@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Énumération pour les rôles utilisateurs
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  CASHIER
+}
+
+// Énumération pour les types de contrats
+enum ContractType {
+  DAILY // Journalier
+  FIXED // Salaire fixe
+  HONORARIUM // Honoraire
+}
+
+// Énumération pour les types de périodes de paie
+enum PayPeriodType {
+  MONTHLY // Mensuel
+  WEEKLY // Hebdomadaire
+  DAILY // Journalier
+}
+
+// Énumération pour les statuts des cycles de paie
+enum PayRunStatus {
+  DRAFT // Brouillon
+  APPROVED // Approuvé
+  CLOSED // Clôturé
+}
+
+// Énumération pour les statuts des bulletins de paie
+enum PayslipStatus {
+  PENDING // En attente
+  PARTIAL // Partiellement payé
+  PAID // Payé
+}
+
+// Énumération pour les modes de paiement
+enum PaymentMethod {
+  CASH // Espèces
+  BANK_TRANSFER // Virement bancaire
+  ORANGE_MONEY // Orange Money
+  WAVE // Wave
+  MOBILE_MONEY // Mobile Money
+  CHECK // Chèque
+  OTHER // Autre
+}
+
+// Énumération pour les types de déductions
+enum DeductionType {
+  TAX // Impôt
+  SOCIAL // Cotisations sociales
+  INSURANCE // Assurance
+  LOAN // Prêt
+  ADVANCE // Avance sur salaire
+  OTHER // Autre
+}
+
+// Table des utilisateurs
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company         Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId       String?
+  createdPayRuns  PayRun[]  @relation("CreatedBy")
+  approvedPayRuns PayRun[]  @relation("ApprovedBy")
+  payments        Payment[]
+
+  @@map("users")
+}
+
+// Table des entreprises
+model Company {
+  id            String        @id @default(cuid())
+  name          String
+  address       String?
+  phone         String?
+  email         String?
+  logo          String? // URL du logo
+  currency      String        @default("XOF") // Devise par défaut (Franc CFA)
+  payPeriodType PayPeriodType @default(MONTHLY)
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  users     User[]
+  employees Employee[]
+  payRuns   PayRun[]
+
+  @@map("companies")
+}
+
+// Table des employés
+model Employee {
+  id           String       @id @default(cuid())
+  employeeCode String       @unique // Code employé unique
+  firstName    String
+  lastName     String
+  email        String?
+  phone        String?
+  address      String?
+  contractType ContractType
+  position     String // Poste occupé
+  dailyRate    Decimal? // Taux journalier (pour les journaliers)
+  fixedSalary  Decimal? // Salaire fixe (pour les salariés fixes)
+  hourlyRate   Decimal? // Taux horaire (pour les honoraires)
+
+  // Informations bancaires
+  bankName      String?
+  accountNumber String?
+
+  // Statut
+  isActive Boolean   @default(true)
+  hireDate DateTime
+  endDate  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  payslips  Payslip[]
+
+  @@map("employees")
+}
+
+// Table des cycles de paie
+model PayRun {
+  id          String       @id @default(cuid())
+  title       String // Ex: "Paie Janvier 2024"
+  periodStart DateTime // Début de période
+  periodEnd   DateTime // Fin de période
+  status      PayRunStatus @default(DRAFT)
+  totalGross  Decimal      @default(0)
+  totalNet    Decimal      @default(0)
+  totalPaid   Decimal      @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  approvedAt  DateTime?
+
+  // Relations
+  company      Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String
+  createdBy    User      @relation("CreatedBy", fields: [createdById], references: [id])
+  createdById  String
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedById String?
+  payslips     Payslip[]
+
+  @@map("pay_runs")
+}
+
+// Table des bulletins de paie
+model Payslip {
+  id            String @id @default(cuid())
+  payslipNumber String @unique // Numéro unique du bulletin
+
+  // Calculs salaire
+  grossAmount     Decimal // Montant brut
+  totalDeductions Decimal @default(0) // Total des déductions
+  netAmount       Decimal // Montant net à payer
+
+  // Informations spécifiques
+  daysWorked  Int? // Nombre de jours travaillés (pour journaliers)
+  hoursWorked Decimal? // Nombre d'heures travaillées (pour honoraires)
+
+  // Statut paiement
+  status     PayslipStatus @default(PENDING)
+  amountPaid Decimal       @default(0) // Montant déjà payé
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  employee   Employee           @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  payRun     PayRun             @relation(fields: [payRunId], references: [id], onDelete: Cascade)
+  payRunId   String
+  deductions PayslipDeduction[]
+  payments   Payment[]
+
+  @@map("payslips")
+}
+
+// Table des déductions sur bulletins
+model PayslipDeduction {
+  id          String        @id @default(cuid())
+  type        DeductionType
+  description String
+  amount      Decimal
+  createdAt   DateTime      @default(now())
+
+  // Relations
+  payslip   Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  payslipId String
+
+  @@map("payslip_deductions")
+}
+
+// Table des paiements
+model Payment {
+  id         String        @id @default(cuid())
+  amount     Decimal
+  method     PaymentMethod
+  reference  String? // Référence de transaction
+  notes      String?
+  receiptUrl String? // URL du reçu PDF généré
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  // Relations
+  payslip       Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+  payslipId     String
+  processedBy   User    @relation(fields: [processedById], references: [id])
+  processedById String
+
+  @@map("payments")
+}
+
+// Table pour les documents générés (historique)
+model Document {
+  id        String   @id @default(cuid())
+  type      String // "receipt", "payslip", "payment_list", "attendance_list"
+  title     String
+  filePath  String // Chemin vers le fichier PDF
+  fileUrl   String? // URL d'accès au fichier
+  metadata  Json? // Métadonnées additionnelles
+  createdAt DateTime @default(now())
+
+  // Relations optionnelles selon le type de document
+  companyId  String?
+  payRunId   String?
+  employeeId String?
+  payslipId  String?
+
+  @@map("documents")
+}
+
+// Table pour les paramètres système
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String // "string", "number", "boolean", "json"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// Table pour l'audit trail (optionnel)
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // "CREATE", "UPDATE", "DELETE", "LOGIN", etc.
+  entity    String // "Employee", "PayRun", "Payment", etc.
+  entityId  String?
+  userId    String?
+  details   Json? // Détails de l'action
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
