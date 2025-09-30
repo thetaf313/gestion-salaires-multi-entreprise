@@ -84,6 +84,13 @@ class AuthService {
         lastName: true,
         email: true,
         role: true,
+        companyId: true,
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
     return user;

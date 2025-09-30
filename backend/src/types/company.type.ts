@@ -11,3 +11,23 @@ export interface CompanyResponse {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export interface CompanyCreateData {
+  name: string;
+  address: string;
+  phone?: string;
+  email?: string;
+  currency?: string;
+  logo?: string;
+  payPeriodType?: "MONTHLY" | "WEEKLY" | "DAILY";
+  isActive?: boolean;
+}
+
+export interface CompanyUpdateData extends Partial<CompanyCreateData> {}
+
+export interface CompanyWithStats extends CompanyResponse {
+  _count?: {
+    employees: number;
+    payRuns: number;
+  };
+}

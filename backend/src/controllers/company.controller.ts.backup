@@ -1,0 +1,203 @@
+import {      const paginationParams = {
+        page: parseInt(req.query.page as string) || 1,
+        pageSize: parseInt(req.query.pageSize as string) || 10,
+        sortBy: (req.query.sortBy as string) || "createdAt",
+        sortOrder: (req.query.sortOrder === "asc" ? "asc" : "desc") as "asc" | "desc",
+        search: (req.query.search as string) || "",
+        status: ((req.query.status as string) === "active" || 
+                (req.query.status as string) === "inactive") 
+                ? (req.query.status as "active" | "inactive")
+                : ("all" as const),
+      };onse } from "express";
+import { companyService } from "../services/company.service.js";
+import { sendResponse } from "../utils/response.js";
+import { HttpStatus } from "../constants/httpStatus.js";
+
+class CompanyController {
+  async getAllCompanies(req: Request, res: Response) {
+    try {
+      const paginationParams = {
+        page: parseInt(req.query.page as string) || 1,
+        pageSize: parseInt(req.query.pageSize as string) || 10,
+        sortBy: (req.query.sortBy as string) || "createdAt",
+        sortOrder: ((req.query.sortOrder as string) === "asc"
+          ? "asc"
+          : "desc") as "asc" | "desc",
+        search: (req.query.search as string) || "",
+        status:
+          (req.query.status as string) === "active" ||
+          (req.query.status as string) === "inactive"
+            ? (req.query.status as "active" | "inactive")
+            : "all",
+      };
+
+      const result = await companyService.getAllCompanies(paginationParams);
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Entreprises récupérées avec succès",
+        result
+      );
+    } catch (error: any) {
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des entreprises"
+      );
+    }
+  }
+
+  async getCompanyById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID de l'entreprise requis"
+        );
+      }
+
+      const company = await companyService.getCompanyById(id);
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Entreprise récupérée avec succès",
+        company
+      );
+    } catch (error: any) {
+      if (error.message === "Entreprise non trouvée") {
+        sendResponse(res, HttpStatus.NOT_FOUND, error.message);
+      } else {
+        sendResponse(
+          res,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          error.message || "Erreur lors de la récupération de l'entreprise"
+        );
+      }
+    }
+  }
+
+  async createCompany(req: Request, res: Response) {
+    try {
+      const companyData = req.body;
+      const newCompany = await companyService.createCompany(companyData);
+
+      sendResponse(
+        res,
+        HttpStatus.CREATED,
+        "Entreprise créée avec succès",
+        newCompany
+      );
+    } catch (error: any) {
+      if (
+        error.message.includes("obligatoire") ||
+        error.message.includes("invalide")
+      ) {
+        sendResponse(res, HttpStatus.BAD_REQUEST, error.message);
+      } else {
+        sendResponse(
+          res,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          error.message || "Erreur lors de la création de l'entreprise"
+        );
+      }
+    }
+  }
+
+  async updateCompany(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID de l'entreprise requis"
+        );
+      }
+
+      const updateData = req.body;
+      const updatedCompany = await companyService.updateCompany(id, updateData);
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Entreprise mise à jour avec succès",
+        updatedCompany
+      );
+    } catch (error: any) {
+      if (error.message === "Entreprise non trouvée") {
+        sendResponse(res, HttpStatus.NOT_FOUND, error.message);
+      } else if (error.message.includes("invalide")) {
+        sendResponse(res, HttpStatus.BAD_REQUEST, error.message);
+      } else {
+        sendResponse(
+          res,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          error.message || "Erreur lors de la mise à jour de l'entreprise"
+        );
+      }
+    }
+  }
+
+  async deleteCompany(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID de l'entreprise requis"
+        );
+      }
+
+      await companyService.deleteCompany(id);
+
+      sendResponse(res, HttpStatus.OK, "Entreprise supprimée avec succès");
+    } catch (error: any) {
+      if (error.message === "Entreprise non trouvée") {
+        sendResponse(res, HttpStatus.NOT_FOUND, error.message);
+      } else if (error.message.includes("employés actifs")) {
+        sendResponse(res, HttpStatus.BAD_REQUEST, error.message);
+      } else {
+        sendResponse(
+          res,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          error.message || "Erreur lors de la suppression de l'entreprise"
+        );
+      }
+    }
+  }
+
+  async getCompanyStats(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID de l'entreprise requis"
+        );
+      }
+
+      const stats = await companyService.getCompanyStats(id);
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Statistiques de l'entreprise récupérées avec succès",
+        stats
+      );
+    } catch (error: any) {
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des statistiques"
+      );
+    }
+  }
+}
+
+export const companyController = new CompanyController();

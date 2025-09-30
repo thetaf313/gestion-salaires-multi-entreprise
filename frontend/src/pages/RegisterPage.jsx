@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { useAuth } from "../contexts/AuthContext";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { register, isAuthenticated, isLoading, error, clearError } = useAuth();
-  
+
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'ADMIN', // Par défaut ADMIN
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "ADMIN", // Par défaut ADMIN
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,7 +33,7 @@ export default function RegisterPage() {
   // Rediriger si déjà connecté
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [isAuthenticated, navigate]);
 
@@ -38,16 +44,16 @@ export default function RegisterPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
 
     // Nettoyer l'erreur du champ modifié
     if (validationErrors[name]) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        [name]: '',
+        [name]: "",
       }));
     }
   };
@@ -57,38 +63,38 @@ export default function RegisterPage() {
 
     // Validation prénom
     if (!formData.firstName.trim()) {
-      errors.firstName = 'Le prénom est requis';
+      errors.firstName = "Le prénom est requis";
     } else if (formData.firstName.trim().length < 2) {
-      errors.firstName = 'Le prénom doit contenir au moins 2 caractères';
+      errors.firstName = "Le prénom doit contenir au moins 2 caractères";
     }
 
     // Validation nom
     if (!formData.lastName.trim()) {
-      errors.lastName = 'Le nom est requis';
+      errors.lastName = "Le nom est requis";
     } else if (formData.lastName.trim().length < 2) {
-      errors.lastName = 'Le nom doit contenir au moins 2 caractères';
+      errors.lastName = "Le nom doit contenir au moins 2 caractères";
     }
 
     // Validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email.trim()) {
-      errors.email = 'L\'email est requis';
+      errors.email = "L'email est requis";
     } else if (!emailRegex.test(formData.email)) {
-      errors.email = 'Format d\'email invalide';
+      errors.email = "Format d'email invalide";
     }
 
     // Validation mot de passe
     if (!formData.password) {
-      errors.password = 'Le mot de passe est requis';
+      errors.password = "Le mot de passe est requis";
     } else if (formData.password.length < 8) {
-      errors.password = 'Le mot de passe doit contenir au moins 8 caractères';
+      errors.password = "Le mot de passe doit contenir au moins 8 caractères";
     }
 
     // Validation confirmation mot de passe
     if (!formData.confirmPassword) {
-      errors.confirmPassword = 'La confirmation du mot de passe est requise';
+      errors.confirmPassword = "La confirmation du mot de passe est requise";
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = 'Les mots de passe ne correspondent pas';
+      errors.confirmPassword = "Les mots de passe ne correspondent pas";
     }
 
     setValidationErrors(errors);
@@ -97,7 +103,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -113,9 +119,9 @@ export default function RegisterPage() {
         confirmPassword: formData.confirmPassword,
         role: formData.role,
       });
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (error) {
-      console.error('Erreur d\'inscription:', error);
+      console.error("Erreur d'inscription:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -137,9 +143,7 @@ export default function RegisterPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Gestion Salaires
           </h1>
-          <p className="text-gray-600">
-            Créez votre compte
-          </p>
+          <p className="text-gray-600">Créez votre compte</p>
         </div>
 
         {/* Formulaire d'inscription */}
@@ -172,10 +176,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting}
-                  className={validationErrors.firstName ? 'border-destructive' : ''}
+                  className={
+                    validationErrors.firstName ? "border-destructive" : ""
+                  }
                 />
                 {validationErrors.firstName && (
-                  <p className="text-xs text-destructive">{validationErrors.firstName}</p>
+                  <p className="text-xs text-destructive">
+                    {validationErrors.firstName}
+                  </p>
                 )}
               </div>
 
@@ -191,10 +199,14 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting}
-                  className={validationErrors.lastName ? 'border-destructive' : ''}
+                  className={
+                    validationErrors.lastName ? "border-destructive" : ""
+                  }
                 />
                 {validationErrors.lastName && (
-                  <p className="text-xs text-destructive">{validationErrors.lastName}</p>
+                  <p className="text-xs text-destructive">
+                    {validationErrors.lastName}
+                  </p>
                 )}
               </div>
 
@@ -210,10 +222,12 @@ export default function RegisterPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isSubmitting}
-                  className={validationErrors.email ? 'border-destructive' : ''}
+                  className={validationErrors.email ? "border-destructive" : ""}
                 />
                 {validationErrors.email && (
-                  <p className="text-xs text-destructive">{validationErrors.email}</p>
+                  <p className="text-xs text-destructive">
+                    {validationErrors.email}
+                  </p>
                 )}
               </div>
 
@@ -241,13 +255,15 @@ export default function RegisterPage() {
                   <Input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                    className={`pr-10 ${validationErrors.password ? 'border-destructive' : ''}`}
+                    className={`pr-10 ${
+                      validationErrors.password ? "border-destructive" : ""
+                    }`}
                   />
                   <button
                     type="button"
@@ -263,24 +279,32 @@ export default function RegisterPage() {
                   </button>
                 </div>
                 {validationErrors.password && (
-                  <p className="text-xs text-destructive">{validationErrors.password}</p>
+                  <p className="text-xs text-destructive">
+                    {validationErrors.password}
+                  </p>
                 )}
               </div>
 
               {/* Confirmation mot de passe */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <Label htmlFor="confirmPassword">
+                  Confirmer le mot de passe
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required
                     disabled={isSubmitting}
-                    className={`pr-10 ${validationErrors.confirmPassword ? 'border-destructive' : ''}`}
+                    className={`pr-10 ${
+                      validationErrors.confirmPassword
+                        ? "border-destructive"
+                        : ""
+                    }`}
                   />
                   <button
                     type="button"
@@ -296,23 +320,21 @@ export default function RegisterPage() {
                   </button>
                 </div>
                 {validationErrors.confirmPassword && (
-                  <p className="text-xs text-destructive">{validationErrors.confirmPassword}</p>
+                  <p className="text-xs text-destructive">
+                    {validationErrors.confirmPassword}
+                  </p>
                 )}
               </div>
 
               {/* Bouton d'inscription */}
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Inscription...
                   </>
                 ) : (
-                  'Créer un compte'
+                  "Créer un compte"
                 )}
               </Button>
             </form>
@@ -320,9 +342,9 @@ export default function RegisterPage() {
             {/* Lien vers connexion */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Déjà un compte ?{' '}
-                <Link 
-                  to="/login" 
+                Déjà un compte ?{" "}
+                <Link
+                  to="/login"
                   className="font-medium text-primary hover:underline"
                 >
                   Se connecter

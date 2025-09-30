@@ -65,7 +65,9 @@ class CompanyRepository implements BaseRepository<Company> {
     return company || null;
   }
 
-  async create(data: Omit<Company, "id" | "createdAt" | "updatedAt">): Promise<Company> {
+  async create(
+    data: Omit<Company, "id" | "createdAt" | "updatedAt">
+  ): Promise<Company> {
     const company = await this.prisma.company.create({
       data: {
         ...data,
@@ -76,9 +78,9 @@ class CompanyRepository implements BaseRepository<Company> {
     return company;
   }
 
-  async update(data: Partial<Company> & { id: string }): Promise<Company | null> {
+  async update(id: string, data: Partial<Company>): Promise<Company | null> {
     const company = await this.prisma.company.update({
-      where: { id: data.id },
+      where: { id },
       data: {
         ...data,
         updatedAt: new Date(),
@@ -87,37 +89,11 @@ class CompanyRepository implements BaseRepository<Company> {
     return company || null;
   }
 
-  async update(
-    id: string,
-    item: Partial<{
-      name: string;
-      id: string;
-      address: string | null;
-      phone: string | null;
-      email: string | null;
-      logo: string | null;
-      currency: string;
-      payPeriodType: $Enums.PayPeriodType;
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    }>
-  ): Promise<{
-    name: string;
-    id: string;
-    address: string | null;
-    phone: string | null;
-    email: string | null;
-    logo: string | null;
-    currency: string;
-    payPeriodType: $Enums.PayPeriodType;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-  } | null> {
-    throw new Error("Method not implemented.");
+  async delete(id: string): Promise<boolean> {
+    const deleted = await this.prisma.company.delete({ where: { id } });
+    return !!deleted;
   }
-  delete(id: string): Promise<boolean> {
-    throw new Error("Method not implemented.");
-  }
+
 }
+
+export const companyRepository = new CompanyRepository();

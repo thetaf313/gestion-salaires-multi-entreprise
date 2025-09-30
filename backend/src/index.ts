@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
+import companyRoutes from "./routes/company.routes.js";
+import employeeRoutes from "./routes/employee.routes.js";
 import config from "./config/env.js";
 import corsOptions, { corsDevOptions } from "./config/cors.js";
 
@@ -53,7 +55,10 @@ const authenticateToken = (req: any, res: any, next: any) => {
 };
 
 app.use("/api/profiles", authenticateToken, userRoutes);
+app.use("/api/users", authenticateToken, userRoutes);
 app.use("/api/stats", authenticateToken, statsRoutes);
+app.use("/api/companies", authenticateToken, companyRoutes);
+app.use("/api/employees", employeeRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

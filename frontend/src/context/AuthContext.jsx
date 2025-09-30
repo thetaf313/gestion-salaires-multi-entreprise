@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import { authService } from '../services/auth.service';
+import React, { createContext, useContext, useReducer, useEffect } from "react";
+import { authService } from "../services/auth.service";
 
 // État initial
 const initialState = {
@@ -11,16 +11,16 @@ const initialState = {
 
 // Actions
 const authActions = {
-  LOGIN_START: 'LOGIN_START',
-  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
-  LOGIN_FAILURE: 'LOGIN_FAILURE',
-  REGISTER_START: 'REGISTER_START',
-  REGISTER_SUCCESS: 'REGISTER_SUCCESS',
-  REGISTER_FAILURE: 'REGISTER_FAILURE',
-  LOGOUT: 'LOGOUT',
-  LOAD_USER: 'LOAD_USER',
-  SET_LOADING: 'SET_LOADING',
-  CLEAR_ERROR: 'CLEAR_ERROR',
+  LOGIN_START: "LOGIN_START",
+  LOGIN_SUCCESS: "LOGIN_SUCCESS",
+  LOGIN_FAILURE: "LOGIN_FAILURE",
+  REGISTER_START: "REGISTER_START",
+  REGISTER_SUCCESS: "REGISTER_SUCCESS",
+  REGISTER_FAILURE: "REGISTER_FAILURE",
+  LOGOUT: "LOGOUT",
+  LOAD_USER: "LOAD_USER",
+  SET_LOADING: "SET_LOADING",
+  CLEAR_ERROR: "CLEAR_ERROR",
 };
 
 // Reducer
@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }) => {
           });
         }
       } catch (error) {
-        console.error('Erreur lors du chargement de l\'utilisateur:', error);
+        console.error("Erreur lors du chargement de l'utilisateur:", error);
         dispatch({
           type: authActions.LOAD_USER,
           payload: { user: null },
@@ -134,41 +134,43 @@ export const AuthProvider = ({ children }) => {
 
   // Actions
   const login = async (credentials) => {
-    console.log('🔄 Début de la connexion...');
+    console.log("🔄 Début de la connexion...");
     dispatch({ type: authActions.LOGIN_START });
-    
+
     try {
-      console.log('📡 Envoi des credentials...');
+      console.log("📡 Envoi des credentials...");
       const response = await authService.login(credentials);
-      console.log('✅ Réponse de connexion reçue:', response);
-      
+      console.log("✅ Réponse de connexion reçue:", response);
+
       // Récupérer l'utilisateur (peut être vide si le profil n'a pas pu être récupéré)
       let user = authService.getCurrentUser();
-      console.log('👤 Utilisateur récupéré du localStorage:', user);
-      
+      console.log("👤 Utilisateur récupéré du localStorage:", user);
+
       // Si pas d'utilisateur, essayer de récupérer le profil
       if (!user) {
-        console.log('🔄 Tentative de récupération du profil...');
+        console.log("🔄 Tentative de récupération du profil...");
         try {
           user = await authService.getProfile();
-          console.log('👤 Profil récupéré:', user);
+          console.log("👤 Profil récupéré:", user);
         } catch (profileError) {
-          console.warn('⚠️ Impossible de récupérer le profil:', profileError);
+          console.warn("⚠️ Impossible de récupérer le profil:", profileError);
           // Continuer avec un utilisateur minimal basé sur le token
           user = { email: credentials.email };
         }
       }
-      
-      console.log('✅ Connexion réussie, dispatch LOGIN_SUCCESS');
+
+      console.log("✅ Connexion réussie, dispatch LOGIN_SUCCESS");
       dispatch({
         type: authActions.LOGIN_SUCCESS,
         payload: { user },
       });
-      
-      return response;
+
+      console.log("🔄 État mis à jour, isAuthenticated devrait être true");
+      return { success: true, user, response };
     } catch (error) {
-      console.error('❌ Erreur de connexion:', error);
-      const errorMessage = error.response?.data?.message || 'Erreur de connexion';
+      console.error("❌ Erreur de connexion:", error);
+      const errorMessage =
+        error.response?.data?.message || "Erreur de connexion";
       dispatch({
         type: authActions.LOGIN_FAILURE,
         payload: { error: errorMessage },
@@ -179,19 +181,20 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     dispatch({ type: authActions.REGISTER_START });
-    
+
     try {
       const response = await authService.register(userData);
       const user = authService.getCurrentUser();
-      
+
       dispatch({
         type: authActions.REGISTER_SUCCESS,
         payload: { user },
       });
-      
+
       return response;
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Erreur d\'inscription';
+      const errorMessage =
+        error.response?.data?.message || "Erreur d'inscription";
       dispatch({
         type: authActions.REGISTER_FAILURE,
         payload: { error: errorMessage },
@@ -217,18 +220,14 @@ export const AuthProvider = ({ children }) => {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Hook pour utiliser le contexte d'authentification
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth doit être utilisé dans un AuthProvider');
+    throw new Error("useAuth doit être utilisé dans un AuthProvider");
   }
   return context;
 };

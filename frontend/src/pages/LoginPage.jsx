@@ -1,29 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { useAuth } from "../contexts/AuthContext";
+import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
-  
+
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Rediriger si déjà connecté
   useEffect(() => {
-    console.log('🔍 Vérification de l\'état d\'authentification:', { isAuthenticated, isLoading });
+    console.log("🔍 Vérification de l'état d'authentification:", {
+      isAuthenticated,
+      isLoading,
+    });
     if (isAuthenticated && !isLoading) {
-      console.log('✅ Utilisateur déjà connecté, redirection vers dashboard...');
-      navigate('/dashboard');
+      console.log(
+        "✅ Utilisateur déjà connecté, redirection vers dashboard..."
+      );
+      // Redirection immédiate vers le dashboard
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, isLoading, navigate]);
 
@@ -34,7 +46,7 @@ export default function LoginPage() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -43,16 +55,20 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log('🚀 Soumission du formulaire de connexion...');
+    console.log("🚀 Soumission du formulaire de connexion...");
 
     try {
-      console.log('🔄 Appel de la fonction login...');
-      await login(formData);
-      console.log('✅ Connexion réussie, redirection vers dashboard...');
-      navigate('/dashboard');
+      console.log("🔄 Appel de la fonction login...");
+      const result = await login(formData.email, formData.password);
+      console.log("✅ Connexion réussie, résultat:", result);
+
+      if (result.success) {
+        console.log("🌟 Redirection immédiate vers dashboard...");
+        // Redirection immédiate sans attendre l'état
+        window.location.href = "/dashboard";
+      }
     } catch (error) {
-      console.error('❌ Erreur lors de la connexion:', error);
-    } finally {
+      console.error("❌ Erreur lors de la connexion:", error);
       setIsSubmitting(false);
     }
   };
@@ -73,9 +89,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Gestion Salaires
           </h1>
-          <p className="text-gray-600">
-            Connectez-vous à votre compte
-          </p>
+          <p className="text-gray-600">Connectez-vous à votre compte</p>
         </div>
 
         {/* Formulaire de connexion */}
@@ -102,11 +116,10 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   name="email"
-                  type="email"
+                  type="text"
                   placeholder="vous@example.com"
                   value={formData.email}
                   onChange={handleInputChange}
-                  required
                   disabled={isSubmitting}
                 />
               </div>
@@ -118,11 +131,10 @@ export default function LoginPage() {
                   <Input
                     id="password"
                     name="password"
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleInputChange}
-                    required
                     disabled={isSubmitting}
                     className="pr-10"
                   />
@@ -142,18 +154,14 @@ export default function LoginPage() {
               </div>
 
               {/* Bouton de connexion */}
-              <Button 
-                type="submit" 
-                className="w-full"
-                disabled={isSubmitting}
-              >
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Connexion...
                   </>
                 ) : (
-                  'Se connecter'
+                  "Se connecter"
                 )}
               </Button>
             </form>
@@ -161,9 +169,9 @@ export default function LoginPage() {
             {/* Lien vers inscription */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Pas encore de compte ?{' '}
-                <Link 
-                  to="/register" 
+                Pas encore de compte ?{" "}
+                <Link
+                  to="/register"
                   className="font-medium text-primary hover:underline"
                 >
                   Créer un compte
@@ -180,9 +188,17 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="text-xs">
-              <p><strong>SUPER_ADMIN:</strong> superadmin@gestion-salaires.com / superadmin123</p>
-              <p><strong>ADMIN:</strong> admin@gestion-salaires.com / admin123</p>
-              <p><strong>CASHIER:</strong> cashier@gestion-salaires.com / cashier123</p>
+              <p>
+                <strong>SUPER_ADMIN:</strong> superadmin@gestion-salaires.com /
+                superadmin123
+              </p>
+              <p>
+                <strong>ADMIN:</strong> admin@gestion-salaires.com / admin123
+              </p>
+              <p>
+                <strong>CASHIER:</strong> cashier@gestion-salaires.com /
+                cashier123
+              </p>
             </div>
           </CardContent>
         </Card>
