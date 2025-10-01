@@ -14,6 +14,9 @@ router.get("/company/:companyId/payruns/stats", payRunController.getStats);
 router.get("/company/:companyId/payruns/:id", payRunController.getById);
 router.put("/company/:companyId/payruns/:id", payRunController.update);
 router.delete("/company/:companyId/payruns/:id", payRunController.delete);
-router.patch("/company/:companyId/payruns/:id/approve", payRunController.approve);
+router.patch(
+  "/company/:companyId/payruns/:id/approve",
+  payRunController.approve
+);
 
 export default router;

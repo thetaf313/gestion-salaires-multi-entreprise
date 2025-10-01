@@ -421,15 +421,15 @@ export function CompanyEmployees() {
                       {canManageEmployees && (
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleViewEmployee(employee)}
                             >
                               <Eye className="w-3 h-3" />
                             </Button>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => handleEditEmployee(employee)}
                             >

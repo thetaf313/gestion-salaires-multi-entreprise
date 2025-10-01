@@ -15,6 +15,14 @@ export const employeeService = {
     return response.data;
   },
 
+  // Alias pour getEmployeesByCompany (utilisé dans CreatePayRunModal)
+  async getByCompany(companyId, page = 1, limit = 100) {
+    const response = await api.get(
+      `/employees/company/${companyId}?page=${page}&limit=${limit}`
+    );
+    return response.data;
+  },
+
   // Obtenir un employé par ID
   async getEmployeeById(employeeId) {
     const response = await api.get(`/employees/${employeeId}`);

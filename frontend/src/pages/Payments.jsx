@@ -58,7 +58,7 @@ export default function Payments() {
         setPayments(response.data.data || []);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des paiements:', error);
+      console.error("Erreur lors du chargement des paiements:", error);
     } finally {
       setLoading(false);
     }
@@ -71,7 +71,7 @@ export default function Payments() {
         setStats(response.data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
+      console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
@@ -98,7 +98,7 @@ export default function Payments() {
   const getMethodBadge = (method) => {
     const labels = {
       BANK_TRANSFER: "Virement",
-      CASH: "Espèces", 
+      CASH: "Espèces",
       MOBILE_MONEY: "Mobile Money",
       CHECK: "Chèque",
     };
@@ -106,7 +106,7 @@ export default function Payments() {
     const colors = {
       BANK_TRANSFER: "bg-blue-100 text-blue-800",
       CASH: "bg-green-100 text-green-800",
-      MOBILE_MONEY: "bg-purple-100 text-purple-800", 
+      MOBILE_MONEY: "bg-purple-100 text-purple-800",
       CHECK: "bg-orange-100 text-orange-800",
     };
 
@@ -135,8 +135,12 @@ export default function Payments() {
 
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
-      payment.payslip?.employee?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.payslip?.employee?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.payslip?.employee?.firstName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      payment.payslip?.employee?.lastName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       payment.id.toString().includes(searchQuery);
     const matchesStatus =
       statusFilter === "all" || payment.status === statusFilter;
@@ -191,7 +195,9 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.totalPayments || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.totalPayments || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Total paiements</p>
               </div>
             </div>
@@ -203,7 +209,9 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.completedPayments || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.completedPayments || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Terminés</p>
               </div>
             </div>
@@ -215,7 +223,9 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.pendingPayments || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.pendingPayments || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">En attente</p>
               </div>
             </div>
@@ -228,7 +238,9 @@ export default function Payments() {
               <DollarSign className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-lg font-bold">
-                  {stats?.totalAmount ? formatCurrency(stats.totalAmount) : formatCurrency(0)}
+                  {stats?.totalAmount
+                    ? formatCurrency(stats.totalAmount)
+                    : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Montant total</p>
               </div>
@@ -242,7 +254,9 @@ export default function Payments() {
               <DollarSign className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-lg font-bold">
-                  {stats?.completedAmount ? formatCurrency(stats.completedAmount) : formatCurrency(0)}
+                  {stats?.completedAmount
+                    ? formatCurrency(stats.completedAmount)
+                    : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Montant payé</p>
               </div>
@@ -335,7 +349,9 @@ export default function Payments() {
                     <TableCell colSpan={8} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <CreditCard className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">Aucun paiement trouvé</p>
+                        <p className="text-muted-foreground">
+                          Aucun paiement trouvé
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -347,7 +363,8 @@ export default function Payments() {
                           <User className="w-4 h-4 text-gray-500" />
                           <div>
                             <p className="font-medium">
-                              {payment.payslip?.employee?.firstName} {payment.payslip?.employee?.lastName}
+                              {payment.payslip?.employee?.firstName}{" "}
+                              {payment.payslip?.employee?.lastName}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               ID: {payment.payslip?.employeeId}
@@ -358,11 +375,13 @@ export default function Payments() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {payment.payslip?.payRun ? (
-                            `${formatDate(payment.payslip.payRun.startDate)} - ${formatDate(payment.payslip.payRun.endDate)}`
-                          ) : (
-                            'Période non définie'
-                          )}
+                          {payment.payslip?.payRun
+                            ? `${formatDate(
+                                payment.payslip.payRun.startDate
+                              )} - ${formatDate(
+                                payment.payslip.payRun.endDate
+                              )}`
+                            : "Période non définie"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -373,10 +392,10 @@ export default function Payments() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>{getMethodBadge(payment.method || 'BANK_TRANSFER')}</TableCell>
                       <TableCell>
-                        {getStatusBadge(payment.status)}
+                        {getMethodBadge(payment.method || "BANK_TRANSFER")}
                       </TableCell>
+                      <TableCell>{getStatusBadge(payment.status)}</TableCell>
                       <TableCell>
                         <code className="text-xs bg-gray-100 px-2 py-1 rounded">
                           ID: {payment.id}

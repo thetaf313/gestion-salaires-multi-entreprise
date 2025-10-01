@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +20,12 @@ import { toast } from "sonner";
 import { employeeService } from "../services/employeeService";
 import { User } from "lucide-react";
 
-export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated }) {
+export function EditEmployeeModal({
+  employee,
+  isOpen,
+  onClose,
+  onEmployeeUpdated,
+}) {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -43,7 +54,7 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
         dailyRate: employee.dailyRate || "",
         fixedSalary: employee.fixedSalary || "",
         hourlyRate: employee.hourlyRate || "",
-        hireDate: employee.hireDate ? employee.hireDate.split('T')[0] : "",
+        hireDate: employee.hireDate ? employee.hireDate.split("T")[0] : "",
         address: employee.address || "",
         isActive: employee.isActive ?? true,
       });
@@ -51,16 +62,21 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
   }, [employee]);
 
   const handleInputChange = (name, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!formData.firstName || !formData.lastName || !formData.position || !formData.contractType) {
+
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.position ||
+      !formData.contractType
+    ) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -82,14 +98,17 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
     setLoading(true);
     try {
       const updateData = { ...formData };
-      
+
       // Convertir les valeurs numériques
-      if (updateData.dailyRate) updateData.dailyRate = parseFloat(updateData.dailyRate);
-      if (updateData.fixedSalary) updateData.fixedSalary = parseFloat(updateData.fixedSalary);
-      if (updateData.hourlyRate) updateData.hourlyRate = parseFloat(updateData.hourlyRate);
-      
+      if (updateData.dailyRate)
+        updateData.dailyRate = parseFloat(updateData.dailyRate);
+      if (updateData.fixedSalary)
+        updateData.fixedSalary = parseFloat(updateData.fixedSalary);
+      if (updateData.hourlyRate)
+        updateData.hourlyRate = parseFloat(updateData.hourlyRate);
+
       // Nettoyer les champs vides
-      Object.keys(updateData).forEach(key => {
+      Object.keys(updateData).forEach((key) => {
         if (updateData[key] === "") {
           delete updateData[key];
         }
@@ -101,7 +120,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
       onClose();
     } catch (error) {
       console.error("Erreur lors de la modification:", error);
-      toast.error(error.response?.data?.message || "Erreur lors de la modification");
+      toast.error(
+        error.response?.data?.message || "Erreur lors de la modification"
+      );
     } finally {
       setLoading(false);
     }
@@ -129,7 +150,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                 <Input
                   id="firstName"
                   value={formData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("firstName", e.target.value)
+                  }
                   placeholder="Prénom"
                   required
                 />
@@ -140,7 +163,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                 <Input
                   id="lastName"
                   value={formData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value)
+                  }
                   placeholder="Nom"
                   required
                 />
@@ -181,14 +206,18 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
 
           {/* Informations professionnelles */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Informations professionnelles</h3>
+            <h3 className="text-lg font-semibold">
+              Informations professionnelles
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="position">Poste *</Label>
                 <Input
                   id="position"
                   value={formData.position}
-                  onChange={(e) => handleInputChange("position", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("position", e.target.value)
+                  }
                   placeholder="Développeur, Comptable, etc."
                   required
                 />
@@ -198,7 +227,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                 <Label htmlFor="contractType">Type de contrat *</Label>
                 <Select
                   value={formData.contractType}
-                  onValueChange={(value) => handleInputChange("contractType", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("contractType", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Sélectionner le type" />
@@ -217,7 +248,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                   id="hireDate"
                   type="date"
                   value={formData.hireDate}
-                  onChange={(e) => handleInputChange("hireDate", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("hireDate", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -226,7 +259,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                 <Label htmlFor="isActive">Statut</Label>
                 <Select
                   value={formData.isActive.toString()}
-                  onValueChange={(value) => handleInputChange("isActive", value === "true")}
+                  onValueChange={(value) =>
+                    handleInputChange("isActive", value === "true")
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Statut de l'employé" />
@@ -246,7 +281,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                     id="dailyRate"
                     type="number"
                     value={formData.dailyRate}
-                    onChange={(e) => handleInputChange("dailyRate", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("dailyRate", e.target.value)
+                    }
                     placeholder="25000"
                     min="0"
                     required
@@ -261,7 +298,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                     id="fixedSalary"
                     type="number"
                     value={formData.fixedSalary}
-                    onChange={(e) => handleInputChange("fixedSalary", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("fixedSalary", e.target.value)
+                    }
                     placeholder="500000"
                     min="0"
                     required
@@ -276,7 +315,9 @@ export function EditEmployeeModal({ employee, isOpen, onClose, onEmployeeUpdated
                     id="hourlyRate"
                     type="number"
                     value={formData.hourlyRate}
-                    onChange={(e) => handleInputChange("hourlyRate", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("hourlyRate", e.target.value)
+                    }
                     placeholder="5000"
                     min="0"
                     required

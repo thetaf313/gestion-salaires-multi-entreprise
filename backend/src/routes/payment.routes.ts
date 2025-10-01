@@ -12,6 +12,9 @@ router.post("/company/:companyId/payments", paymentController.create);
 router.get("/company/:companyId/payments", paymentController.getByCompany);
 router.get("/company/:companyId/payments/stats", paymentController.getStats);
 router.get("/company/:companyId/payments/:id", paymentController.getById);
-router.get("/company/:companyId/payslips/:payslipId/payments", paymentController.getByPayslip);
+router.get(
+  "/company/:companyId/payslips/:payslipId/payments",
+  paymentController.getByPayslip
+);
 
 export default router;

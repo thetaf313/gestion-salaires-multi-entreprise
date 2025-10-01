@@ -1,4 +1,4 @@
-import api from './api.js';
+import api from "./api.js";
 
 export const payRunService = {
   // Créer un nouveau cycle de paie
@@ -9,9 +9,9 @@ export const payRunService = {
 
   // Obtenir les cycles de paie d'une entreprise
   async getByCompany(companyId, params = {}) {
-    const { page = 1, limit = 10, status = 'all' } = params;
+    const { page = 1, limit = 10, status = "all" } = params;
     const response = await api.get(`/company/${companyId}/payruns`, {
-      params: { page, limit, status }
+      params: { page, limit, status },
     });
     return response.data;
   },
@@ -36,7 +36,15 @@ export const payRunService = {
 
   // Approuver un cycle de paie et générer les bulletins
   async approve(companyId, id) {
-    const response = await api.patch(`/company/${companyId}/payruns/${id}/approve`);
+    const response = await api.patch(
+      `/company/${companyId}/payruns/${id}/approve`
+    );
+    return response.data;
+  },
+
+  // Mettre à jour le statut d'un cycle de paie
+  async updateStatus(id, status) {
+    const response = await api.patch(`/payruns/${id}/status`, { status });
     return response.data;
   },
 
@@ -44,5 +52,5 @@ export const payRunService = {
   async getStats(companyId) {
     const response = await api.get(`/company/${companyId}/payruns/stats`);
     return response.data;
-  }
+  },
 };

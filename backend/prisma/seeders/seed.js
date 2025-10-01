@@ -109,7 +109,7 @@ async function main() {
     // Créer des employés de test pour chaque entreprise
     console.log("👥 Création des employés de test...");
     const employees = [];
-    
+
     // Employés pour Tech Solutions SARL
     const techSolutionsEmployees = await Promise.all([
       prisma.employee.create({
@@ -158,7 +158,7 @@ async function main() {
         },
       }),
     ]);
-    
+
     // Employés pour Digital Marketing Pro
     const digitalMarketingEmployees = await Promise.all([
       prisma.employee.create({

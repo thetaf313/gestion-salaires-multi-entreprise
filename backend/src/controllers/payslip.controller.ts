@@ -11,20 +11,26 @@ class PayslipController {
       const companyId = req.params.companyId as string;
       const { page = 1, limit = 10, status, payRunId } = req.query;
 
-      const result = await payslipService.getByCompany(
-        companyId,
-        {
-          page: Number(page),
-          limit: Number(limit),
-          status: status as string,
-          payRunId: payRunId as string,
-        }
-      );
+      const result = await payslipService.getByCompany(companyId, {
+        page: Number(page),
+        limit: Number(limit),
+        status: status as string,
+        payRunId: payRunId as string,
+      });
 
-      sendResponse(res, HttpStatus.OK, "Bulletins de paie récupérés avec succès", result);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Bulletins de paie récupérés avec succès",
+        result
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des bulletins:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération des bulletins");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des bulletins"
+      );
     }
   }
 
@@ -32,17 +38,33 @@ class PayslipController {
   async getById(req: Request, res: Response) {
     try {
       const { id, companyId } = req.params;
-      
-      const payslip = await payslipService.getById(id as string, companyId as string);
-      
+
+      const payslip = await payslipService.getById(
+        id as string,
+        companyId as string
+      );
+
       if (!payslip) {
-        return sendResponse(res, HttpStatus.NOT_FOUND, "Bulletin de paie non trouvé");
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Bulletin de paie non trouvé"
+        );
       }
 
-      sendResponse(res, HttpStatus.OK, "Bulletin de paie récupéré avec succès", payslip);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Bulletin de paie récupéré avec succès",
+        payslip
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération du bulletin:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération du bulletin");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération du bulletin"
+      );
     }
   }
 
@@ -56,16 +78,33 @@ class PayslipController {
         return sendResponse(res, HttpStatus.BAD_REQUEST, "Statut invalide");
       }
 
-      const payslip = await payslipService.updateStatus(id as string, companyId as string, status);
-      
+      const payslip = await payslipService.updateStatus(
+        id as string,
+        companyId as string,
+        status
+      );
+
       if (!payslip) {
-        return sendResponse(res, HttpStatus.NOT_FOUND, "Bulletin de paie non trouvé");
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Bulletin de paie non trouvé"
+        );
       }
 
-      sendResponse(res, HttpStatus.OK, "Statut mis à jour avec succès", payslip);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Statut mis à jour avec succès",
+        payslip
+      );
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour du statut:", error);
-      sendResponse(res, HttpStatus.BAD_REQUEST, error.message || "Erreur lors de la mise à jour du statut");
+      sendResponse(
+        res,
+        HttpStatus.BAD_REQUEST,
+        error.message || "Erreur lors de la mise à jour du statut"
+      );
     }
   }
 
@@ -73,12 +112,21 @@ class PayslipController {
   async getStats(req: Request, res: Response) {
     try {
       const companyId = req.params.companyId as string;
-      
+
       const stats = await payslipService.getStats(companyId);
-      sendResponse(res, HttpStatus.OK, "Statistiques récupérées avec succès", stats);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Statistiques récupérées avec succès",
+        stats
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des statistiques:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération des statistiques");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des statistiques"
+      );
     }
   }
 }

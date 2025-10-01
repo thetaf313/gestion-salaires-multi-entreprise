@@ -4,8 +4,9 @@ const prisma = new PrismaClient();
 
 interface CreatePayRunData {
   title: string;
-  periodStart: Date;
-  periodEnd: Date;
+  periodStart: string | Date;
+  periodEnd: string | Date;
+  description?: string;
   companyId: string;
   createdById: string;
   employeeIds?: string[]; // IDs des employés à inclure dans ce cycle
@@ -22,11 +23,28 @@ class PayRunService {
   async create(data: CreatePayRunData) {
     const { employeeIds, ...payRunData } = data;
 
+    // Validation des dates
+    const startDate = new Date(payRunData.periodStart);
+    const endDate = new Date(payRunData.periodEnd);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new Error("Dates invalides pour le cycle de paie");
+    }
+
+    if (startDate >= endDate) {
+      throw new Error(
+        "La date de fin doit être postérieure à la date de début"
+      );
+    }
+
     const payRun = await prisma.payRun.create({
       data: {
-        ...payRunData,
-        periodStart: new Date(payRunData.periodStart),
-        periodEnd: new Date(payRunData.periodEnd),
+        title: payRunData.title,
+        periodStart: startDate,
+        periodEnd: endDate,
+        description: payRunData.description || null,
+        companyId: payRunData.companyId,
+        createdById: payRunData.createdById,
       },
       include: {
         company: {
@@ -57,7 +75,7 @@ class PayRunService {
       companyId,
     };
 
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       where.status = status;
     }
 
@@ -67,7 +85,7 @@ class PayRunService {
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         include: {
           company: {
@@ -280,11 +298,17 @@ class PayRunService {
       let totalNet = 0;
 
       for (const employee of employees) {
-        const payslipData = await this.calculatePayslip(employee, existingPayRun);
-        
+        const payslipData = await this.calculatePayslip(
+          employee,
+          existingPayRun
+        );
+
         const payslip = await tx.payslip.create({
           data: {
-            payslipNumber: await this.generatePayslipNumber(employee.employeeCode, existingPayRun.id),
+            payslipNumber: await this.generatePayslipNumber(
+              employee.employeeCode,
+              existingPayRun.id
+            ),
             employeeId: employee.id,
             payRunId: id,
             grossAmount: payslipData.grossAmount,
@@ -338,39 +362,47 @@ class PayRunService {
     let grossAmount = 0;
     let daysWorked = null;
     let hoursWorked = null;
-    
+
     // Calculer le salaire selon le type de contrat
-    if (employee.contractType === 'DAILY' && employee.dailyRate) {
+    if (employee.contractType === "DAILY" && employee.dailyRate) {
       // Pour les journaliers, calculer sur la base des jours travaillés
-      const periodDays = this.calculateWorkingDays(payRun.periodStart, payRun.periodEnd);
+      const periodDays = this.calculateWorkingDays(
+        payRun.periodStart,
+        payRun.periodEnd
+      );
       daysWorked = periodDays;
       grossAmount = Number(employee.dailyRate) * periodDays;
-    } else if (employee.contractType === 'FIXED' && employee.fixedSalary) {
+    } else if (employee.contractType === "FIXED" && employee.fixedSalary) {
       // Pour les salaires fixes, utiliser le montant fixe
       grossAmount = Number(employee.fixedSalary);
-    } else if (employee.contractType === 'HONORARIUM' && employee.hourlyRate) {
+    } else if (employee.contractType === "HONORARIUM" && employee.hourlyRate) {
       // Pour les honoraires, utiliser les heures (valeur par défaut: 160h/mois)
       hoursWorked = 160;
       grossAmount = Number(employee.hourlyRate) * hoursWorked;
     } else {
-      throw new Error(`Configuration de salaire manquante pour l'employé ${employee.employeeCode}`);
+      throw new Error(
+        `Configuration de salaire manquante pour l'employé ${employee.employeeCode}`
+      );
     }
 
     // Calculer les déductions (exemple simplifié)
     const deductions = [
       {
-        type: 'TAX' as any,
-        description: 'Impôt sur le revenu',
+        type: "TAX" as any,
+        description: "Impôt sur le revenu",
         amount: grossAmount * 0.1, // 10% d'impôt
       },
       {
-        type: 'SOCIAL' as any,
-        description: 'Cotisations sociales',
+        type: "SOCIAL" as any,
+        description: "Cotisations sociales",
         amount: grossAmount * 0.055, // 5.5% de cotisations
       },
     ];
 
-    const totalDeductions = deductions.reduce((sum, ded) => sum + ded.amount, 0);
+    const totalDeductions = deductions.reduce(
+      (sum, ded) => sum + ded.amount,
+      0
+    );
     const netAmount = grossAmount - totalDeductions;
 
     return {
@@ -387,20 +419,24 @@ class PayRunService {
   private calculateWorkingDays(startDate: Date, endDate: Date): number {
     let count = 0;
     const current = new Date(startDate);
-    
+
     while (current <= endDate) {
       const dayOfWeek = current.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclure dimanche (0) et samedi (6)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        // Exclure dimanche (0) et samedi (6)
         count++;
       }
       current.setDate(current.getDate() + 1);
     }
-    
+
     return count;
   }
 
   // Générer un numéro de bulletin unique
-  private async generatePayslipNumber(employeeCode: string, payRunId: string): Promise<string> {
+  private async generatePayslipNumber(
+    employeeCode: string,
+    payRunId: string
+  ): Promise<string> {
     const timestamp = Date.now().toString().slice(-6);
     return `PAY-${employeeCode}-${timestamp}`;
   }
@@ -417,8 +453,12 @@ class PayRunService {
     ] = await Promise.all([
       prisma.payRun.count({ where: { companyId } }),
       prisma.payRun.count({ where: { companyId, status: PayRunStatus.DRAFT } }),
-      prisma.payRun.count({ where: { companyId, status: PayRunStatus.APPROVED } }),
-      prisma.payRun.count({ where: { companyId, status: PayRunStatus.CLOSED } }),
+      prisma.payRun.count({
+        where: { companyId, status: PayRunStatus.APPROVED },
+      }),
+      prisma.payRun.count({
+        where: { companyId, status: PayRunStatus.CLOSED },
+      }),
       prisma.payRun.aggregate({
         where: { companyId, status: PayRunStatus.APPROVED },
         _sum: { totalNet: true },

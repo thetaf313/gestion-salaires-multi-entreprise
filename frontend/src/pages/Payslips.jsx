@@ -55,7 +55,7 @@ export default function Payslips() {
         setPayslips(response.data.data || []);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des bulletins:', error);
+      console.error("Erreur lors du chargement des bulletins:", error);
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function Payslips() {
         setStats(response.data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
+      console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
@@ -106,14 +106,19 @@ export default function Payslips() {
 
   const filteredPayslips = payslips.filter((payslip) => {
     const matchesSearch =
-      payslip.employee?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payslip.employee?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payslip.employee?.firstName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      payslip.employee?.lastName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       payslip.id.toString().includes(searchQuery);
     const matchesStatus =
       statusFilter === "all" || payslip.status === statusFilter;
     const matchesPeriod =
-      periodFilter === "all" || 
-      new Date(payslip.payRun?.startDate).getFullYear().toString() === periodFilter;
+      periodFilter === "all" ||
+      new Date(payslip.payRun?.startDate).getFullYear().toString() ===
+        periodFilter;
 
     return matchesSearch && matchesStatus && matchesPeriod;
   });
@@ -162,7 +167,9 @@ export default function Payslips() {
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.totalPayslips || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.totalPayslips || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Total bulletins</p>
               </div>
             </div>
@@ -186,7 +193,9 @@ export default function Payslips() {
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.pendingPayslips || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.pendingPayslips || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">En attente</p>
               </div>
             </div>
@@ -199,7 +208,9 @@ export default function Payslips() {
               <DollarSign className="w-5 h-5 text-orange-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {stats?.totalAmount ? formatCurrency(stats.totalAmount) : formatCurrency(0)}
+                  {stats?.totalAmount
+                    ? formatCurrency(stats.totalAmount)
+                    : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Total net</p>
               </div>
@@ -287,7 +298,9 @@ export default function Payslips() {
                     <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <FileText className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">Aucun bulletin de paie trouvé</p>
+                        <p className="text-muted-foreground">
+                          Aucun bulletin de paie trouvé
+                        </p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -299,7 +312,8 @@ export default function Payslips() {
                           <User className="w-4 h-4 text-gray-500" />
                           <div>
                             <p className="font-medium">
-                              {payslip.employee?.firstName} {payslip.employee?.lastName}
+                              {payslip.employee?.firstName}{" "}
+                              {payslip.employee?.lastName}
                             </p>
                             <p className="text-sm text-muted-foreground">
                               ID: {payslip.employeeId}
@@ -310,11 +324,11 @@ export default function Payslips() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
-                          {payslip.payRun ? (
-                            `${formatDate(payslip.payRun.startDate)} - ${formatDate(payslip.payRun.endDate)}`
-                          ) : (
-                            'Période non définie'
-                          )}
+                          {payslip.payRun
+                            ? `${formatDate(
+                                payslip.payRun.startDate
+                              )} - ${formatDate(payslip.payRun.endDate)}`
+                            : "Période non définie"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -334,9 +348,7 @@ export default function Payslips() {
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(payslip.status)}</TableCell>
-                      <TableCell>
-                        {formatDate(payslip.createdAt)}
-                      </TableCell>
+                      <TableCell>{formatDate(payslip.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Button size="sm" variant="outline">

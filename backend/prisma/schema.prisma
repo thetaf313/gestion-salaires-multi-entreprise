@@ -152,6 +152,7 @@ model Employee {
 model PayRun {
   id          String       @id @default(cuid())
   title       String // Ex: "Paie Janvier 2024"
+  description String? // Description optionnelle du cycle
   periodStart DateTime // Début de période
   periodEnd   DateTime // Fin de période
   status      PayRunStatus @default(DRAFT)

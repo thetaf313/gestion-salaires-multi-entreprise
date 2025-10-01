@@ -10,21 +10,34 @@ class PaymentController {
     try {
       const userId = req.user?.id;
       const companyId = req.params.companyId as string;
-      
+
       if (!userId) {
-        return sendResponse(res, HttpStatus.UNAUTHORIZED, "Utilisateur non authentifié");
+        return sendResponse(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          "Utilisateur non authentifié"
+        );
       }
 
       const paymentData = {
         ...req.body,
-        processedById: userId
+        processedById: userId,
       };
 
       const payment = await paymentService.create(paymentData);
-      sendResponse(res, HttpStatus.CREATED, "Paiement créé avec succès", payment);
+      sendResponse(
+        res,
+        HttpStatus.CREATED,
+        "Paiement créé avec succès",
+        payment
+      );
     } catch (error: any) {
       console.error("Erreur lors de la création du paiement:", error);
-      sendResponse(res, HttpStatus.BAD_REQUEST, error.message || "Erreur lors de la création du paiement");
+      sendResponse(
+        res,
+        HttpStatus.BAD_REQUEST,
+        error.message || "Erreur lors de la création du paiement"
+      );
     }
   }
 
@@ -34,20 +47,26 @@ class PaymentController {
       const companyId = req.params.companyId as string;
       const { page = 1, limit = 10, method, payRunId } = req.query;
 
-      const result = await paymentService.getByCompany(
-        companyId,
-        {
-          page: Number(page),
-          limit: Number(limit),
-          method: method as string,
-          payRunId: payRunId as string,
-        }
-      );
+      const result = await paymentService.getByCompany(companyId, {
+        page: Number(page),
+        limit: Number(limit),
+        method: method as string,
+        payRunId: payRunId as string,
+      });
 
-      sendResponse(res, HttpStatus.OK, "Paiements récupérés avec succès", result);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Paiements récupérés avec succès",
+        result
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des paiements:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération des paiements");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des paiements"
+      );
     }
   }
 
@@ -55,17 +74,29 @@ class PaymentController {
   async getById(req: Request, res: Response) {
     try {
       const { id, companyId } = req.params;
-      
-      const payment = await paymentService.getById(id as string, companyId as string);
-      
+
+      const payment = await paymentService.getById(
+        id as string,
+        companyId as string
+      );
+
       if (!payment) {
         return sendResponse(res, HttpStatus.NOT_FOUND, "Paiement non trouvé");
       }
 
-      sendResponse(res, HttpStatus.OK, "Paiement récupéré avec succès", payment);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Paiement récupéré avec succès",
+        payment
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération du paiement:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération du paiement");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération du paiement"
+      );
     }
   }
 
@@ -73,12 +104,21 @@ class PaymentController {
   async getStats(req: Request, res: Response) {
     try {
       const companyId = req.params.companyId as string;
-      
+
       const stats = await paymentService.getStats(companyId);
-      sendResponse(res, HttpStatus.OK, "Statistiques récupérées avec succès", stats);
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Statistiques récupérées avec succès",
+        stats
+      );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des statistiques:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération des statistiques");
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération des statistiques"
+      );
     }
   }
 
@@ -86,12 +126,28 @@ class PaymentController {
   async getByPayslip(req: Request, res: Response) {
     try {
       const { payslipId, companyId } = req.params;
-      
-      const payments = await paymentService.getByPayslip(payslipId as string, companyId as string);
-      sendResponse(res, HttpStatus.OK, "Paiements du bulletin récupérés avec succès", payments);
+
+      const payments = await paymentService.getByPayslip(
+        payslipId as string,
+        companyId as string
+      );
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Paiements du bulletin récupérés avec succès",
+        payments
+      );
     } catch (error: any) {
-      console.error("Erreur lors de la récupération des paiements du bulletin:", error);
-      sendResponse(res, HttpStatus.INTERNAL_SERVER_ERROR, error.message || "Erreur lors de la récupération des paiements du bulletin");
+      console.error(
+        "Erreur lors de la récupération des paiements du bulletin:",
+        error
+      );
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message ||
+          "Erreur lors de la récupération des paiements du bulletin"
+      );
     }
   }
 }

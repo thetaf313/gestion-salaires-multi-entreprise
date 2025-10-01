@@ -25,10 +25,14 @@ import {
   Eye,
   Edit,
   Trash2,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { payRunService } from "../services/payRunService.js";
+import { CreatePayRunModal } from "../components/CreatePayRunModal";
+import { PayRunDetailsModal } from "../components/PayRunDetailsModal";
+import { PayRunStatusModal } from "../components/PayRunStatusModal";
 
 export default function PayrollCycles() {
   const { user } = useAuth();
@@ -37,6 +41,12 @@ export default function PayrollCycles() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // États pour les modals
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedPayRun, setSelectedPayRun] = useState(null);
 
   useEffect(() => {
     loadCycles();
@@ -51,7 +61,7 @@ export default function PayrollCycles() {
         setCycles(response.data.data || []);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des cycles:', error);
+      console.error("Erreur lors du chargement des cycles:", error);
     } finally {
       setLoading(false);
     }
@@ -64,7 +74,7 @@ export default function PayrollCycles() {
         setStats(response.data);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement des statistiques:', error);
+      console.error("Erreur lors du chargement des statistiques:", error);
     }
   };
 
@@ -75,13 +85,48 @@ export default function PayrollCycles() {
         // Recharger les données
         loadCycles();
         loadStats();
-        toast.success('Cycle de paie approuvé et bulletins générés avec succès !');
+        toast.success(
+          "Cycle de paie approuvé et bulletins générés avec succès !"
+        );
       }
     } catch (error) {
-      console.error('Erreur lors de l\'approbation:', error);
-      toast.error('Erreur lors de l\'approbation du cycle de paie');
+      console.error("Erreur lors de l'approbation:", error);
+      toast.error("Erreur lors de l'approbation du cycle de paie");
     }
   };
+
+  const handleViewPayRun = (payRun) => {
+    setSelectedPayRun(payRun);
+    setShowDetailsModal(true);
+  };
+
+  const handleChangeStatus = (payRun) => {
+    setSelectedPayRun(payRun);
+    setShowStatusModal(true);
+  };
+
+  const handleCreateSuccess = () => {
+    loadCycles();
+    loadStats();
+  };
+
+  const handleStatusUpdate = () => {
+    loadCycles();
+    loadStats();
+  };
+
+  const filteredCycles = cycles.filter((cycle) => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      cycle.id.toLowerCase().includes(searchLower) ||
+      cycle.description?.toLowerCase().includes(searchLower) ||
+      new Date(cycle.startDate)
+        .toLocaleDateString("fr-FR")
+        .includes(searchLower) ||
+      new Date(cycle.endDate).toLocaleDateString("fr-FR").includes(searchLower)
+    );
+  });
 
   const getStatusBadge = (status) => {
     const variants = {
@@ -125,7 +170,10 @@ export default function PayrollCycles() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("fr-FR");
+    if (!dateString) return "Non définie";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Date invalide";
+    return date.toLocaleDateString("fr-FR");
   };
 
   if (loading) {
@@ -153,7 +201,7 @@ export default function PayrollCycles() {
             Gérer les cycles de paie de votre entreprise
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Nouveau Cycle
         </Button>
@@ -178,7 +226,9 @@ export default function PayrollCycles() {
             <div className="flex items-center gap-2">
               <Play className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.approvedPayRuns || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.approvedPayRuns || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Approuvés</p>
               </div>
             </div>
@@ -190,7 +240,9 @@ export default function PayrollCycles() {
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{stats?.closedPayRuns || 0}</p>
+                <p className="text-2xl font-bold">
+                  {stats?.closedPayRuns || 0}
+                </p>
                 <p className="text-sm text-muted-foreground">Clôturés</p>
               </div>
             </div>
@@ -250,13 +302,20 @@ export default function PayrollCycles() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cycles.length === 0 ? (
+                {filteredCycles.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Calendar className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">Aucun cycle de paie trouvé</p>
-                        <Button size="sm">
+                        <p className="text-muted-foreground">
+                          {searchQuery
+                            ? "Aucun cycle trouvé pour cette recherche"
+                            : "Aucun cycle de paie trouvé"}
+                        </p>
+                        <Button
+                          size="sm"
+                          onClick={() => setShowCreateModal(true)}
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Créer le premier cycle
                         </Button>
@@ -264,17 +323,22 @@ export default function PayrollCycles() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  cycles.map((cycle) => (
+                  filteredCycles.map((cycle) => (
                     <TableRow key={cycle.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(cycle.status)}
                           <div>
                             <p className="font-medium">
-                              Cycle du {formatDate(cycle.startDate)}
+                              Cycle du {formatDate(cycle.periodStart || cycle.startDate)}
                             </p>
-                            <p className="text-sm text-muted-foreground">
-                              ID: {cycle.id}
+                            {cycle.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {cycle.description}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              ID: {cycle.id.slice(0, 8)}...
                             </p>
                           </div>
                         </div>
@@ -282,8 +346,16 @@ export default function PayrollCycles() {
                       <TableCell>
                         <div className="text-sm">
                           <p>
-                            {formatDate(cycle.startDate)} -{" "}
-                            {formatDate(cycle.endDate)}
+                            {formatDate(cycle.periodStart || cycle.startDate)} -{" "}
+                            {formatDate(cycle.periodEnd || cycle.endDate)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {Math.ceil(
+                              (new Date(cycle.periodEnd || cycle.endDate) -
+                                new Date(cycle.periodStart || cycle.startDate)) /
+                                (1000 * 60 * 60 * 24)
+                            )}{" "}
+                            jour(s)
                           </p>
                         </div>
                       </TableCell>
@@ -296,17 +368,35 @@ export default function PayrollCycles() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewPayRun(cycle)}
+                          >
+                            <Eye className="w-3 h-3 mr-1" />
                             Voir
                           </Button>
-                          {cycle.status === "DRAFT" && (
-                            <Button 
+
+                          {(cycle.status === "DRAFT" ||
+                            cycle.status === "APPROVED") && (
+                            <Button
                               size="sm"
-                              onClick={() => handleApprove(cycle.id)}
-                              disabled={loading}
+                              onClick={() => handleChangeStatus(cycle)}
+                              variant={
+                                cycle.status === "DRAFT" ? "default" : "outline"
+                              }
                             >
-                              <Play className="w-3 h-3 mr-1" />
-                              Approuver
+                              {cycle.status === "DRAFT" ? (
+                                <>
+                                  <Play className="w-3 h-3 mr-1" />
+                                  Approuver
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Clôturer
+                                </>
+                              )}
                             </Button>
                           )}
                         </div>
@@ -319,6 +409,33 @@ export default function PayrollCycles() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <CreatePayRunModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        companyId={companyId}
+        onPayRunCreated={handleCreateSuccess}
+      />
+
+      <PayRunDetailsModal
+        payRun={selectedPayRun}
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedPayRun(null);
+        }}
+      />
+
+      <PayRunStatusModal
+        payRun={selectedPayRun}
+        isOpen={showStatusModal}
+        onClose={() => {
+          setShowStatusModal(false);
+          setSelectedPayRun(null);
+        }}
+        onUpdate={handleStatusUpdate}
+      />
     </div>
   );
 }

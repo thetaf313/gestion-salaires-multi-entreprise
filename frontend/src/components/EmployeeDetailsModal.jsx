@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -85,7 +90,7 @@ export function EmployeeDetailsModal({ employee, isOpen, onClose }) {
                   {employee.firstName} {employee.lastName}
                 </p>
               </div>
-              
+
               {employee.email && (
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Email</p>
@@ -120,7 +125,9 @@ export function EmployeeDetailsModal({ employee, isOpen, onClose }) {
 
           {/* Informations professionnelles */}
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Informations professionnelles</h3>
+            <h3 className="text-lg font-semibold">
+              Informations professionnelles
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Poste</p>
@@ -144,7 +151,9 @@ export function EmployeeDetailsModal({ employee, isOpen, onClose }) {
                 <p className="text-sm text-muted-foreground">Rémunération</p>
                 <p className="flex items-center gap-2">
                   <DollarSign className="w-4 h-4 text-green-500" />
-                  <span className="font-medium">{getSalaryDisplay(employee)}</span>
+                  <span className="font-medium">
+                    {getSalaryDisplay(employee)}
+                  </span>
                 </p>
               </div>
 
@@ -174,12 +183,16 @@ export function EmployeeDetailsModal({ employee, isOpen, onClose }) {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Date de création</p>
+                <p className="text-sm text-muted-foreground">
+                  Date de création
+                </p>
                 <p className="text-sm">{formatDate(employee.createdAt)}</p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Dernière modification</p>
+                <p className="text-sm text-muted-foreground">
+                  Dernière modification
+                </p>
                 <p className="text-sm">{formatDate(employee.updatedAt)}</p>
               </div>
             </div>

@@ -23,14 +23,18 @@ class PaymentService {
   // Créer un nouveau paiement
   async create(data: CreatePaymentData) {
     // Vérifier que le bulletin existe et calculer le montant restant
-    const remainingAmount = await payslipService.getRemainingAmount(data.payslipId);
-    
+    const remainingAmount = await payslipService.getRemainingAmount(
+      data.payslipId
+    );
+
     if (remainingAmount <= 0) {
       throw new Error("Ce bulletin de paie est déjà entièrement payé");
     }
 
     if (data.amount > remainingAmount) {
-      throw new Error(`Le montant ne peut pas dépasser le montant restant (${remainingAmount})`);
+      throw new Error(
+        `Le montant ne peut pas dépasser le montant restant (${remainingAmount})`
+      );
     }
 
     // Utiliser une transaction pour garantir la cohérence
@@ -96,7 +100,7 @@ class PaymentService {
       },
     };
 
-    if (method && method !== 'all') {
+    if (method && method !== "all") {
       where.method = method;
     }
 
@@ -113,7 +117,7 @@ class PaymentService {
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         include: {
           payslip: {
@@ -263,7 +267,11 @@ class PaymentService {
             },
           },
           method: {
-            in: [PaymentMethod.ORANGE_MONEY, PaymentMethod.WAVE, PaymentMethod.MOBILE_MONEY],
+            in: [
+              PaymentMethod.ORANGE_MONEY,
+              PaymentMethod.WAVE,
+              PaymentMethod.MOBILE_MONEY,
+            ],
           },
         },
         _count: true,
@@ -316,7 +324,7 @@ class PaymentService {
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
   }

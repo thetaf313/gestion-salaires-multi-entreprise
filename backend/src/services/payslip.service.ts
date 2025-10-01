@@ -21,7 +21,7 @@ class PayslipService {
       },
     };
 
-    if (status && status !== 'all') {
+    if (status && status !== "all") {
       where.status = status;
     }
 
@@ -35,7 +35,7 @@ class PayslipService {
         skip,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          createdAt: "desc",
         },
         include: {
           employee: {
@@ -235,7 +235,9 @@ class PayslipService {
       paidPayslips,
       totalAmount: totalAmount._sum.netAmount || 0,
       totalPaid: totalPaid._sum.amountPaid || 0,
-      remainingToPay: Number(totalAmount._sum.netAmount || 0) - Number(totalPaid._sum.amountPaid || 0),
+      remainingToPay:
+        Number(totalAmount._sum.netAmount || 0) -
+        Number(totalPaid._sum.amountPaid || 0),
     };
   }
 
