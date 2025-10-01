@@ -6,6 +6,9 @@ import userRoutes from "./routes/user.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
 import companyRoutes from "./routes/company.routes.js";
 import employeeRoutes from "./routes/employee.routes.js";
+import payrunRoutes from "./routes/payrun.routes.js";
+import payslipRoutes from "./routes/payslip.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 import config from "./config/env.js";
 import corsOptions, { corsDevOptions } from "./config/cors.js";
 
@@ -59,6 +62,9 @@ app.use("/api/users", authenticateToken, userRoutes);
 app.use("/api/stats", authenticateToken, statsRoutes);
 app.use("/api/companies", authenticateToken, companyRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api", payrunRoutes);
+app.use("/api", payslipRoutes);
+app.use("/api", paymentRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

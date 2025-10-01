@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,88 +30,59 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { payslipService } from "../services/payslipService.js";
 
 export default function Payslips() {
   const { user } = useAuth();
+  const { companyId } = useParams();
   const [payslips, setPayslips] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("all");
 
-  // Données mockées pour le moment
-  const mockPayslips = [
-    {
-      id: "1",
-      employeeName: "Jean Dupont",
-      employeeId: "EMP001",
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      grossSalary: 450000,
-      netSalary: 360000,
-      status: "SENT",
-      generatedAt: "2025-02-01",
-      sentAt: "2025-02-01",
-    },
-    {
-      id: "2",
-      employeeName: "Marie Martin",
-      employeeId: "EMP002",
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      grossSalary: 350000,
-      netSalary: 280000,
-      status: "GENERATED",
-      generatedAt: "2025-02-01",
-      sentAt: null,
-    },
-    {
-      id: "3",
-      employeeName: "Paul Bernard",
-      employeeId: "EMP003",
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      grossSalary: 275000,
-      netSalary: 220000,
-      status: "SENT",
-      generatedAt: "2025-02-01",
-      sentAt: "2025-02-02",
-    },
-    {
-      id: "4",
-      employeeName: "Sophie Dubois",
-      employeeId: "EMP004",
-      period: "2025-02",
-      periodLabel: "Février 2025",
-      grossSalary: 380000,
-      netSalary: 304000,
-      status: "DRAFT",
-      generatedAt: "2025-03-01",
-      sentAt: null,
-    },
-  ];
-
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
-      setPayslips(mockPayslips);
+    loadPayslips();
+    loadStats();
+  }, [companyId]);
+
+  const loadPayslips = async () => {
+    try {
+      setLoading(true);
+      const response = await payslipService.getByCompany(companyId);
+      if (response.success) {
+        setPayslips(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des bulletins:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await payslipService.getStats(companyId);
+      if (response.success) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
 
   const getStatusBadge = (status) => {
     const variants = {
-      DRAFT: "secondary",
-      GENERATED: "default",
-      SENT: "success",
-      ERROR: "destructive",
+      PENDING: "secondary",
+      PARTIAL: "default",
+      PAID: "success",
     };
 
     const labels = {
-      DRAFT: "Brouillon",
-      GENERATED: "Généré",
-      SENT: "Envoyé",
-      ERROR: "Erreur",
+      PENDING: "En attente",
+      PARTIAL: "Partiellement payé",
+      PAID: "Payé",
     };
 
     return (
@@ -134,19 +106,17 @@ export default function Payslips() {
 
   const filteredPayslips = payslips.filter((payslip) => {
     const matchesSearch =
-      payslip.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payslip.employeeId.toLowerCase().includes(searchQuery.toLowerCase());
+      payslip.employee?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payslip.employee?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payslip.id.toString().includes(searchQuery);
     const matchesStatus =
       statusFilter === "all" || payslip.status === statusFilter;
     const matchesPeriod =
-      periodFilter === "all" || payslip.period === periodFilter;
+      periodFilter === "all" || 
+      new Date(payslip.payRun?.startDate).getFullYear().toString() === periodFilter;
 
     return matchesSearch && matchesStatus && matchesPeriod;
   });
-
-  const totalGenerated = payslips.length;
-  const totalSent = payslips.filter((p) => p.status === "SENT").length;
-  const totalAmount = payslips.reduce((sum, p) => sum + p.netSalary, 0);
 
   if (loading) {
     return (
@@ -192,8 +162,8 @@ export default function Payslips() {
             <div className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{totalGenerated}</p>
-                <p className="text-sm text-muted-foreground">Total générés</p>
+                <p className="text-2xl font-bold">{stats?.totalPayslips || 0}</p>
+                <p className="text-sm text-muted-foreground">Total bulletins</p>
               </div>
             </div>
           </CardContent>
@@ -204,8 +174,8 @@ export default function Payslips() {
             <div className="flex items-center gap-2">
               <Send className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{totalSent}</p>
-                <p className="text-sm text-muted-foreground">Envoyés</p>
+                <p className="text-2xl font-bold">{stats?.paidPayslips || 0}</p>
+                <p className="text-sm text-muted-foreground">Payés</p>
               </div>
             </div>
           </CardContent>
@@ -216,10 +186,8 @@ export default function Payslips() {
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-purple-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {[...new Set(payslips.map((p) => p.period))].length}
-                </p>
-                <p className="text-sm text-muted-foreground">Périodes</p>
+                <p className="text-2xl font-bold">{stats?.pendingPayslips || 0}</p>
+                <p className="text-sm text-muted-foreground">En attente</p>
               </div>
             </div>
           </CardContent>
@@ -231,7 +199,7 @@ export default function Payslips() {
               <DollarSign className="w-5 h-5 text-orange-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(totalAmount)}
+                  {stats?.totalAmount ? formatCurrency(stats.totalAmount) : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Total net</p>
               </div>
@@ -260,9 +228,9 @@ export default function Payslips() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="DRAFT">Brouillon</SelectItem>
-                <SelectItem value="GENERATED">Généré</SelectItem>
-                <SelectItem value="SENT">Envoyé</SelectItem>
+                <SelectItem value="PENDING">En attente</SelectItem>
+                <SelectItem value="PARTIAL">Partiellement payé</SelectItem>
+                <SelectItem value="PAID">Payé</SelectItem>
               </SelectContent>
             </Select>
 
@@ -272,8 +240,8 @@ export default function Payslips() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les périodes</SelectItem>
-                <SelectItem value="2025-02">Février 2025</SelectItem>
-                <SelectItem value="2025-01">Janvier 2025</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
               </SelectContent>
             </Select>
 
@@ -314,87 +282,79 @@ export default function Payslips() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayslips.map((payslip) => (
-                  <TableRow key={payslip.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <p className="font-medium">{payslip.employeeName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {payslip.employeeId}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {payslip.periodLabel}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-blue-500" />
-                        <span className="font-medium">
-                          {formatCurrency(payslip.grossSalary)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-green-500" />
-                        <span className="font-medium">
-                          {formatCurrency(payslip.netSalary)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(payslip.status)}</TableCell>
-                    <TableCell>
-                      {formatDate(payslip.generatedAt)}
-                      {payslip.sentAt && (
-                        <p className="text-xs text-muted-foreground">
-                          Envoyé le {formatDate(payslip.sentAt)}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          <Eye className="w-3 h-3 mr-1" />
-                          Voir
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Download className="w-3 h-3 mr-1" />
-                          PDF
-                        </Button>
-                        {payslip.status === "GENERATED" && (
-                          <Button size="sm">
-                            <Send className="w-3 h-3 mr-1" />
-                            Envoyer
-                          </Button>
-                        )}
+                {filteredPayslips.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <FileText className="w-8 h-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">Aucun bulletin de paie trouvé</p>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredPayslips.map((payslip) => (
+                    <TableRow key={payslip.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="font-medium">
+                              {payslip.employee?.firstName} {payslip.employee?.lastName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {payslip.employeeId}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {payslip.payRun ? (
+                            `${formatDate(payslip.payRun.startDate)} - ${formatDate(payslip.payRun.endDate)}`
+                          ) : (
+                            'Période non définie'
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 text-blue-500" />
+                          <span className="font-medium">
+                            {formatCurrency(payslip.grossSalary || 0)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 text-green-500" />
+                          <span className="font-medium">
+                            {formatCurrency(payslip.netSalary || 0)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(payslip.status)}</TableCell>
+                      <TableCell>
+                        {formatDate(payslip.createdAt)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="w-3 h-3 mr-1" />
+                            Voir
+                          </Button>
+                          <Button size="sm" variant="outline">
+                            <Download className="w-3 h-3 mr-1" />
+                            PDF
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
-
-          {filteredPayslips.length === 0 && (
-            <div className="text-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aucun bulletin trouvé
-              </h3>
-              <p className="text-gray-600">
-                {searchQuery || statusFilter !== "all" || periodFilter !== "all"
-                  ? "Aucun bulletin ne correspond à vos critères de recherche."
-                  : "Aucun bulletin de paie n'a encore été généré."}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

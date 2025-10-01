@@ -5,6 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
@@ -30,6 +31,7 @@ if (import.meta.env.DEV) {
 function App() {
   return (
     <AuthProvider>
+      <Toaster richColors position="top-right" />
       <Router>
         <Routes>
           {/* Routes publiques */}

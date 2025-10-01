@@ -12,6 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import {
@@ -28,10 +36,13 @@ import {
   Building,
   User,
   TrendingUp,
+  Eye,
 } from "lucide-react";
 import { employeeService } from "../services/employeeService";
 import { companyService } from "../services/companyService";
 import { CreateEmployeeModal } from "../components/CreateEmployeeModal";
+import { EmployeeDetailsModal } from "../components/EmployeeDetailsModal";
+import { EditEmployeeModal } from "../components/EditEmployeeModal";
 import { useAuth } from "../contexts/AuthContext";
 
 export function CompanyEmployees() {
@@ -46,6 +57,10 @@ export function CompanyEmployees() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -99,13 +114,11 @@ export function CompanyEmployees() {
   };
 
   const handleDeleteEmployee = async (employeeId) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet employé ?")) {
-      return;
-    }
-
     try {
       await employeeService.deleteEmployee(employeeId);
       toast.success("Employé supprimé avec succès");
+      setDeleteModalOpen(false);
+      setSelectedEmployee(null);
       loadData();
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
@@ -113,6 +126,23 @@ export function CompanyEmployees() {
         error.response?.data?.message || "Erreur lors de la suppression"
       );
     }
+  };
+
+  const confirmDelete = (employee) => {
+    setSelectedEmployee(employee);
+    setDeleteModalOpen(true);
+  };
+
+  const handleViewEmployee = (employee) => {
+    // Ouvrir une modal ou naviguer vers la page de détails
+    setSelectedEmployee(employee);
+    setViewModalOpen(true);
+  };
+
+  const handleEditEmployee = (employee) => {
+    // Ouvrir la modal d'édition
+    setSelectedEmployee(employee);
+    setEditModalOpen(true);
   };
 
   const getContractTypeLabel = (type) => {
@@ -231,7 +261,7 @@ export function CompanyEmployees() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold">{stats.totalEmployees}</p>
+                  <p className="text-2xl font-bold">{stats.total || 0}</p>
                   <p className="text-sm text-muted-foreground">
                     Total employés
                   </p>
@@ -246,7 +276,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats?.contractTypeBreakdown?.DAILY || 0}
+                    {stats?.contractTypes?.daily || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Journaliers</p>
                 </div>
@@ -260,7 +290,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-purple-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats?.contractTypeBreakdown?.FIXED || 0}
+                    {stats?.contractTypes?.fixed || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Fixes</p>
                 </div>
@@ -274,7 +304,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats?.contractTypeBreakdown?.HONORARIUM || 0}
+                    {stats?.contractTypes?.honorarium || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Honoraires</p>
                 </div>
@@ -391,13 +421,24 @@ export function CompanyEmployees() {
                       {canManageEmployees && (
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleViewEmployee(employee)}
+                            >
+                              <Eye className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditEmployee(employee)}
+                            >
                               <Edit className="w-3 h-3" />
                             </Button>
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => handleDeleteEmployee(employee.id)}
+                              onClick={() => confirmDelete(employee)}
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
@@ -459,6 +500,59 @@ export function CompanyEmployees() {
           </Button>
         </div>
       )}
+
+      {/* Modals */}
+      <EmployeeDetailsModal
+        employee={selectedEmployee}
+        isOpen={viewModalOpen}
+        onClose={() => {
+          setViewModalOpen(false);
+          setSelectedEmployee(null);
+        }}
+      />
+
+      <EditEmployeeModal
+        employee={selectedEmployee}
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setSelectedEmployee(null);
+        }}
+        onEmployeeUpdated={loadData}
+      />
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer l'employé{" "}
+              <strong>
+                {selectedEmployee?.firstName} {selectedEmployee?.lastName}
+              </strong>{" "}
+              ? Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteModalOpen(false);
+                setSelectedEmployee(null);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleDeleteEmployee(selectedEmployee?.id)}
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,73 +22,78 @@ import {
   Clock,
   DollarSign,
   Users,
+  Eye,
+  Edit,
+  Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
+import { payRunService } from "../services/payRunService.js";
 
 export default function PayrollCycles() {
   const { user } = useAuth();
+  const { companyId } = useParams();
   const [cycles, setCycles] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Données mockées pour le moment
-  const mockCycles = [
-    {
-      id: "1",
-      name: "Paie Janvier 2025",
-      startDate: "2025-01-01",
-      endDate: "2025-01-31",
-      payDate: "2025-02-01",
-      status: "COMPLETED",
-      employeeCount: 25,
-      totalAmount: 1250000,
-      createdAt: "2025-01-15",
-    },
-    {
-      id: "2",
-      name: "Paie Février 2025",
-      startDate: "2025-02-01",
-      endDate: "2025-02-28",
-      payDate: "2025-03-01",
-      status: "IN_PROGRESS",
-      employeeCount: 27,
-      totalAmount: 0,
-      createdAt: "2025-02-15",
-    },
-    {
-      id: "3",
-      name: "Paie Mars 2025",
-      startDate: "2025-03-01",
-      endDate: "2025-03-31",
-      payDate: "2025-04-01",
-      status: "DRAFT",
-      employeeCount: 28,
-      totalAmount: 0,
-      createdAt: "2025-03-01",
-    },
-  ];
-
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
-      setCycles(mockCycles);
+    loadCycles();
+    loadStats();
+  }, [companyId]);
+
+  const loadCycles = async () => {
+    try {
+      setLoading(true);
+      const response = await payRunService.getByCompany(companyId);
+      if (response.success) {
+        setCycles(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des cycles:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await payRunService.getStats(companyId);
+      if (response.success) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
+
+  const handleApprove = async (cycleId) => {
+    try {
+      const response = await payRunService.approve(companyId, cycleId);
+      if (response.success) {
+        // Recharger les données
+        loadCycles();
+        loadStats();
+        toast.success('Cycle de paie approuvé et bulletins générés avec succès !');
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'approbation:', error);
+      toast.error('Erreur lors de l\'approbation du cycle de paie');
+    }
+  };
 
   const getStatusBadge = (status) => {
     const variants = {
       DRAFT: "secondary",
-      IN_PROGRESS: "default",
-      COMPLETED: "success",
-      CANCELLED: "destructive",
+      APPROVED: "default",
+      CLOSED: "success",
     };
 
     const labels = {
       DRAFT: "Brouillon",
-      IN_PROGRESS: "En cours",
-      COMPLETED: "Terminé",
-      CANCELLED: "Annulé",
+      APPROVED: "Approuvé",
+      CLOSED: "Clôturé",
     };
 
     return (
@@ -99,9 +105,9 @@ export default function PayrollCycles() {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case "COMPLETED":
+      case "CLOSED":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case "IN_PROGRESS":
+      case "APPROVED":
         return <Play className="w-4 h-4 text-blue-500" />;
       case "DRAFT":
         return <Clock className="w-4 h-4 text-gray-500" />;
@@ -160,7 +166,7 @@ export default function PayrollCycles() {
             <div className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{cycles.length}</p>
+                <p className="text-2xl font-bold">{stats?.totalPayRuns || 0}</p>
                 <p className="text-sm text-muted-foreground">Total cycles</p>
               </div>
             </div>
@@ -172,10 +178,8 @@ export default function PayrollCycles() {
             <div className="flex items-center gap-2">
               <Play className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {cycles.filter((c) => c.status === "IN_PROGRESS").length}
-                </p>
-                <p className="text-sm text-muted-foreground">En cours</p>
+                <p className="text-2xl font-bold">{stats?.approvedPayRuns || 0}</p>
+                <p className="text-sm text-muted-foreground">Approuvés</p>
               </div>
             </div>
           </CardContent>
@@ -186,10 +190,8 @@ export default function PayrollCycles() {
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">
-                  {cycles.filter((c) => c.status === "COMPLETED").length}
-                </p>
-                <p className="text-sm text-muted-foreground">Terminés</p>
+                <p className="text-2xl font-bold">{stats?.closedPayRuns || 0}</p>
+                <p className="text-sm text-muted-foreground">Clôturés</p>
               </div>
             </div>
           </CardContent>
@@ -242,73 +244,76 @@ export default function PayrollCycles() {
                 <TableRow>
                   <TableHead>Cycle</TableHead>
                   <TableHead>Période</TableHead>
-                  <TableHead>Date de Paie</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Employés</TableHead>
-                  <TableHead>Montant Total</TableHead>
+                  <TableHead>Date de création</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cycles.map((cycle) => (
-                  <TableRow key={cycle.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(cycle.status)}
-                        <div>
-                          <p className="font-medium">{cycle.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Créé le {formatDate(cycle.createdAt)}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p>
-                          {formatDate(cycle.startDate)} -{" "}
-                          {formatDate(cycle.endDate)}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(cycle.payDate)}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(cycle.status)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Users className="w-3 h-3" />
-                        {cycle.employeeCount}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-green-500" />
-                        <span className="font-medium">
-                          {cycle.totalAmount > 0
-                            ? formatCurrency(cycle.totalAmount)
-                            : "En attente"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline">
-                          Voir
+                {cycles.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <Calendar className="w-8 h-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">Aucun cycle de paie trouvé</p>
+                        <Button size="sm">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Créer le premier cycle
                         </Button>
-                        {cycle.status === "DRAFT" && (
-                          <Button size="sm">
-                            <Play className="w-3 h-3 mr-1" />
-                            Lancer
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  cycles.map((cycle) => (
+                    <TableRow key={cycle.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(cycle.status)}
+                          <div>
+                            <p className="font-medium">
+                              Cycle du {formatDate(cycle.startDate)}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {cycle.id}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <p>
+                            {formatDate(cycle.startDate)} -{" "}
+                            {formatDate(cycle.endDate)}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(cycle.status)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(cycle.createdAt)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            Voir
+                          </Button>
+                          {cycle.status === "DRAFT" && (
+                            <Button 
+                              size="sm"
+                              onClick={() => handleApprove(cycle.id)}
+                              disabled={loading}
+                            >
+                              <Play className="w-3 h-3 mr-1" />
+                              Approuver
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>

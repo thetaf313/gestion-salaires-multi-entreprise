@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,110 +33,63 @@ import {
   Download,
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { paymentService } from "../services/paymentService.js";
 
 export default function Payments() {
   const { user } = useAuth();
+  const { companyId } = useParams();
   const [payments, setPayments] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
 
-  // Données mockées pour le moment
-  const mockPayments = [
-    {
-      id: "1",
-      employeeName: "Jean Dupont",
-      employeeId: "EMP001",
-      amount: 360000,
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      method: "BANK_TRANSFER",
-      status: "COMPLETED",
-      createdAt: "2025-02-01",
-      processedAt: "2025-02-01",
-      reference: "TRF-202501-001",
-    },
-    {
-      id: "2",
-      employeeName: "Marie Martin",
-      employeeId: "EMP002",
-      amount: 280000,
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      method: "CASH",
-      status: "PENDING",
-      createdAt: "2025-02-01",
-      processedAt: null,
-      reference: "CSH-202501-002",
-    },
-    {
-      id: "3",
-      employeeName: "Paul Bernard",
-      employeeId: "EMP003",
-      amount: 220000,
-      period: "2025-01",
-      periodLabel: "Janvier 2025",
-      method: "BANK_TRANSFER",
-      status: "FAILED",
-      createdAt: "2025-02-01",
-      processedAt: "2025-02-01",
-      reference: "TRF-202501-003",
-      errorMessage: "Compte bancaire invalide",
-    },
-    {
-      id: "4",
-      employeeName: "Sophie Dubois",
-      employeeId: "EMP004",
-      amount: 304000,
-      period: "2025-02",
-      periodLabel: "Février 2025",
-      method: "MOBILE_MONEY",
-      status: "PROCESSING",
-      createdAt: "2025-03-01",
-      processedAt: null,
-      reference: "MM-202502-004",
-    },
-  ];
-
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
-      setPayments(mockPayments);
+    loadPayments();
+    loadStats();
+  }, [companyId]);
+
+  const loadPayments = async () => {
+    try {
+      setLoading(true);
+      const response = await paymentService.getByCompany(companyId);
+      if (response.success) {
+        setPayments(response.data.data || []);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des paiements:', error);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await paymentService.getStats(companyId);
+      if (response.success) {
+        setStats(response.data);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des statistiques:', error);
+    }
+  };
 
   const getStatusBadge = (status) => {
     const variants = {
       PENDING: "secondary",
-      PROCESSING: "default",
       COMPLETED: "success",
       FAILED: "destructive",
     };
 
     const labels = {
       PENDING: "En attente",
-      PROCESSING: "En cours",
-      COMPLETED: "Terminé",
+      COMPLETED: "Effectué",
       FAILED: "Échoué",
     };
 
-    const icons = {
-      PENDING: Clock,
-      PROCESSING: AlertCircle,
-      COMPLETED: CheckCircle,
-      FAILED: XCircle,
-    };
-
-    const Icon = icons[status];
-
     return (
-      <Badge
-        variant={variants[status] || "secondary"}
-        className="flex items-center gap-1"
-      >
-        <Icon className="w-3 h-3" />
+      <Badge variant={variants[status] || "secondary"}>
         {labels[status] || status}
       </Badge>
     );
@@ -144,7 +98,7 @@ export default function Payments() {
   const getMethodBadge = (method) => {
     const labels = {
       BANK_TRANSFER: "Virement",
-      CASH: "Espèces",
+      CASH: "Espèces", 
       MOBILE_MONEY: "Mobile Money",
       CHECK: "Chèque",
     };
@@ -152,7 +106,7 @@ export default function Payments() {
     const colors = {
       BANK_TRANSFER: "bg-blue-100 text-blue-800",
       CASH: "bg-green-100 text-green-800",
-      MOBILE_MONEY: "bg-purple-100 text-purple-800",
+      MOBILE_MONEY: "bg-purple-100 text-purple-800", 
       CHECK: "bg-orange-100 text-orange-800",
     };
 
@@ -181,9 +135,9 @@ export default function Payments() {
 
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
-      payment.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.employeeId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.reference.toLowerCase().includes(searchQuery.toLowerCase());
+      payment.payslip?.employee?.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.payslip?.employee?.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.id.toString().includes(searchQuery);
     const matchesStatus =
       statusFilter === "all" || payment.status === statusFilter;
     const matchesMethod =
@@ -192,18 +146,7 @@ export default function Payments() {
     return matchesSearch && matchesStatus && matchesMethod;
   });
 
-  const totalPayments = payments.length;
-  const completedPayments = payments.filter(
-    (p) => p.status === "COMPLETED"
-  ).length;
-  const pendingPayments = payments.filter(
-    (p) => p.status === "PENDING" || p.status === "PROCESSING"
-  ).length;
-  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
-  const completedAmount = payments
-    .filter((p) => p.status === "COMPLETED")
-    .reduce((sum, p) => sum + p.amount, 0);
-
+  // Statistics are now from backend stats
   if (loading) {
     return (
       <div className="p-6">
@@ -248,7 +191,7 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <CreditCard className="w-5 h-5 text-blue-500" />
               <div>
-                <p className="text-2xl font-bold">{totalPayments}</p>
+                <p className="text-2xl font-bold">{stats?.totalPayments || 0}</p>
                 <p className="text-sm text-muted-foreground">Total paiements</p>
               </div>
             </div>
@@ -260,7 +203,7 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-green-500" />
               <div>
-                <p className="text-2xl font-bold">{completedPayments}</p>
+                <p className="text-2xl font-bold">{stats?.completedPayments || 0}</p>
                 <p className="text-sm text-muted-foreground">Terminés</p>
               </div>
             </div>
@@ -272,7 +215,7 @@ export default function Payments() {
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-orange-500" />
               <div>
-                <p className="text-2xl font-bold">{pendingPayments}</p>
+                <p className="text-2xl font-bold">{stats?.pendingPayments || 0}</p>
                 <p className="text-sm text-muted-foreground">En attente</p>
               </div>
             </div>
@@ -285,7 +228,7 @@ export default function Payments() {
               <DollarSign className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-lg font-bold">
-                  {formatCurrency(totalAmount)}
+                  {stats?.totalAmount ? formatCurrency(stats.totalAmount) : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Montant total</p>
               </div>
@@ -299,7 +242,7 @@ export default function Payments() {
               <DollarSign className="w-5 h-5 text-green-500" />
               <div>
                 <p className="text-lg font-bold">
-                  {formatCurrency(completedAmount)}
+                  {stats?.completedAmount ? formatCurrency(stats.completedAmount) : formatCurrency(0)}
                 </p>
                 <p className="text-sm text-muted-foreground">Montant payé</p>
               </div>
@@ -329,8 +272,7 @@ export default function Payments() {
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="PENDING">En attente</SelectItem>
-                <SelectItem value="PROCESSING">En cours</SelectItem>
-                <SelectItem value="COMPLETED">Terminé</SelectItem>
+                <SelectItem value="COMPLETED">Effectué</SelectItem>
                 <SelectItem value="FAILED">Échoué</SelectItem>
               </SelectContent>
             </Select>
@@ -388,91 +330,89 @@ export default function Payments() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <div>
-                          <p className="font-medium">{payment.employeeName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {payment.employeeId}
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {payment.periodLabel}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="w-3 h-3 text-green-500" />
-                        <span className="font-medium">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getMethodBadge(payment.method)}</TableCell>
-                    <TableCell>
-                      {getStatusBadge(payment.status)}
-                      {payment.errorMessage && (
-                        <p className="text-xs text-red-600 mt-1">
-                          {payment.errorMessage}
-                        </p>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {payment.reference}
-                      </code>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p>Créé: {formatDate(payment.createdAt)}</p>
-                        {payment.processedAt && (
-                          <p className="text-muted-foreground">
-                            Traité: {formatDate(payment.processedAt)}
-                          </p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {payment.status === "PENDING" && (
-                          <Button size="sm">Traiter</Button>
-                        )}
-                        {payment.status === "FAILED" && (
-                          <Button size="sm" variant="outline">
-                            Réessayer
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline">
-                          Détails
-                        </Button>
+                {filteredPayments.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <CreditCard className="w-8 h-8 text-muted-foreground" />
+                        <p className="text-muted-foreground">Aucun paiement trouvé</p>
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  filteredPayments.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <div>
+                            <p className="font-medium">
+                              {payment.payslip?.employee?.firstName} {payment.payslip?.employee?.lastName}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {payment.payslip?.employeeId}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {payment.payslip?.payRun ? (
+                            `${formatDate(payment.payslip.payRun.startDate)} - ${formatDate(payment.payslip.payRun.endDate)}`
+                          ) : (
+                            'Période non définie'
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-3 h-3 text-green-500" />
+                          <span className="font-medium">
+                            {formatCurrency(payment.amount || 0)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getMethodBadge(payment.method || 'BANK_TRANSFER')}</TableCell>
+                      <TableCell>
+                        {getStatusBadge(payment.status)}
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                          ID: {payment.id}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <p>Créé: {formatDate(payment.createdAt)}</p>
+                          {payment.updatedAt !== payment.createdAt && (
+                            <p className="text-muted-foreground">
+                              Modifié: {formatDate(payment.updatedAt)}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {payment.status === "PENDING" && (
+                            <Button size="sm">Traiter</Button>
+                          )}
+                          {payment.status === "FAILED" && (
+                            <Button size="sm" variant="outline">
+                              Réessayer
+                            </Button>
+                          )}
+                          <Button size="sm" variant="outline">
+                            Détails
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
-
-          {filteredPayments.length === 0 && (
-            <div className="text-center py-12">
-              <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Aucun paiement trouvé
-              </h3>
-              <p className="text-gray-600">
-                {searchQuery || statusFilter !== "all" || methodFilter !== "all"
-                  ? "Aucun paiement ne correspond à vos critères de recherche."
-                  : "Aucun paiement n'a encore été effectué."}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
