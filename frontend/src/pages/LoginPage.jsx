@@ -211,7 +211,7 @@ export default function LoginPage() {
         </Card>
 
         {/* Comptes de test */}
-        <Card className="mt-6">
+        {/* <Card className="mt-6">
           <CardHeader>
             <CardTitle className="text-sm">Comptes de test</CardTitle>
           </CardHeader>
@@ -230,7 +230,7 @@ export default function LoginPage() {
               </p>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
