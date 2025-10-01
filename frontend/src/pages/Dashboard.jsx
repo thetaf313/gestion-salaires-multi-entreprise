@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -12,11 +13,20 @@ import {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simuler le chargement des statistiques
+    // Si l'utilisateur est ADMIN ou CASHIER, rediriger vers le dashboard de son entreprise
+    if (user?.role === "ADMIN" || user?.role === "CASHIER") {
+      if (user?.companyId) {
+        navigate(`/company/${user.companyId}/dashboard`, { replace: true });
+        return;
+      }
+    }
+
+    // Simuler le chargement des statistiques pour SUPER_ADMIN
     setTimeout(() => {
       setStats({
         totalCompanies: 12,
@@ -26,7 +36,7 @@ const Dashboard = () => {
       });
       setLoading(false);
     }, 1000);
-  }, []);
+  }, [user, navigate]);
 
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();

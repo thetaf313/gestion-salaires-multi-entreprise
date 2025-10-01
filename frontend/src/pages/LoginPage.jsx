@@ -12,6 +12,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useAuth } from "../contexts/AuthContext";
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { email } from "zod";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -23,7 +24,11 @@ export default function LoginPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [formErrors, setFormErrors] = useState({
+    global: "",
+    email: "",
+    password: "",
+  });
   // Rediriger si déjà connecté
   useEffect(() => {
     console.log("🔍 Vérification de l'état d'authentification:", {
@@ -57,6 +62,21 @@ export default function LoginPage() {
     setIsSubmitting(true);
     console.log("🚀 Soumission du formulaire de connexion...");
 
+    // Validation simple
+    if (!formData.email) {
+      setFormErrors((prev) => ({
+        ...prev,
+        email: "l'email est requis",
+      }));
+    }
+
+    if (!formData.password) {
+      setFormErrors((prev) => ({
+        ...prev,
+        password: "Le mot de passe est requis",
+      }));
+    }
+
     try {
       console.log("🔄 Appel de la fonction login...");
       const result = await login(formData.email, formData.password);
@@ -70,6 +90,12 @@ export default function LoginPage() {
     } catch (error) {
       console.error("❌ Erreur lors de la connexion:", error);
       setIsSubmitting(false);
+      error.response && setFormErrors(prev => ({
+        ...prev,
+        global: error.response.data.message,
+        email: error.response.data.errors.email,
+        password: error.response.data.errors.password
+      }))
     }
   };
 
@@ -122,6 +148,7 @@ export default function LoginPage() {
                   onChange={handleInputChange}
                   disabled={isSubmitting}
                 />
+                <p className="text-sm text-destructive">{formErrors.email}</p>
               </div>
 
               {/* Mot de passe */}
@@ -138,6 +165,8 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                     className="pr-10"
                   />
+                  <p className="text-sm text-destructive">{formErrors.password}</p>
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -193,7 +222,7 @@ export default function LoginPage() {
                 superadmin123
               </p>
               <p>
-                <strong>ADMIN:</strong> admin@gestion-salaires.com / admin123
+                <strong>ADMIN:</strong> admin@techsolutions.com / admin123
               </p>
               <p>
                 <strong>CASHIER:</strong> cashier@gestion-salaires.com /

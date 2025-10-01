@@ -134,7 +134,7 @@ const CompanyDashboard = () => {
                   {company.isActive ? "Active" : "Inactive"}
                 </Badge>
                 <span className="text-sm text-gray-500">
-                  {company.payPeriodType} • {company.currency}
+                  {company.payPeriodType === "MONTHLY" ? "Mensuelle" : company.payPeriodType === "WEEKLY" ? "Hebdomadaire" : "Journalière"} • {company.currency}
                 </span>
               </div>
             </div>
@@ -147,9 +147,12 @@ const CompanyDashboard = () => {
             Paramètres
           </Button>
           {(user?.role === "SUPER_ADMIN" || user?.role === "ADMIN") && (
-            <Button size="sm">
-              <Plus size={16} className="mr-2" />
-              Nouvel Employé
+            <Button
+              size="sm"
+              onClick={() => navigate(`/company/${companyId}/employees`)}
+            >
+              <Users size={16} className="mr-2" />
+              Employés
             </Button>
           )}
         </div>
@@ -302,16 +305,16 @@ const CompanyDashboard = () => {
             Ajouter, modifier ou supprimer des employés
           </p>
           <div className="space-y-2">
-            <Button
+            {/* <Button
               className="w-full"
               size="sm"
               onClick={() => navigate(`/company/${companyId}/employees`)}
             >
               <Plus size={14} className="mr-2" />
               Nouvel Employé
-            </Button>
+            </Button> */}
             <Button
-              variant="outline"
+              // variant="outline"
               className="w-full"
               size="sm"
               onClick={() => navigate(`/company/${companyId}/employees`)}
@@ -332,16 +335,16 @@ const CompanyDashboard = () => {
             Gérer les comptes d'accès au système
           </p>
           <div className="space-y-2">
-            <Button
+            {/* <Button
               className="w-full"
               size="sm"
               onClick={() => navigate(`/company/${companyId}/users`)}
             >
               <Plus size={14} className="mr-2" />
               Nouvel Utilisateur
-            </Button>
+            </Button> */}
             <Button
-              variant="outline"
+              // variant="outline"
               className="w-full"
               size="sm"
               onClick={() => navigate(`/company/${companyId}/users`)}
@@ -360,10 +363,11 @@ const CompanyDashboard = () => {
             Générer et gérer les fiches de paie
           </p>
           <div className="space-y-2">
-            <Button className="w-full" size="sm" variant="outline">
+            {/* <Button className="w-full" size="sm" variant="outline">
               Nouvelle Paie
-            </Button>
-            <Button variant="outline" className="w-full" size="sm">
+            </Button> */}
+            {/* <Button variant="outline" className="w-full" size="sm"> */}
+            <Button className="w-full" size="sm">
               Historique des Paies
             </Button>
           </div>

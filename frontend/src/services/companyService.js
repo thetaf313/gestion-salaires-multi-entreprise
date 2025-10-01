@@ -1,8 +1,8 @@
-import api from './api';
+import api from "./api";
 
 export const companyService = {
   async getAllCompanies() {
-    const response = await api.get('/companies');
+    const response = await api.get("/companies");
     return response.data;
   },
 
@@ -12,7 +12,7 @@ export const companyService = {
   },
 
   async createCompany(companyData) {
-    const response = await api.post('/companies', companyData);
+    const response = await api.post("/companies", companyData);
     return response.data;
   },
 
@@ -29,7 +29,7 @@ export const companyService = {
   async getCompanyStats(companyId) {
     const response = await api.get(`/companies/${companyId}/stats`);
     return response.data;
-  }
+  },
 };
 
 export default companyService;

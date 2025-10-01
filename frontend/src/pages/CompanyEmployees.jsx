@@ -246,7 +246,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-green-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats.contractTypeBreakdown.DAILY || 0}
+                    {stats?.contractTypeBreakdown?.DAILY || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Journaliers</p>
                 </div>
@@ -260,7 +260,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-purple-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats.contractTypeBreakdown.FIXED || 0}
+                    {stats?.contractTypeBreakdown?.FIXED || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Fixes</p>
                 </div>
@@ -274,7 +274,7 @@ export function CompanyEmployees() {
                 <User className="w-5 h-5 text-orange-500" />
                 <div>
                   <p className="text-2xl font-bold">
-                    {stats.contractTypeBreakdown.HONORARIUM || 0}
+                    {stats?.contractTypeBreakdown?.HONORARIUM || 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Honoraires</p>
                 </div>

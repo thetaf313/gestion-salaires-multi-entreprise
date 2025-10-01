@@ -36,6 +36,18 @@ export const authService = {
     return response.data;
   },
 
+  // Refresh token
+  async refreshToken() {
+    const response = await api.post(
+      "/auth/refresh-token",
+      {},
+      {
+        withCredentials: true, // Pour envoyer les cookies
+      }
+    );
+    return response.data;
+  },
+
   // Déconnexion (côté client seulement)
   logout() {
     localStorage.removeItem("authToken");

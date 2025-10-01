@@ -85,6 +85,22 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  const refreshToken = async () => {
+    try {
+      const response = await authService.refreshToken();
+      const { accessToken } = response.data;
+
+      // Stocker le nouveau token
+      localStorage.setItem("authToken", accessToken);
+
+      return accessToken;
+    } catch (error) {
+      // Le refresh a échoué, déconnecter l'utilisateur
+      logout();
+      throw error;
+    }
+  };
+
   const updateUser = (userData) => {
     setUser(userData);
   };
@@ -97,6 +113,7 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     logout,
+    refreshToken,
     updateUser,
     checkAuth,
     clearError,

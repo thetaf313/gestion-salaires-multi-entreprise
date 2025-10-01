@@ -9,6 +9,11 @@ import {
   User,
   Menu,
   X,
+  Users,
+  Calendar,
+  FileText,
+  CreditCard,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -37,10 +42,52 @@ const AdminLayout = ({ children }) => {
       path: "/companies",
       roles: ["SUPER_ADMIN"], // Seulement pour super admin
     },
+    // Menu spécifiques aux ADMIN (gestion de leur propre entreprise)
+    {
+      icon: Users,
+      label: "Employés",
+      path: user?.companyId
+        ? `/company/${user.companyId}/employees`
+        : "/employees",
+      roles: ["ADMIN"],
+    },
+    {
+      icon: Calendar,
+      label: "Cycles de Paie",
+      path: user?.companyId
+        ? `/company/${user.companyId}/payroll-cycles`
+        : "/payroll-cycles",
+      roles: ["ADMIN"],
+    },
+    {
+      icon: FileText,
+      label: "Bulletins",
+      path: user?.companyId
+        ? `/company/${user.companyId}/payslips`
+        : "/payslips",
+      roles: ["ADMIN"],
+    },
+    {
+      icon: CreditCard,
+      label: "Paiements",
+      path: user?.companyId
+        ? `/company/${user.companyId}/payments`
+        : "/payments",
+      roles: ["ADMIN"],
+    },
+    {
+      icon: BarChart3,
+      label: "Rapports",
+      path: user?.companyId ? `/company/${user.companyId}/reports` : "/reports",
+      roles: ["ADMIN"],
+    },
     {
       icon: Settings,
       label: "Paramètres",
-      path: "/settings",
+      path:
+        user?.role === "ADMIN" && user?.companyId
+          ? `/company/${user.companyId}/company-settings`
+          : "/settings",
       roles: ["SUPER_ADMIN", "ADMIN"],
     },
   ];
@@ -49,7 +96,17 @@ const AdminLayout = ({ children }) => {
     item.roles.includes(user?.role)
   );
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    // Pour le dashboard, on vérifie si on est sur le dashboard principal ou celui d'une entreprise
+    if (path === "/dashboard") {
+      return (
+        location.pathname === "/dashboard" ||
+        location.pathname.match(/^\/company\/[\w-]+\/dashboard$/)
+      );
+    }
+    // Pour les autres chemins, on vérifie la correspondance exacte
+    return location.pathname === path;
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">

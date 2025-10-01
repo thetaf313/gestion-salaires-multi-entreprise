@@ -14,6 +14,11 @@ import Companies from "./pages/Companies";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyUsers from "./pages/CompanyUsers";
 import CompanyEmployees from "./pages/CompanyEmployees";
+import PayrollCycles from "./pages/PayrollCycles";
+import Payslips from "./pages/Payslips";
+import Payments from "./pages/Payments";
+import Reports from "./pages/Reports";
+import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
 import AdminLayout from "./components/AdminLayout";
 
@@ -79,6 +84,57 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <CompanyEmployees />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Pages spécifiques aux ADMIN */}
+                    {/* Cycles de paie */}
+                    <Route
+                      path="/company/:companyId/payroll-cycles"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <PayrollCycles />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Bulletins de paie */}
+                    <Route
+                      path="/company/:companyId/payslips"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <Payslips />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Paiements */}
+                    <Route
+                      path="/company/:companyId/payments"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <Payments />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Rapports */}
+                    <Route
+                      path="/company/:companyId/reports"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <Reports />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Paramètres de l'entreprise */}
+                    <Route
+                      path="/company/:companyId/company-settings"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <CompanySettings />
                         </ProtectedRoute>
                       }
                     />
