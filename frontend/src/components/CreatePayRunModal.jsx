@@ -16,14 +16,14 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { payRunService } from "../services/payRunService";
 import { employeeService } from "../services/employeeService";
-import { 
-  Calendar, 
-  Plus, 
-  Users, 
+import {
+  Calendar,
+  Plus,
+  Users,
   DollarSign,
   User,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 
 export function CreatePayRunModal({
@@ -58,10 +58,10 @@ export function CreatePayRunModal({
       if (response.success) {
         // Le backend retourne { employees, pagination }
         const employeesList = response.data.employees || response.data;
-        const activeEmployees = employeesList.filter(emp => emp.isActive);
+        const activeEmployees = employeesList.filter((emp) => emp.isActive);
         setEmployees(employeesList);
         // Présélectionner les employés actifs
-        setSelectedEmployees(activeEmployees.map(emp => emp.id));
+        setSelectedEmployees(activeEmployees.map((emp) => emp.id));
       }
     } catch (error) {
       console.error("Erreur lors du chargement des employés:", error);
@@ -79,38 +79,40 @@ export function CreatePayRunModal({
   };
 
   const handleEmployeeToggle = (employeeId) => {
-    setSelectedEmployees(prev => 
+    setSelectedEmployees((prev) =>
       prev.includes(employeeId)
-        ? prev.filter(id => id !== employeeId)
+        ? prev.filter((id) => id !== employeeId)
         : [...prev, employeeId]
     );
   };
 
   const toggleAllEmployees = () => {
-    const activeEmployees = employees.filter(emp => emp.isActive);
+    const activeEmployees = employees.filter((emp) => emp.isActive);
     if (selectedEmployees.length === activeEmployees.length) {
       setSelectedEmployees([]);
     } else {
-      setSelectedEmployees(activeEmployees.map(emp => emp.id));
+      setSelectedEmployees(activeEmployees.map((emp) => emp.id));
     }
   };
 
   const getEmployeeSalary = (employee) => {
     switch (employee.contractType) {
-      case 'DAILY':
+      case "DAILY":
         return employee.dailyRate || 0;
-      case 'FIXED':
+      case "FIXED":
         return employee.fixedSalary || 0;
-      case 'HONORARIUM':
+      case "HONORARIUM":
         return employee.hourlyRate || 0;
       default:
-        return employee.fixedSalary || employee.dailyRate || employee.hourlyRate || 0;
+        return (
+          employee.fixedSalary || employee.dailyRate || employee.hourlyRate || 0
+        );
     }
   };
 
   const calculateTotalAmount = () => {
     return employees
-      .filter(emp => selectedEmployees.includes(emp.id))
+      .filter((emp) => selectedEmployees.includes(emp.id))
       .reduce((total, emp) => {
         return total + Number(getEmployeeSalary(emp));
       }, 0);
@@ -126,9 +128,9 @@ export function CreatePayRunModal({
 
   const formatDateForApi = (dateString) => {
     if (!dateString) return null;
-    
+
     // Convertir la date en format ISO avec l'heure UTC pour éviter les problèmes de timezone
-    const date = new Date(dateString + 'T00:00:00.000Z');
+    const date = new Date(dateString + "T00:00:00.000Z");
     return date.toISOString();
   };
 
@@ -199,7 +201,7 @@ export function CreatePayRunModal({
           {/* Informations générales */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Informations générales</h3>
-            
+
             <div className="space-y-2">
               <Label htmlFor="title">Titre du cycle *</Label>
               <Input
@@ -219,7 +221,9 @@ export function CreatePayRunModal({
                   id="startDate"
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => handleInputChange("startDate", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("startDate", e.target.value)
+                  }
                   required
                 />
               </div>
@@ -241,7 +245,9 @@ export function CreatePayRunModal({
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => handleInputChange("description", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
                 placeholder="Description du cycle de paie..."
                 rows={3}
               />
@@ -264,10 +270,10 @@ export function CreatePayRunModal({
                   size="sm"
                   onClick={toggleAllEmployees}
                 >
-                  {selectedEmployees.length === employees.filter(emp => emp.isActive).length
+                  {selectedEmployees.length ===
+                  employees.filter((emp) => emp.isActive).length
                     ? "Désélectionner tout"
-                    : "Sélectionner tous les actifs"
-                  }
+                    : "Sélectionner tous les actifs"}
                 </Button>
               )}
             </div>
@@ -298,7 +304,9 @@ export function CreatePayRunModal({
                     <div className="flex items-center gap-3">
                       <Checkbox
                         checked={selectedEmployees.includes(employee.id)}
-                        onCheckedChange={() => handleEmployeeToggle(employee.id)}
+                        onCheckedChange={() =>
+                          handleEmployeeToggle(employee.id)
+                        }
                       />
                       <div className="flex items-center gap-2">
                         <User className="w-4 h-4 text-gray-500" />
@@ -307,7 +315,11 @@ export function CreatePayRunModal({
                             {employee.firstName} {employee.lastName}
                           </p>
                           <div className="flex items-center gap-2">
-                            <Badge variant={employee.isActive ? "success" : "secondary"}>
+                            <Badge
+                              variant={
+                                employee.isActive ? "success" : "secondary"
+                              }
+                            >
                               {employee.isActive ? "Actif" : "Inactif"}
                             </Badge>
                             <span className="text-sm text-muted-foreground">
@@ -334,7 +346,9 @@ export function CreatePayRunModal({
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-blue-500" />
                     <span className="font-medium">
-                      {selectedEmployees.length} employé{selectedEmployees.length > 1 ? 's' : ''} sélectionné{selectedEmployees.length > 1 ? 's' : ''}
+                      {selectedEmployees.length} employé
+                      {selectedEmployees.length > 1 ? "s" : ""} sélectionné
+                      {selectedEmployees.length > 1 ? "s" : ""}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -352,8 +366,8 @@ export function CreatePayRunModal({
             <Button type="button" variant="outline" onClick={onClose}>
               Annuler
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={loading || selectedEmployees.length === 0}
             >
               {loading ? "Création..." : "Créer le cycle"}

@@ -330,7 +330,8 @@ export default function PayrollCycles() {
                           {getStatusIcon(cycle.status)}
                           <div>
                             <p className="font-medium">
-                              Cycle du {formatDate(cycle.periodStart || cycle.startDate)}
+                              Cycle du{" "}
+                              {formatDate(cycle.periodStart || cycle.startDate)}
                             </p>
                             {cycle.description && (
                               <p className="text-sm text-muted-foreground">
@@ -352,7 +353,9 @@ export default function PayrollCycles() {
                           <p className="text-xs text-muted-foreground">
                             {Math.ceil(
                               (new Date(cycle.periodEnd || cycle.endDate) -
-                                new Date(cycle.periodStart || cycle.startDate)) /
+                                new Date(
+                                  cycle.periodStart || cycle.startDate
+                                )) /
                                 (1000 * 60 * 60 * 24)
                             )}{" "}
                             jour(s)

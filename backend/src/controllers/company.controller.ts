@@ -2,6 +2,11 @@ import { Request, Response } from "express";
 import { companyService } from "../services/company.service.js";
 import { sendResponse } from "../utils/response.js";
 import { HttpStatus } from "../constants/httpStatus.js";
+import {
+  uploadCompanyLogo,
+  buildLogoUrl,
+  deleteOldLogo,
+} from "../services/upload.service.js";
 
 interface PaginationParams {
   page: number;
@@ -200,6 +205,120 @@ export class CompanyController {
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
         error.message || "Erreur lors de la récupération des statistiques"
+      );
+    }
+  }
+
+  async getMyCompany(req: Request, res: Response) {
+    try {
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        return sendResponse(res, HttpStatus.UNAUTHORIZED, "Accès non autorisé");
+      }
+
+      const company = await companyService.getCompanyById(companyId);
+
+      if (!company) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Entreprise non trouvée"
+        );
+      }
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Entreprise récupérée avec succès",
+        company
+      );
+    } catch (error: any) {
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la récupération de l'entreprise"
+      );
+    }
+  }
+
+  async updateMyCompany(req: Request, res: Response) {
+    try {
+      const companyId = req.user?.companyId;
+      const { name, address, phone, email, currency, payPeriodType } = req.body;
+
+      if (!companyId) {
+        return sendResponse(res, HttpStatus.UNAUTHORIZED, "Accès non autorisé");
+      }
+
+      const updateData: any = {};
+      if (name !== undefined) updateData.name = name;
+      if (address !== undefined) updateData.address = address;
+      if (phone !== undefined) updateData.phone = phone;
+      if (email !== undefined) updateData.email = email;
+      if (currency !== undefined) updateData.currency = currency;
+      if (payPeriodType !== undefined) updateData.payPeriodType = payPeriodType;
+
+      const updatedCompany = await companyService.updateCompany(
+        companyId,
+        updateData
+      );
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Entreprise mise à jour avec succès",
+        updatedCompany
+      );
+    } catch (error: any) {
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la mise à jour de l'entreprise"
+      );
+    }
+  }
+
+  async uploadLogo(req: Request, res: Response) {
+    try {
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        return sendResponse(res, HttpStatus.UNAUTHORIZED, "Accès non autorisé");
+      }
+
+      if (!req.file) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Aucun fichier fourni"
+        );
+      }
+
+      // Récupérer l'ancien logo pour le supprimer
+      const currentCompany = await companyService.getCompanyById(companyId);
+      if (currentCompany?.logo) {
+        deleteOldLogo(currentCompany.logo);
+      }
+
+      // Construire l'URL du nouveau logo
+      const logoUrl = buildLogoUrl(req.file.filename, req);
+
+      // Mettre à jour l'entreprise avec le nouveau logo
+      const updatedCompany = await companyService.updateCompanyLogo(
+        companyId,
+        logoUrl
+      );
+
+      sendResponse(res, HttpStatus.OK, "Logo mis à jour avec succès", {
+        company: updatedCompany,
+        logoUrl: logoUrl,
+      });
+    } catch (error: any) {
+      sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de l'upload du logo"
       );
     }
   }

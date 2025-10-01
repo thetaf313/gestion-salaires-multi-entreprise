@@ -30,6 +30,28 @@ export const companyService = {
     const response = await api.get(`/companies/${companyId}/stats`);
     return response.data;
   },
+
+  async getMyCompany() {
+    const response = await api.get("/companies/me");
+    return response.data;
+  },
+
+  async updateMyCompany(companyData) {
+    const response = await api.put("/companies/me", companyData);
+    return response.data;
+  },
+
+  async uploadLogo(logoFile) {
+    const formData = new FormData();
+    formData.append("logo", logoFile);
+
+    const response = await api.post("/companies/me/logo", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data;
+  },
 };
 
 export default companyService;

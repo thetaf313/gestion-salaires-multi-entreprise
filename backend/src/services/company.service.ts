@@ -182,6 +182,21 @@ class CompanyService {
     return await this.getCompanyById(id);
   }
 
+  async updateCompanyLogo(id: string, logoUrl: string) {
+    const company = await this.prisma.company.findUnique({
+      where: { id },
+    });
+
+    if (!company) {
+      throw new Error("Entreprise non trouvée");
+    }
+
+    return await this.prisma.company.update({
+      where: { id },
+      data: { logo: logoUrl },
+    });
+  }
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

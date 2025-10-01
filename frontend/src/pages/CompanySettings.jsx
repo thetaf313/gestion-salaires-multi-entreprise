@@ -1,690 +1,353 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect, useRef } from 'react';
+import { companyService } from '../services/companyService';
+import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Settings,
-  Building,
-  DollarSign,
-  Bell,
-  Shield,
-  Upload,
-  Save,
-  Eye,
-  EyeOff,
-  Users,
-  Calendar,
-  Mail,
-} from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Building2, Camera, MapPin, Phone, Mail, CreditCard, Calendar, Check, X } from "lucide-react";
 
-export default function CompanySettings() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
-
-  // États pour les différentes sections
-  const [companyInfo, setCompanyInfo] = useState({
-    name: "Tech Solutions SARL",
-    email: "contact@techsolutions.com",
-    phone: "+225 07 12 34 56 78",
-    address: "Abidjan, Cocody",
-    website: "www.techsolutions.com",
-    logo: null,
+const CompanySettings = () => {
+  const [company, setCompany] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    currency: 'XOF',
+    payPeriodType: 'MONTHLY'
   });
+  const fileInputRef = useRef(null);
 
-  const [payrollSettings, setPayrollSettings] = useState({
-    currency: "XOF",
-    paymentDay: "30",
-    workingDaysPerWeek: "5",
-    workingHoursPerDay: "8",
-    overtimeRate: "1.5",
-    socialCharges: "15.5",
-    incomeTax: "progressive",
-  });
+  useEffect(() => {
+    fetchCompanyData();
+  }, []);
 
-  const [notifications, setNotifications] = useState({
-    emailPayslips: true,
-    smsReminders: false,
-    paymentAlerts: true,
-    reportDigest: true,
-    systemUpdates: false,
-  });
-
-  const [security, setSecurity] = useState({
-    twoFactorAuth: false,
-    sessionTimeout: "30",
-    passwordPolicy: "medium",
-    apiKey: "sk_live_abc123def456ghi789...",
-  });
-
-  const handleSave = async (section) => {
-    setLoading(true);
+  const fetchCompanyData = async () => {
     try {
-      // Simuler la sauvegarde
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert(`Paramètres ${section} sauvegardés avec succès !`);
+      setLoading(true);
+      const data = await companyService.getMyCompany();
+      setCompany(data);
+      setFormData({
+        name: data.name || '',
+        address: data.address || '',
+        phone: data.phone || '',
+        email: data.email || '',
+        currency: data.currency || 'XOF',
+        payPeriodType: data.payPeriodType || 'MONTHLY'
+      });
     } catch (error) {
-      alert("Erreur lors de la sauvegarde");
+      toast.error('Erreur lors du chargement des données de l\'entreprise');
+      console.error('Erreur:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogoUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCompanyInfo((prev) => ({
-          ...prev,
-          logo: e.target.result,
-        }));
-      };
-      reader.readAsDataURL(file);
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const updatedCompany = await companyService.updateMyCompany(formData);
+      setCompany(updatedCompany);
+      toast.success('Informations de l\'entreprise mises à jour avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la mise à jour des informations');
+      console.error('Erreur:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Vérification du type de fichier
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image');
+      return;
+    }
+
+    // Vérification de la taille (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Le fichier est trop volumineux (5MB maximum)');
+      return;
+    }
+
+    try {
+      setUploading(true);
+      const response = await companyService.uploadLogo(file);
+      setCompany(prev => ({
+        ...prev,
+        logo: response.logoUrl
+      }));
+      toast.success('Logo mis à jour avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de l\'upload du logo');
+      console.error('Erreur:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'E';
+    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Non défini';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="w-6 h-6" />
-            Paramètres de l'Entreprise
-          </h1>
-          <p className="text-muted-foreground">
-            Configurez les paramètres de votre entreprise
-          </p>
-        </div>
+    <div className="container mx-auto p-6 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Paramètres de l'entreprise</h1>
+        <p className="text-gray-600 mt-2">
+          Gérez les informations et paramètres de votre entreprise
+        </p>
       </div>
 
-      <Tabs defaultValue="company" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="company" className="flex items-center gap-2">
-            <Building className="w-4 h-4" />
-            Entreprise
-          </TabsTrigger>
-          <TabsTrigger value="payroll" className="flex items-center gap-2">
-            <DollarSign className="w-4 h-4" />
-            Paie
-          </TabsTrigger>
-          <TabsTrigger
-            value="notifications"
-            className="flex items-center gap-2"
-          >
-            <Bell className="w-4 h-4" />
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="security" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Sécurité
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Informations de l'entreprise */}
-        <TabsContent value="company">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building className="w-5 h-5" />
-                Informations de l'Entreprise
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Logo */}
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                  {companyInfo.logo ? (
-                    <img
-                      src={companyInfo.logo}
-                      alt="Logo"
-                      className="w-full h-full object-cover rounded-lg"
-                    />
-                  ) : (
-                    <Upload className="w-8 h-8 text-gray-400" />
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="logo">Logo de l'entreprise</Label>
-                  <input
-                    id="logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => document.getElementById("logo").click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Changer le logo
-                  </Button>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    PNG, JPG jusqu'à 2MB
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="company-name">Nom de l'entreprise</Label>
-                  <Input
-                    id="company-name"
-                    value={companyInfo.name}
-                    onChange={(e) =>
-                      setCompanyInfo((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company-email">Email</Label>
-                  <Input
-                    id="company-email"
-                    type="email"
-                    value={companyInfo.email}
-                    onChange={(e) =>
-                      setCompanyInfo((prev) => ({
-                        ...prev,
-                        email: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company-phone">Téléphone</Label>
-                  <Input
-                    id="company-phone"
-                    value={companyInfo.phone}
-                    onChange={(e) =>
-                      setCompanyInfo((prev) => ({
-                        ...prev,
-                        phone: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company-website">Site web</Label>
-                  <Input
-                    id="company-website"
-                    value={companyInfo.website}
-                    onChange={(e) =>
-                      setCompanyInfo((prev) => ({
-                        ...prev,
-                        website: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="company-address">Adresse</Label>
-                <Textarea
-                  id="company-address"
-                  value={companyInfo.address}
-                  onChange={(e) =>
-                    setCompanyInfo((prev) => ({
-                      ...prev,
-                      address: e.target.value,
-                    }))
-                  }
-                  rows={3}
+      <div className="grid gap-6">
+        {/* Section Logo et informations principales */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Profil de l'entreprise
+            </CardTitle>
+            <CardDescription>
+              Logo et informations principales de votre entreprise
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Logo */}
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <Avatar className="h-24 w-24">
+                  <AvatarImage src={company?.logo} alt={company?.name} />
+                  <AvatarFallback className="text-lg">
+                    {getInitials(company?.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+                  onClick={triggerFileUpload}
+                  disabled={uploading}
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
                 />
               </div>
-
-              <Button
-                onClick={() => handleSave("entreprise")}
-                disabled={loading}
-                className="w-full md:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Paramètres de paie */}
-        <TabsContent value="payroll">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Paramètres de Paie
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Devise</Label>
-                  <Select
-                    value={payrollSettings.currency}
-                    onValueChange={(value) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        currency: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="XOF">Franc CFA (XOF)</SelectItem>
-                      <SelectItem value="EUR">Euro (EUR)</SelectItem>
-                      <SelectItem value="USD">Dollar US (USD)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">{company?.name}</h3>
+                <p className="text-gray-600 text-sm">
+                  {uploading ? 'Upload en cours...' : 'Cliquez sur l\'icône pour modifier le logo'}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant={company?.isActive ? "default" : "secondary"}>
+                    {company?.isActive ? (
+                      <>
+                        <Check className="h-3 w-3 mr-1" />
+                        Actif
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-3 w-3 mr-1" />
+                        Inactif
+                      </>
+                    )}
+                  </Badge>
+                  <span className="text-xs text-gray-500">
+                    Créé le {formatDate(company?.createdAt)}
+                  </span>
                 </div>
+              </div>
+            </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="payment-day">Jour de paiement</Label>
-                  <Select
-                    value={payrollSettings.paymentDay}
-                    onValueChange={(value) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        paymentDay: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="30">Fin du mois (30)</SelectItem>
-                      <SelectItem value="15">Mi-mois (15)</SelectItem>
-                      <SelectItem value="1">Début de mois (1er)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <Separator />
 
-                <div className="space-y-2">
-                  <Label htmlFor="working-days">
-                    Jours travaillés par semaine
-                  </Label>
+            {/* Informations de base */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nom de l'entreprise</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Nom de votre entreprise"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    id="working-days"
-                    type="number"
-                    min="1"
-                    max="7"
-                    value={payrollSettings.workingDaysPerWeek}
-                    onChange={(e) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        workingDaysPerWeek: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="working-hours">Heures par jour</Label>
-                  <Input
-                    id="working-hours"
-                    type="number"
-                    min="1"
-                    max="24"
-                    value={payrollSettings.workingHoursPerDay}
-                    onChange={(e) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        workingHoursPerDay: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="overtime-rate">
-                    Taux heures supplémentaires
-                  </Label>
-                  <Input
-                    id="overtime-rate"
-                    type="number"
-                    step="0.1"
-                    value={payrollSettings.overtimeRate}
-                    onChange={(e) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        overtimeRate: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="social-charges">Charges sociales (%)</Label>
-                  <Input
-                    id="social-charges"
-                    type="number"
-                    step="0.1"
-                    value={payrollSettings.socialCharges}
-                    onChange={(e) =>
-                      setPayrollSettings((prev) => ({
-                        ...prev,
-                        socialCharges: e.target.value,
-                      }))
-                    }
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="email@entreprise.com"
+                    className="pl-10"
                   />
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="income-tax">Système d'imposition</Label>
+                <Label htmlFor="phone">Téléphone</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    placeholder="+221 XX XXX XXXX"
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="currency">Devise</Label>
                 <Select
-                  value={payrollSettings.incomeTax}
-                  onValueChange={(value) =>
-                    setPayrollSettings((prev) => ({
-                      ...prev,
-                      incomeTax: value,
-                    }))
-                  }
+                  value={formData.currency}
+                  onValueChange={(value) => handleInputChange('currency', value)}
+                >
+                  <SelectTrigger>
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="XOF">XOF (Franc CFA)</SelectItem>
+                    <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                    <SelectItem value="USD">USD (Dollar)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Adresse</Label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Textarea
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  placeholder="Adresse complète de l'entreprise"
+                  className="pl-10 min-h-[80px]"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section Paramètres de paie */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Paramètres de paie
+            </CardTitle>
+            <CardDescription>
+              Configuration des cycles de paie et paramètres financiers
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payPeriodType">Périodicité de paie</Label>
+                <Select
+                  value={formData.payPeriodType}
+                  onValueChange={(value) => handleInputChange('payPeriodType', value)}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="progressive">Progressif</SelectItem>
-                    <SelectItem value="flat">Taux fixe</SelectItem>
-                    <SelectItem value="none">Aucun</SelectItem>
+                    <SelectItem value="WEEKLY">Hebdomadaire</SelectItem>
+                    <SelectItem value="BIWEEKLY">Bimensuel</SelectItem>
+                    <SelectItem value="MONTHLY">Mensuel</SelectItem>
+                    <SelectItem value="QUARTERLY">Trimestriel</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <Button
-                onClick={() => handleSave("paie")}
-                disabled={loading}
-                className="w-full md:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Notifications */}
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                Préférences de Notifications
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-blue-500" />
-                    <div>
-                      <p className="font-medium">Bulletins par email</p>
-                      <p className="text-sm text-muted-foreground">
-                        Envoyer automatiquement les bulletins par email
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifications.emailPayslips}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({
-                        ...prev,
-                        emailPayslips: checked,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Bell className="w-5 h-5 text-green-500" />
-                    <div>
-                      <p className="font-medium">Rappels SMS</p>
-                      <p className="text-sm text-muted-foreground">
-                        Rappels de paiement par SMS
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifications.smsReminders}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({
-                        ...prev,
-                        smsReminders: checked,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <DollarSign className="w-5 h-5 text-orange-500" />
-                    <div>
-                      <p className="font-medium">Alertes de paiement</p>
-                      <p className="text-sm text-muted-foreground">
-                        Notifications pour les paiements traités
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifications.paymentAlerts}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({
-                        ...prev,
-                        paymentAlerts: checked,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Calendar className="w-5 h-5 text-purple-500" />
-                    <div>
-                      <p className="font-medium">Résumé hebdomadaire</p>
-                      <p className="text-sm text-muted-foreground">
-                        Rapport hebdomadaire par email
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifications.reportDigest}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({
-                        ...prev,
-                        reportDigest: checked,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Settings className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Mises à jour système</p>
-                      <p className="text-sm text-muted-foreground">
-                        Notifications de nouvelles fonctionnalités
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={notifications.systemUpdates}
-                    onCheckedChange={(checked) =>
-                      setNotifications((prev) => ({
-                        ...prev,
-                        systemUpdates: checked,
-                      }))
-                    }
-                  />
+              <div className="space-y-2">
+                <Label>Devise d'affichage</Label>
+                <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
+                  <CreditCard className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium">{formData.currency}</span>
+                  <span className="text-xs text-gray-500 ml-auto">
+                    {formData.currency === 'XOF' ? 'Franc CFA' : 
+                     formData.currency === 'EUR' ? 'Euro' : 'Dollar américain'}
+                  </span>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <Button
-                onClick={() => handleSave("notifications")}
-                disabled={loading}
-                className="w-full md:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Sécurité */}
-        <TabsContent value="security">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
-                Paramètres de Sécurité
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-green-500" />
-                    <div>
-                      <p className="font-medium">
-                        Authentification à deux facteurs
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Sécurité renforcée pour votre compte
-                      </p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={security.twoFactorAuth}
-                    onCheckedChange={(checked) =>
-                      setSecurity((prev) => ({
-                        ...prev,
-                        twoFactorAuth: checked,
-                      }))
-                    }
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="session-timeout">
-                    Délai d'expiration session (minutes)
-                  </Label>
-                  <Select
-                    value={security.sessionTimeout}
-                    onValueChange={(value) =>
-                      setSecurity((prev) => ({
-                        ...prev,
-                        sessionTimeout: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="15">15 minutes</SelectItem>
-                      <SelectItem value="30">30 minutes</SelectItem>
-                      <SelectItem value="60">1 heure</SelectItem>
-                      <SelectItem value="120">2 heures</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password-policy">
-                    Politique de mot de passe
-                  </Label>
-                  <Select
-                    value={security.passwordPolicy}
-                    onValueChange={(value) =>
-                      setSecurity((prev) => ({
-                        ...prev,
-                        passwordPolicy: value,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">
-                        Faible (6 caractères min)
-                      </SelectItem>
-                      <SelectItem value="medium">
-                        Moyen (8 caractères, majuscules)
-                      </SelectItem>
-                      <SelectItem value="high">
-                        Élevé (12 caractères, symboles)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="api-key">Clé API</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="api-key"
-                      type={showApiKey ? "text" : "password"}
-                      value={security.apiKey}
-                      readOnly
-                      className="font-mono"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setShowApiKey(!showApiKey)}
-                    >
-                      {showApiKey ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
-                    </Button>
-                    <Button variant="outline">Régénérer</Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Utilisée pour l'intégration avec des services externes
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                onClick={() => handleSave("sécurité")}
-                disabled={loading}
-                className="w-full md:w-auto"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Sauvegarde..." : "Sauvegarder"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        {/* Boutons d'action */}
+        <div className="flex justify-end gap-3">
+          <Button
+            variant="outline"
+            onClick={fetchCompanyData}
+            disabled={saving}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="min-w-[100px]"
+          >
+            {saving ? 'Enregistrement...' : 'Enregistrer'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default CompanySettings;

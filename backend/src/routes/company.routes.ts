@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { companyController } from "../controllers/company.controller.js";
+import { uploadCompanyLogo } from "../services/upload.service.js";
+import { validateToken } from "../middlewares/auth.js";
 
 const router = Router();
 
@@ -20,5 +22,15 @@ router.delete("/:id", companyController.deleteCompany);
 
 // GET /api/companies/:id/stats - Récupérer les statistiques d'une entreprise
 router.get("/:id/stats", companyController.getCompanyStats);
+
+// Routes protégées par authentification pour la gestion de sa propre entreprise
+// GET /api/companies/me - Récupérer les informations de mon entreprise
+router.get("/me", validateToken, companyController.getMyCompany);
+
+// PUT /api/companies/me - Mettre à jour les informations de mon entreprise
+router.put("/me", validateToken, companyController.updateMyCompany);
+
+// POST /api/companies/me/logo - Upload du logo d'entreprise
+router.post("/me/logo", validateToken, uploadCompanyLogo.single('logo'), companyController.uploadLogo);
 
 export default router;

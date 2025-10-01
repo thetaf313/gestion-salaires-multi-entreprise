@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import jwt from "jsonwebtoken";
+import path from "path";
+import { fileURLToPath } from 'url';
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import statsRoutes from "./routes/stats.routes.js";
@@ -11,6 +13,9 @@ import payslipRoutes from "./routes/payslip.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
 import config from "./config/env.js";
 import corsOptions, { corsDevOptions } from "./config/cors.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -23,6 +28,9 @@ app.use(cors(corsConfig));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir les fichiers statiques pour les uploads
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes public
 app.get("/api", (req, res) => {
