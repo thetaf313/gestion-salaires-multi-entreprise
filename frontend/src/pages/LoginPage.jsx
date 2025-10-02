@@ -59,6 +59,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormErrors({ global: "", email: "", password: "" });
     setIsSubmitting(true);
     console.log("🚀 Soumission du formulaire de connexion...");
 
@@ -92,7 +93,7 @@ export default function LoginPage() {
       setIsSubmitting(false);
       error.response && setFormErrors(prev => ({
         ...prev,
-        global: error.response.data.message,
+        global: error.response.message,
         email: error.response.data.errors.email,
         password: error.response.data.errors.password
       }))
@@ -129,10 +130,10 @@ export default function LoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Affichage des erreurs */}
-              {error && (
+              {formErrors.global && (
                 <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
                   <AlertCircle className="h-4 w-4" />
-                  <span>{error}</span>
+                  <span>{formErrors.global}</span>
                 </div>
               )}
 

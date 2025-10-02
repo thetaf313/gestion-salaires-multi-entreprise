@@ -118,8 +118,15 @@ class PayRunService {
       prisma.payRun.count({ where }),
     ]);
 
+    // Convertir les valeurs Decimal en nombres pour le frontend
+    const formattedPayRuns = payRuns.map(payRun => ({
+      ...payRun,
+      totalGross: Number(payRun.totalGross),
+      totalNet: Number(payRun.totalNet),
+    }));
+
     return {
-      data: payRuns,
+      data: formattedPayRuns,
       pagination: {
         page,
         limit,
