@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
+import { SalaryChart, EmployeeChart, ContractTypeChart, PayrollChart } from "../components/charts";
 import {
   Building2,
   Users,
@@ -112,15 +113,17 @@ const CompanyDashboard = () => {
       {/* En-tête avec informations de l'entreprise */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleBackToCompanies}
-            className="mb-2 sm:mb-0"
-          >
-            <ArrowLeft size={16} className="mr-2" />
-            Retour
-          </Button>
+          {user?.role === "SUPER_ADMIN" && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBackToCompanies}
+              className="mb-2 sm:mb-0"
+            >
+              <ArrowLeft size={16} className="mr-2" />
+              Retour
+            </Button>
+          )}
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-blue-100 rounded-lg">
               <Building2 className="h-8 w-8 text-blue-600" />
@@ -157,65 +160,6 @@ const CompanyDashboard = () => {
           )}
         </div>
       </div>
-
-      {/* Informations de l'entreprise */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Informations de l'entreprise
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <div>
-              <span className="text-sm font-medium text-gray-600">
-                Adresse:
-              </span>
-              <p className="text-gray-900">{company.address}</p>
-            </div>
-            {company.email && (
-              <div>
-                <span className="text-sm font-medium text-gray-600">
-                  Email:
-                </span>
-                <p className="text-gray-900">{company.email}</p>
-              </div>
-            )}
-            {company.phone && (
-              <div>
-                <span className="text-sm font-medium text-gray-600">
-                  Téléphone:
-                </span>
-                <p className="text-gray-900">{company.phone}</p>
-              </div>
-            )}
-          </div>
-          <div className="space-y-3">
-            <div>
-              <span className="text-sm font-medium text-gray-600">
-                Date de création:
-              </span>
-              <p className="text-gray-900">
-                {new Date(company.createdAt).toLocaleDateString()}
-              </p>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-600">Devise:</span>
-              <p className="text-gray-900">{company.currency}</p>
-            </div>
-            <div>
-              <span className="text-sm font-medium text-gray-600">
-                Période de paie:
-              </span>
-              <p className="text-gray-900">
-                {company.payPeriodType === "MONTHLY"
-                  ? "Mensuelle"
-                  : company.payPeriodType === "WEEKLY"
-                  ? "Hebdomadaire"
-                  : "Journalière"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* Statistiques de l'entreprise */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -290,6 +234,17 @@ const CompanyDashboard = () => {
             <Calendar className="h-8 w-8 text-blue-600" />
           </div>
         </Card>
+      </div>
+
+      {/* Graphiques et analyses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SalaryChart title={`Évolution des salaires - ${company?.name}`} />
+        <ContractTypeChart title="Types de contrats" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EmployeeChart title="Employés par département" />
+        <PayrollChart title="Masse salariale mensuelle" />
       </div>
 
       {/* Actions rapides */}
@@ -426,6 +381,65 @@ const CompanyDashboard = () => {
               <span className="text-xs text-gray-500">{activity.time}</span>
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Informations de l'entreprise */}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Informations de l'entreprise
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm font-medium text-gray-600">
+                Adresse:
+              </span>
+              <p className="text-gray-900">{company.address}</p>
+            </div>
+            {company.email && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">
+                  Email:
+                </span>
+                <p className="text-gray-900">{company.email}</p>
+              </div>
+            )}
+            {company.phone && (
+              <div>
+                <span className="text-sm font-medium text-gray-600">
+                  Téléphone:
+                </span>
+                <p className="text-gray-900">{company.phone}</p>
+              </div>
+            )}
+          </div>
+          <div className="space-y-3">
+            <div>
+              <span className="text-sm font-medium text-gray-600">
+                Date de création:
+              </span>
+              <p className="text-gray-900">
+                {new Date(company.createdAt).toLocaleDateString()}
+              </p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-600">Devise:</span>
+              <p className="text-gray-900">{company.currency}</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-600">
+                Période de paie:
+              </span>
+              <p className="text-gray-900">
+                {company.payPeriodType === "MONTHLY"
+                  ? "Mensuelle"
+                  : company.payPeriodType === "WEEKLY"
+                  ? "Hebdomadaire"
+                  : "Journalière"}
+              </p>
+            </div>
+          </div>
         </div>
       </Card>
     </div>

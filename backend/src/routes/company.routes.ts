@@ -16,7 +16,12 @@ router.get("/me", validateToken, companyController.getMyCompany);
 router.put("/me", validateToken, companyController.updateMyCompany);
 
 // POST /api/companies/me/logo - Upload du logo d'entreprise
-router.post("/me/logo", validateToken, uploadCompanyLogo.single('logo'), companyController.uploadLogo);
+router.post(
+  "/me/logo",
+  validateToken,
+  uploadCompanyLogo.single("logo"),
+  companyController.uploadLogo
+);
 
 // GET /api/companies/:id - Récupérer une entreprise par ID
 router.get("/:id", companyController.getCompanyById);

@@ -9,6 +9,7 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { LogOut, User, Building, CreditCard } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -60,6 +61,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-4">
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" />
+                <AvatarFallback>{user?.firstName.charAt(0)}{user?.lastName.charAt(0)}</AvatarFallback>
+              </Avatar>
+
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 {getRoleIcon(user?.role)}
                 <span>
@@ -79,6 +85,7 @@ export default function DashboardPage() {
                 <LogOut className="h-4 w-4" />
                 Déconnexion
               </Button>
+              
             </div>
           </div>
         </div>

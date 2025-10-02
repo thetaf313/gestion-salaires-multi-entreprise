@@ -1,16 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { companyService } from '../services/companyService';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useRef } from "react";
+import { companyService } from "../services/companyService";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Camera, MapPin, Phone, Mail, CreditCard, Calendar, Check, X } from "lucide-react";
+import {
+  Building2,
+  Camera,
+  MapPin,
+  Phone,
+  Mail,
+  CreditCard,
+  Calendar,
+  Check,
+  X,
+} from "lucide-react";
 
 const CompanySettings = () => {
   const [company, setCompany] = useState(null);
@@ -18,12 +40,12 @@ const CompanySettings = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    address: '',
-    phone: '',
-    email: '',
-    currency: 'XOF',
-    payPeriodType: 'MONTHLY'
+    name: "",
+    address: "",
+    phone: "",
+    email: "",
+    currency: "XOF",
+    payPeriodType: "MONTHLY",
   });
   const fileInputRef = useRef(null);
 
@@ -37,25 +59,25 @@ const CompanySettings = () => {
       const data = await companyService.getMyCompany();
       setCompany(data);
       setFormData({
-        name: data.name || '',
-        address: data.address || '',
-        phone: data.phone || '',
-        email: data.email || '',
-        currency: data.currency || 'XOF',
-        payPeriodType: data.payPeriodType || 'MONTHLY'
+        name: data.name || "",
+        address: data.address || "",
+        phone: data.phone || "",
+        email: data.email || "",
+        currency: data.currency || "XOF",
+        payPeriodType: data.payPeriodType || "MONTHLY",
       });
     } catch (error) {
-      toast.error('Erreur lors du chargement des données de l\'entreprise');
-      console.error('Erreur:', error);
+      toast.error("Erreur lors du chargement des données de l'entreprise");
+      console.error("Erreur:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -64,10 +86,10 @@ const CompanySettings = () => {
       setSaving(true);
       const updatedCompany = await companyService.updateMyCompany(formData);
       setCompany(updatedCompany);
-      toast.success('Informations de l\'entreprise mises à jour avec succès');
+      toast.success("Informations de l'entreprise mises à jour avec succès");
     } catch (error) {
-      toast.error('Erreur lors de la mise à jour des informations');
-      console.error('Erreur:', error);
+      toast.error("Erreur lors de la mise à jour des informations");
+      console.error("Erreur:", error);
     } finally {
       setSaving(false);
     }
@@ -78,28 +100,28 @@ const CompanySettings = () => {
     if (!file) return;
 
     // Vérification du type de fichier
-    if (!file.type.startsWith('image/')) {
-      toast.error('Veuillez sélectionner un fichier image');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sélectionner un fichier image");
       return;
     }
 
     // Vérification de la taille (5MB max)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Le fichier est trop volumineux (5MB maximum)');
+      toast.error("Le fichier est trop volumineux (5MB maximum)");
       return;
     }
 
     try {
       setUploading(true);
       const response = await companyService.uploadLogo(file);
-      setCompany(prev => ({
+      setCompany((prev) => ({
         ...prev,
-        logo: response.logoUrl
+        logo: response.logoUrl,
       }));
-      toast.success('Logo mis à jour avec succès');
+      toast.success("Logo mis à jour avec succès");
     } catch (error) {
-      toast.error('Erreur lors de l\'upload du logo');
-      console.error('Erreur:', error);
+      toast.error("Erreur lors de l'upload du logo");
+      console.error("Erreur:", error);
     } finally {
       setUploading(false);
     }
@@ -110,16 +132,21 @@ const CompanySettings = () => {
   };
 
   const getInitials = (name) => {
-    if (!name) return 'E';
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+    if (!name) return "E";
+    return name
+      .split(" ")
+      .map((word) => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return 'Non défini';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    if (!dateString) return "Non défini";
+    return new Date(dateString).toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -134,7 +161,9 @@ const CompanySettings = () => {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">Paramètres de l'entreprise</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Paramètres de l'entreprise
+        </h1>
         <p className="text-gray-600 mt-2">
           Gérez les informations et paramètres de votre entreprise
         </p>
@@ -182,7 +211,9 @@ const CompanySettings = () => {
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{company?.name}</h3>
                 <p className="text-gray-600 text-sm">
-                  {uploading ? 'Upload en cours...' : 'Cliquez sur l\'icône pour modifier le logo'}
+                  {uploading
+                    ? "Upload en cours..."
+                    : "Cliquez sur l'icône pour modifier le logo"}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <Badge variant={company?.isActive ? "default" : "secondary"}>
@@ -214,7 +245,7 @@ const CompanySettings = () => {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
                   placeholder="Nom de votre entreprise"
                 />
               </div>
@@ -226,7 +257,7 @@ const CompanySettings = () => {
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="email@entreprise.com"
                     className="pl-10"
                   />
@@ -242,7 +273,7 @@ const CompanySettings = () => {
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+221 XX XXX XXXX"
                     className="pl-10"
                   />
@@ -252,7 +283,9 @@ const CompanySettings = () => {
                 <Label htmlFor="currency">Devise</Label>
                 <Select
                   value={formData.currency}
-                  onValueChange={(value) => handleInputChange('currency', value)}
+                  onValueChange={(value) =>
+                    handleInputChange("currency", value)
+                  }
                 >
                   <SelectTrigger>
                     <CreditCard className="h-4 w-4 mr-2" />
@@ -274,7 +307,7 @@ const CompanySettings = () => {
                 <Textarea
                   id="address"
                   value={formData.address}
-                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
                   placeholder="Adresse complète de l'entreprise"
                   className="pl-10 min-h-[80px]"
                 />
@@ -300,7 +333,9 @@ const CompanySettings = () => {
                 <Label htmlFor="payPeriodType">Périodicité de paie</Label>
                 <Select
                   value={formData.payPeriodType}
-                  onValueChange={(value) => handleInputChange('payPeriodType', value)}
+                  onValueChange={(value) =>
+                    handleInputChange("payPeriodType", value)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -317,10 +352,15 @@ const CompanySettings = () => {
                 <Label>Devise d'affichage</Label>
                 <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md">
                   <CreditCard className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">{formData.currency}</span>
+                  <span className="text-sm font-medium">
+                    {formData.currency}
+                  </span>
                   <span className="text-xs text-gray-500 ml-auto">
-                    {formData.currency === 'XOF' ? 'Franc CFA' : 
-                     formData.currency === 'EUR' ? 'Euro' : 'Dollar américain'}
+                    {formData.currency === "XOF"
+                      ? "Franc CFA"
+                      : formData.currency === "EUR"
+                      ? "Euro"
+                      : "Dollar américain"}
                   </span>
                 </div>
               </div>
@@ -342,7 +382,7 @@ const CompanySettings = () => {
             disabled={saving}
             className="min-w-[100px]"
           >
-            {saving ? 'Enregistrement...' : 'Enregistrer'}
+            {saving ? "Enregistrement..." : "Enregistrer"}
           </Button>
         </div>
       </div>

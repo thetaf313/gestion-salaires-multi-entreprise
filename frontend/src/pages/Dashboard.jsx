@@ -4,6 +4,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
+  SalaryChart,
+  EmployeeChart,
+  ContractTypeChart,
+  PayrollChart,
+  RealTimeChart,
+} from "../components/charts";
+import {
   Building2,
   Users,
   DollarSign,
@@ -64,9 +71,10 @@ const Dashboard = () => {
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
+            {[...Array(12)].map((_, i) => (
               <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
             ))}
+            
           </div>
         </div>
       </div>
@@ -206,6 +214,31 @@ const Dashboard = () => {
           </Card>
         </div>
       )}
+
+      {/* Graphiques et analyses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {user?.role === "SUPER_ADMIN" ? (
+          <>
+            <PayrollChart title="Évolution globale de la masse salariale" />
+            <EmployeeChart title="Employés par entreprise" />
+          </>
+        ) : (
+          <>
+            <SalaryChart title="Évolution des salaires de l'entreprise" />
+            <ContractTypeChart title="Répartition des types de contrats" />
+          </>
+        )}
+      </div>
+
+      {user?.role !== "SUPER_ADMIN" && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <EmployeeChart title="Employés par département" />
+          <PayrollChart title="Masse salariale mensuelle" />
+        </div>
+      )}
+
+      {/* Graphique temps réel */}
+      <RealTimeChart title="Activité système en temps réel" />
 
       {/* Actions rapides */}
       <Card className="p-6">

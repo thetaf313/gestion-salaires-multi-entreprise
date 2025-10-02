@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
+  SalaryChart,
+  EmployeeChart,
+  ContractTypeChart,
+  PayrollChart,
+  CombinedChart,
+} from "../components/charts";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -204,6 +211,23 @@ export default function Reports() {
       </div>
 
       {/* Graphiques et analyses */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SalaryChart title="Évolution des salaires" height={350} />
+        <PayrollChart title="Masse salariale mensuelle" height={350} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <EmployeeChart title="Employés par département" height={350} />
+        <ContractTypeChart title="Répartition des contrats" height={350} />
+      </div>
+
+      {/* Analyse combinée avancée */}
+      <CombinedChart
+        title="Analyse complète des performances RH"
+        height={500}
+      />
+
+      {/* Graphiques et analyses détaillées */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Évolution mensuelle */}
         <Card>

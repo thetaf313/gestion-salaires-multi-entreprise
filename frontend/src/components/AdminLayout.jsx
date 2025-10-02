@@ -17,14 +17,18 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const AdminLayout = ({ children }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
+    setIsLoading(true);
     logout();
     navigate("/login");
   };
@@ -204,28 +208,92 @@ const AdminLayout = ({ children }) => {
 
             <div className="flex items-center space-x-4">
               {/* User Info */}
-              <Card className="px-4 py-2 bg-gray-50">
-                <div className="flex items-center space-x-3">
-                  <User size={16} className="text-gray-500" />
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-700">
-                      {user?.firstName} {user?.lastName}
+              <Popover className="bg-[#00000005]">
+                <PopoverTrigger>
+                  <Card className="px-4 py-2 bg-gray-50">
+                    <div className="flex items-center space-x-3">
+                      {/* <User size={16} className="text-gray-500" /> */}
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-700">
+                          {user?.firstName} {user?.lastName}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {user?.role}
+                        </div>
+                      </div>
+                      <Avatar>
+                        <AvatarImage src="https://github.com/shadcn.png" />
+                        <AvatarFallback>
+                          {user?.firstName.charAt(0)}
+                          {user?.lastName.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
-                    <div className="text-xs text-gray-500">{user?.role}</div>
+                  </Card>
+                </PopoverTrigger>
+                {/* <PopoverContent className="w-48 hover:bg-slate-50">
+      
+                  <div
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 cursor-pointer"
+                    >
+                    <LogOut size={16} />
+                    <span>Déconnexion</span>
+                  </div>
+                </PopoverContent> */}
+                <PopoverContent className="w-56" align="end">
+                <div className="flex flex-col space-y-1">
+                  {/* Infos utilisateur dans le menu mobile */}
+                  <div className="md:hidden pb-2 border-b">
+                    <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-8"
+                    onClick={() => {
+                      // TODO: Implémenter page de profil
+                      alert("Page de profil à implémenter");
+                    }}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Profil
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-8"
+                    onClick={() => {
+                      // TODO: Implémenter page de paramètres
+                      alert("Page de paramètres à implémenter");
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Paramètres
+                  </Button>
+
+                  <div className="border-t pt-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                      disabled={isLoading}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      {isLoading ? "Déconnexion..." : "Se déconnecter"}
+                    </Button>
                   </div>
                 </div>
-              </Card>
-
-              {/* Logout Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="flex items-center space-x-2"
-              >
-                <LogOut size={16} />
-                <span>Déconnexion</span>
-              </Button>
+              </PopoverContent>
+              </Popover>
             </div>
           </div>
         </header>
