@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
@@ -14,6 +14,11 @@ import {
   FileText,
   CreditCard,
   BarChart3,
+  Clock,
+  CalendarClock,
+  TrendingUp,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -26,12 +31,28 @@ const AdminLayout = ({ children }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [attendanceMenuOpen, setAttendanceMenuOpen] = useState(false);
 
   const handleLogout = () => {
     setIsLoading(true);
     logout();
     navigate("/login");
   };
+
+  const isAttendanceActive = () => {
+    return (
+      location.pathname.includes("/attendance") ||
+      location.pathname.includes("/work-schedule") ||
+      location.pathname.includes("/attendance-stats")
+    );
+  };
+
+  // Ouvrir automatiquement le sous-menu si on est sur une page de pointage
+  useEffect(() => {
+    if (isAttendanceActive()) {
+      setAttendanceMenuOpen(true);
+    }
+  }, [location.pathname]);
 
   const menuItems = [
     {
@@ -86,6 +107,35 @@ const AdminLayout = ({ children }) => {
       roles: ["ADMIN"],
     },
     {
+      icon: Clock,
+      label: "Pointage",
+      roles: ["ADMIN"],
+      isSubmenu: true,
+      submenuItems: [
+        {
+          icon: Clock,
+          label: "Gestion Pointage",
+          path: user?.companyId
+            ? `/company/${user.companyId}/attendance`
+            : "/attendance",
+        },
+        {
+          icon: CalendarClock,
+          label: "Horaires de travail",
+          path: user?.companyId
+            ? `/company/${user.companyId}/work-schedule`
+            : "/work-schedule",
+        },
+        {
+          icon: TrendingUp,
+          label: "Statistiques",
+          path: user?.companyId
+            ? `/company/${user.companyId}/attendance-stats`
+            : "/attendance-stats",
+        },
+      ],
+    },
+    {
       icon: Settings,
       label: "Paramètres",
       path:
@@ -124,6 +174,56 @@ const AdminLayout = ({ children }) => {
         <nav className="flex-1 p-4 space-y-2">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
+
+            // Si c'est un sous-menu
+            if (item.isSubmenu) {
+              return (
+                <div key={item.label}>
+                  <button
+                    onClick={() => setAttendanceMenuOpen(!attendanceMenuOpen)}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+                      isAttendanceActive()
+                        ? "bg-blue-100 text-blue-700 border border-blue-200"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon size={20} />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    {attendanceMenuOpen ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </button>
+
+                  {attendanceMenuOpen && (
+                    <div className="ml-6 mt-2 space-y-1">
+                      {item.submenuItems.map((subItem) => {
+                        const SubIcon = subItem.icon;
+                        return (
+                          <Link
+                            key={subItem.path}
+                            to={subItem.path}
+                            className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
+                              isActive(subItem.path)
+                                ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                : "text-gray-500 hover:bg-gray-50"
+                            }`}
+                          >
+                            <SubIcon size={16} />
+                            <span>{subItem.label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Menu normal
             return (
               <Link
                 key={item.path}
@@ -165,6 +265,59 @@ const AdminLayout = ({ children }) => {
             <nav className="flex-1 p-4 space-y-2">
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
+
+                // Si c'est un sous-menu
+                if (item.isSubmenu) {
+                  return (
+                    <div key={item.label}>
+                      <button
+                        onClick={() =>
+                          setAttendanceMenuOpen(!attendanceMenuOpen)
+                        }
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
+                          isAttendanceActive()
+                            ? "bg-blue-100 text-blue-700 border border-blue-200"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <Icon size={20} />
+                          <span className="font-medium">{item.label}</span>
+                        </div>
+                        {attendanceMenuOpen ? (
+                          <ChevronDown size={16} />
+                        ) : (
+                          <ChevronRight size={16} />
+                        )}
+                      </button>
+
+                      {attendanceMenuOpen && (
+                        <div className="ml-6 mt-2 space-y-1">
+                          {item.submenuItems.map((subItem) => {
+                            const SubIcon = subItem.icon;
+                            return (
+                              <Link
+                                key={subItem.path}
+                                to={subItem.path}
+                                onClick={() => setSidebarOpen(false)}
+                                className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
+                                  isActive(subItem.path)
+                                    ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                    : "text-gray-500 hover:bg-gray-50"
+                                }`}
+                              >
+                                <SubIcon size={16} />
+                                <span>{subItem.label}</span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Menu normal
                 return (
                   <Link
                     key={item.path}
@@ -244,55 +397,57 @@ const AdminLayout = ({ children }) => {
                   </div>
                 </PopoverContent> */}
                 <PopoverContent className="w-56" align="end">
-                <div className="flex flex-col space-y-1">
-                  {/* Infos utilisateur dans le menu mobile */}
-                  <div className="md:hidden pb-2 border-b">
-                    <p className="font-medium text-sm">{user?.firstName} {user?.lastName}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
+                  <div className="flex flex-col space-y-1">
+                    {/* Infos utilisateur dans le menu mobile */}
+                    <div className="md:hidden pb-2 border-b">
+                      <p className="font-medium text-sm">
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start h-8"
-                    onClick={() => {
-                      // TODO: Implémenter page de profil
-                      alert("Page de profil à implémenter");
-                    }}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Profil
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start h-8"
-                    onClick={() => {
-                      // TODO: Implémenter page de paramètres
-                      alert("Page de paramètres à implémenter");
-                    }}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    Paramètres
-                  </Button>
-
-                  <div className="border-t pt-1">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="justify-start h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={handleLogout}
-                      disabled={isLoading}
+                      className="justify-start h-8"
+                      onClick={() => {
+                        // TODO: Implémenter page de profil
+                        alert("Page de profil à implémenter");
+                      }}
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {isLoading ? "Déconnexion..." : "Se déconnecter"}
+                      <User className="mr-2 h-4 w-4" />
+                      Profil
                     </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-8"
+                      onClick={() => {
+                        // TODO: Implémenter page de paramètres
+                        alert("Page de paramètres à implémenter");
+                      }}
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      Paramètres
+                    </Button>
+
+                    <div className="border-t pt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="justify-start h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={handleLogout}
+                        disabled={isLoading}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {isLoading ? "Déconnexion..." : "Se déconnecter"}
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </PopoverContent>
+                </PopoverContent>
               </Popover>
             </div>
           </div>

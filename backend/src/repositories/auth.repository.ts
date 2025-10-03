@@ -40,6 +40,7 @@ class AuthRepository {
       email: user.email,
       role: user.role,
       ...(user.companyId && { companyId: user.companyId }),
+      ...(user.employeeId && { employeeId: user.employeeId }),
     };
 
     // Générer les tokens

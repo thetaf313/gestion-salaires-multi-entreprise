@@ -11,6 +11,8 @@ import employeeRoutes from "./routes/employee.routes.js";
 import payrunRoutes from "./routes/payrun.routes.js";
 import payslipRoutes from "./routes/payslip.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import attendanceRoutes from "./routes/attendance.routes.js";
+import workScheduleRoutes from "./routes/workSchedule.routes.js";
 import config from "./config/env.js";
 import corsOptions, { corsDevOptions } from "./config/cors.js";
 
@@ -43,7 +45,13 @@ const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
 
-  if (!token) {
+  console.log("🔐 AuthenticateToken - Auth header:", authHeader);
+  console.log(
+    "🎫 AuthenticateToken - Token extracted:",
+    token ? "✅ Found" : "❌ Missing"
+  );
+
+  if (!token || token === "null" || token === "undefined") {
     return res.status(401).json({
       error: "UNAUTHORIZED",
       message: "Token d'accès requis",
@@ -54,10 +62,28 @@ const authenticateToken = (req: any, res: any, next: any) => {
     const ACCESS_TOKEN_SECRET =
       process.env.ACCESS_TOKEN_SECRET || "default-secret";
 
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET) as any;
+    console.log("🔓 AuthenticateToken - Token décodé:", {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      companyId: decoded.companyId,
+      employeeId: decoded.employeeId,
+    });
+
+    // Structurer req.user avec les propriétés attendues
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      companyId: decoded.companyId,
+      employeeId: decoded.employeeId,
+    };
+
+    console.log("✅ AuthenticateToken - User ajouté à req:", req.user);
     next();
   } catch (error: any) {
+    console.error("❌ AuthenticateToken - Erreur:", error);
     return res.status(403).json({
       error: "FORBIDDEN",
       message: "Token invalide ou expiré",
@@ -70,6 +96,8 @@ app.use("/api/users", authenticateToken, userRoutes);
 app.use("/api/stats", authenticateToken, statsRoutes);
 app.use("/api/companies", authenticateToken, companyRoutes);
 app.use("/api/employees", employeeRoutes);
+app.use("/api/attendances", attendanceRoutes);
+app.use("/api/work-schedules", authenticateToken, workScheduleRoutes);
 app.use("/api", payrunRoutes);
 app.use("/api", payslipRoutes);
 app.use("/api", paymentRoutes);

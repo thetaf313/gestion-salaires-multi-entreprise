@@ -256,7 +256,10 @@ export default function PayrollCycles() {
               <div>
                 <p className="text-2xl font-bold">
                   {formatCurrency(
-                    cycles.reduce((sum, c) => sum + (Number(c.totalNet) || 0), 0)
+                    cycles.reduce(
+                      (sum, c) => sum + (Number(c.totalNet) || 0),
+                      0
+                    )
                   )}
                 </p>
                 <p className="text-sm text-muted-foreground">Total versé</p>

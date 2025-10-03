@@ -5,6 +5,7 @@ export interface JwtPayload {
   email: string;
   role: UserRole;
   companyId?: string | undefined;
+  employeeId?: string | undefined;
 }
 
 export interface LoginCredentials {

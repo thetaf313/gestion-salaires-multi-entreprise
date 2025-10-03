@@ -21,6 +21,9 @@ import Payments from "./pages/Payments";
 import Reports from "./pages/Reports";
 import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
+import AttendancePage from "./pages/AttendancePage";
+import WorkSchedulePage from "./pages/WorkSchedulePage";
+import AttendanceStatsPage from "./pages/AttendanceStatsPage";
 import AdminLayout from "./components/AdminLayout";
 
 // Import du script de test en développement
@@ -127,6 +130,36 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <Reports />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Pointage des employés */}
+                    <Route
+                      path="/company/:companyId/attendance"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <AttendancePage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Configuration des horaires de travail */}
+                    <Route
+                      path="/company/:companyId/work-schedule"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <WorkSchedulePage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Statistiques de pointage */}
+                    <Route
+                      path="/company/:companyId/attendance-stats"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <AttendanceStatsPage />
                         </ProtectedRoute>
                       }
                     />

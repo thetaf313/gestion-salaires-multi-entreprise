@@ -8,57 +8,13 @@ class UserRepository implements BaseRepository<User> {
   ): Promise<{ items: User[]; total: number }> {
     throw new Error("Method not implemented.");
   }
-  create(item: {
-    id: string;
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role: $Enums.UserRole;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    companyId: string | null;
-  }): Promise<{
-    id: string;
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role: $Enums.UserRole;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    companyId: string | null;
-  }> {
+  create(item: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<User> {
     throw new Error("Method not implemented.");
   }
   update(
     id: string,
-    item: Partial<{
-      id: string;
-      email: string;
-      password: string;
-      firstName: string;
-      lastName: string;
-      role: $Enums.UserRole;
-      isActive: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-      companyId: string | null;
-    }>
-  ): Promise<{
-    id: string;
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    role: $Enums.UserRole;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
-    companyId: string | null;
-  } | null> {
+    item: Partial<Omit<User, "id" | "createdAt" | "updatedAt">>
+  ): Promise<User | null> {
     throw new Error("Method not implemented.");
   }
   delete(id: string): Promise<boolean> {

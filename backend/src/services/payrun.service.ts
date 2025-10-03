@@ -119,7 +119,7 @@ class PayRunService {
     ]);
 
     // Convertir les valeurs Decimal en nombres pour le frontend
-    const formattedPayRuns = payRuns.map(payRun => ({
+    const formattedPayRuns = payRuns.map((payRun) => ({
       ...payRun,
       totalGross: Number(payRun.totalGross),
       totalNet: Number(payRun.totalNet),

@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -69,7 +66,18 @@ enum DeductionType {
   OTHER // Autre
 }
 
-// Table des utilisateurs
+// Énumération pour les statuts de présence
+enum AttendanceStatus {
+  PRESENT // Présent
+  ABSENT // Absent
+  LATE // Retard
+  HALF_DAY // Demi-journée
+  SICK_LEAVE // Congé maladie
+  VACATION // Congé payé
+  UNPAID_LEAVE // Congé sans solde
+}
+
+// Table des utilisateurs (comptes de connexion)
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -82,8 +90,14 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  company         Company?  @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId       String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String?
+
+  // ⭐ NOUVEAU : Lien avec l'employé
+  // Un User peut être lié à un Employee (ADMIN et CASHIER sont aussi des employés)
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeId String?   @unique
+
   createdPayRuns  PayRun[]  @relation("CreatedBy")
   approvedPayRuns PayRun[]  @relation("ApprovedBy")
   payments        Payment[]
@@ -106,9 +120,11 @@ model Company {
   updatedAt     DateTime      @updatedAt
 
   // Relations
-  users     User[]
-  employees Employee[]
-  payRuns   PayRun[]
+  users         User[]
+  employees     Employee[]
+  payRuns       PayRun[]
+  attendances   Attendance[]
+  workSchedules WorkSchedule[]
 
   @@map("companies")
 }
@@ -141,11 +157,67 @@ model Employee {
   updatedAt DateTime @updatedAt
 
   // Relations
-  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId String
-  payslips  Payslip[]
+
+  // ⭐ NOUVEAU : Un employé peut avoir un compte utilisateur
+  user User?
+
+  payslips    Payslip[]
+  attendances Attendance[]
 
   @@map("employees")
+}
+
+// ⭐ NOUVEAU : Table pour les horaires de travail de l'entreprise
+model WorkSchedule {
+  id           String   @id @default(cuid())
+  dayOfWeek    Int // 0=Dimanche, 1=Lundi, ..., 6=Samedi
+  startTime    String // Format "HH:MM" (ex: "08:00")
+  endTime      String // Format "HH:MM" (ex: "17:00")
+  isWorkingDay Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+
+  @@unique([companyId, dayOfWeek])
+  @@map("work_schedules")
+}
+
+// ⭐ NOUVEAU : Table des pointages
+model Attendance {
+  id       String           @id @default(cuid())
+  date     DateTime // Date du pointage
+  checkIn  DateTime? // Heure d'arrivée
+  checkOut DateTime? // Heure de départ
+  status   AttendanceStatus @default(PRESENT)
+
+  // Calculs automatiques
+  hoursWorked Decimal? // Heures travaillées calculées
+  lateMinutes Int      @default(0) // Minutes de retard
+
+  // Informations additionnelles
+  notes       String? // Notes ou justificatifs
+  isValidated Boolean   @default(false) // Validation par un admin
+  validatedAt DateTime?
+  validatedBy String? // ID de l'utilisateur qui a validé
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId  String
+
+  @@unique([employeeId, date]) // Un seul pointage par employé par jour
+  @@index([companyId, date])
+  @@index([employeeId, date])
+  @@map("attendances")
 }
 
 // Table des cycles de paie
@@ -185,9 +257,13 @@ model Payslip {
   totalDeductions Decimal @default(0) // Total des déductions
   netAmount       Decimal // Montant net à payer
 
-  // Informations spécifiques
-  daysWorked  Int? // Nombre de jours travaillés (pour journaliers)
-  hoursWorked Decimal? // Nombre d'heures travaillées (pour honoraires)
+  // Informations spécifiques basées sur le pointage
+  daysWorked       Int? // Nombre de jours travaillés (calculé depuis attendance)
+  daysPresent      Int? // Jours de présence effective
+  daysAbsent       Int? // Jours d'absence
+  daysLate         Int? // Jours de retard
+  hoursWorked      Decimal? // Nombre d'heures travaillées (pour honoraires)
+  totalLateMinutes Int? // Total des minutes de retard
 
   // Statut paiement
   status     PayslipStatus @default(PENDING)
@@ -245,7 +321,7 @@ model Payment {
 // Table pour les documents générés (historique)
 model Document {
   id        String   @id @default(cuid())
-  type      String // "receipt", "payslip", "payment_list", "attendance_list"
+  type      String // "receipt", "payslip", "payment_list", "attendance_list", "attendance_report"
   title     String
   filePath  String // Chemin vers le fichier PDF
   fileUrl   String? // URL d'accès au fichier
@@ -273,11 +349,11 @@ model SystemSetting {
   @@map("system_settings")
 }
 
-// Table pour l'audit trail (optionnel)
+// Table pour l'audit trail
 model AuditLog {
   id        String   @id @default(cuid())
-  action    String // "CREATE", "UPDATE", "DELETE", "LOGIN", etc.
-  entity    String // "Employee", "PayRun", "Payment", etc.
+  action    String // "CREATE", "UPDATE", "DELETE", "LOGIN", "ATTENDANCE_CHECK_IN", etc.
+  entity    String // "Employee", "PayRun", "Payment", "Attendance", etc.
   entityId  String?
   userId    String?
   details   Json? // Détails de l'action

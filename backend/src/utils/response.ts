@@ -28,3 +28,21 @@ export const sendResponse = <T>(
 
   res.status(statusCode).json(response);
 };
+
+export const successResponse = <T>(
+  res: Response,
+  data?: T,
+  message: string = "Succès",
+  statusCode: number = 200
+): void => {
+  sendResponse(res, statusCode, message, data);
+};
+
+export const errorResponse = (
+  res: Response,
+  message: string = "Erreur",
+  statusCode: number = 500,
+  errors?: any[]
+): void => {
+  sendResponse(res, statusCode, message, undefined, errors);
+};

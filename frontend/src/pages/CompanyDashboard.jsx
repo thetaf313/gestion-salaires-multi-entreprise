@@ -4,7 +4,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
-import { SalaryChart, EmployeeChart, ContractTypeChart, PayrollChart } from "../components/charts";
+import {
+  SalaryChart,
+  EmployeeChart,
+  ContractTypeChart,
+  PayrollChart,
+} from "../components/charts";
+import QuickAttendanceWidget from "../components/QuickAttendanceWidget";
 import {
   Building2,
   Users,
@@ -137,7 +143,12 @@ const CompanyDashboard = () => {
                   {company.isActive ? "Active" : "Inactive"}
                 </Badge>
                 <span className="text-sm text-gray-500">
-                  {company.payPeriodType === "MONTHLY" ? "Mensuelle" : company.payPeriodType === "WEEKLY" ? "Hebdomadaire" : "Journalière"} • {company.currency}
+                  {company.payPeriodType === "MONTHLY"
+                    ? "Mensuelle"
+                    : company.payPeriodType === "WEEKLY"
+                    ? "Hebdomadaire"
+                    : "Journalière"}{" "}
+                  • {company.currency}
                 </span>
               </div>
             </div>
@@ -235,6 +246,9 @@ const CompanyDashboard = () => {
           </div>
         </Card>
       </div>
+
+      {/* Widget de pointage rapide pour les utilisateurs qui sont aussi employés */}
+      {user?.employeeId && <QuickAttendanceWidget />}
 
       {/* Graphiques et analyses */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

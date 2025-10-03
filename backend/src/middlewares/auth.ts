@@ -39,6 +39,7 @@ export const validateToken = (
       email: decoded.email,
       role: decoded.role,
       companyId: decoded.companyId,
+      employeeId: decoded.employeeId,
     };
 
     console.log("✅ User ajouté à req:", req.user);

@@ -6,6 +6,7 @@ declare global {
         email: string;
         role: import("@prisma/client").UserRole;
         companyId?: string;
+        employeeId?: string;
       };
     }
   }
