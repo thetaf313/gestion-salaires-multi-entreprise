@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { authService } from "../services/authService";
+import authService from "../services/authService";
 
 const AuthContext = createContext({});
 
@@ -57,23 +57,46 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       setError(null);
+      console.log('🔍 Tentative de connexion avec:', { email, password: '***' });
+      
       const response = await authService.login({ email, password });
+      console.log('🔍 Réponse du service auth:', response);
+      
+      // Maintenant response contient directement la structure du backend
+      if (!response || !response.data) {
+        console.error('❌ Structure de réponse invalide:', response);
+        throw new Error('Structure de réponse invalide');
+      }
+      
+      if (!response.data.accessToken) {
+        console.error('❌ Pas d\'accessToken dans response.data');
+        console.error('Contenu de response.data:', response.data);
+        throw new Error('Token d\'accès manquant dans la réponse');
+      }
+      
       const { accessToken } = response.data;
 
       // Stocker le token
       localStorage.setItem("authToken", accessToken);
 
-      // Récupérer le profil utilisateur avec le token
-      const profileResponse = await authService.getProfile(accessToken);
-      const userData = profileResponse.data;
+      // Décoder le token pour obtenir les infos utilisateur
+      const decodedToken = JSON.parse(atob(accessToken.split('.')[1]));
+      const user = {
+        id: decodedToken.id,
+        email: decodedToken.email,
+        role: decodedToken.role,
+        companyId: decodedToken.companyId
+      };
 
       // Mettre à jour l'état
-      setUser(userData);
+      setUser(user);
       setIsAuthenticated(true);
 
+      console.log('✅ Connexion réussie:', user);
       return { success: true, data: response.data };
     } catch (error) {
-      setError(error.response?.data?.message || "Erreur de connexion");
+      console.error('❌ Erreur lors de la connexion:', error);
+      setError(error.response?.data?.message || error.message || "Erreur de connexion");
       throw error;
     }
   };
@@ -83,22 +106,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     setError(null);
-  };
-
-  const refreshToken = async () => {
-    try {
-      const response = await authService.refreshToken();
-      const { accessToken } = response.data;
-
-      // Stocker le nouveau token
-      localStorage.setItem("authToken", accessToken);
-
-      return accessToken;
-    } catch (error) {
-      // Le refresh a échoué, déconnecter l'utilisateur
-      logout();
-      throw error;
-    }
   };
 
   const updateUser = (userData) => {
@@ -113,7 +120,6 @@ export const AuthProvider = ({ children }) => {
     error,
     login,
     logout,
-    refreshToken,
     updateUser,
     checkAuth,
     clearError,

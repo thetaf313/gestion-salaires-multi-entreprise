@@ -64,11 +64,13 @@ export default function LoginPage() {
     console.log("🚀 Soumission du formulaire de connexion...");
 
     // Validation simple
+    let hasErrors = false;
     if (!formData.email) {
       setFormErrors((prev) => ({
         ...prev,
         email: "l'email est requis",
       }));
+      hasErrors = true;
     }
 
     if (!formData.password) {
@@ -76,6 +78,13 @@ export default function LoginPage() {
         ...prev,
         password: "Le mot de passe est requis",
       }));
+      hasErrors = true;
+    }
+
+    // Arrêter si il y a des erreurs de validation
+    if (hasErrors) {
+      setIsSubmitting(false);
+      return;
     }
 
     try {
@@ -91,12 +100,20 @@ export default function LoginPage() {
     } catch (error) {
       console.error("❌ Erreur lors de la connexion:", error);
       setIsSubmitting(false);
-      error.response && setFormErrors(prev => ({
-        ...prev,
-        global: error.response.message,
-        email: error.response.data.errors.email,
-        password: error.response.data.errors.password
-      }))
+
+      if (error.response && error.response.data) {
+        setFormErrors((prev) => ({
+          ...prev,
+          global: error.response.data.message || "Erreur lors de la connexion",
+          email: error.response.data.errors?.email || "",
+          password: error.response.data.errors?.password || "",
+        }));
+      } else {
+        setFormErrors((prev) => ({
+          ...prev,
+          global: "Erreur de connexion au serveur",
+        }));
+      }
     }
   };
 
@@ -166,7 +183,9 @@ export default function LoginPage() {
                     disabled={isSubmitting}
                     className="pr-10"
                   />
-                  <p className="text-sm text-destructive">{formErrors.password}</p>
+                  <p className="text-sm text-destructive">
+                    {formErrors.password}
+                  </p>
 
                   <button
                     type="button"

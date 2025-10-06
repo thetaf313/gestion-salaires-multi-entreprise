@@ -17,6 +17,7 @@ import {
   Clock,
   CalendarClock,
   TrendingUp,
+  QrCode,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -43,7 +44,8 @@ const AdminLayout = ({ children }) => {
     return (
       location.pathname.includes("/attendance") ||
       location.pathname.includes("/work-schedule") ||
-      location.pathname.includes("/attendance-stats")
+      location.pathname.includes("/attendance-stats") ||
+      location.pathname.includes("/employee-qr-codes")
     );
   };
 
@@ -133,6 +135,13 @@ const AdminLayout = ({ children }) => {
             ? `/company/${user.companyId}/attendance-stats`
             : "/attendance-stats",
         },
+        {
+          icon: QrCode,
+          label: "QR Codes Employés",
+          path: user?.companyId
+            ? `/company/${user.companyId}/employee-qr-codes`
+            : "/employee-qr-codes",
+        },
       ],
     },
     {
@@ -165,13 +174,13 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar Desktop */}
-      <div className={`hidden md:flex md:w-64 bg-white shadow-lg flex-col`}>
-        <div className="p-6 border-b">
+      <div className="hidden md:flex md:w-64 bg-white shadow-lg flex-col fixed h-full z-30">
+        <div className="p-6 border-b flex-shrink-0">
           <h1 className="text-xl font-bold text-gray-800">Gestion Salaires</h1>
           <p className="text-sm text-gray-500 mt-1">Multi-Entreprise</p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
 
@@ -245,8 +254,8 @@ const AdminLayout = ({ children }) => {
       {/* Sidebar Mobile */}
       {sidebarOpen && (
         <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-50">
-          <div className="w-64 bg-white h-full shadow-lg">
-            <div className="p-6 border-b flex justify-between items-center">
+          <div className="w-64 bg-white h-full shadow-lg flex flex-col">
+            <div className="p-6 border-b flex justify-between items-center flex-shrink-0">
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
                   Gestion Salaires
@@ -262,7 +271,7 @@ const AdminLayout = ({ children }) => {
               </Button>
             </div>
 
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
               {filteredMenuItems.map((item) => {
                 const Icon = item.icon;
 
@@ -340,9 +349,9 @@ const AdminLayout = ({ children }) => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 md:ml-64">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b px-6 py-4">
+        <header className="bg-white shadow-sm border-b px-6 py-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
@@ -454,7 +463,9 @@ const AdminLayout = ({ children }) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="min-h-screen bg-gray-50">
+          <div className="p-6">{children}</div>
+        </main>
       </div>
     </div>
   );

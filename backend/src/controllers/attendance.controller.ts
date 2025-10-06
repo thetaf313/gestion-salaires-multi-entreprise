@@ -8,8 +8,17 @@ export class AttendanceController {
   // ⭐ Rechercher un employé par code ou email
   async searchEmployee(req: Request, res: Response) {
     try {
-      const { searchTerm } = req.query;
-      const companyId = req.user?.companyId;
+      const { searchTerm, companyId: queryCompanyId } = req.query;
+
+      // Utiliser le companyId des query params ou celui du token
+      const companyId = queryCompanyId || req.user?.companyId;
+
+      console.log("🔍 Controller - Paramètres reçus:", {
+        searchTerm,
+        queryCompanyId,
+        userCompanyId: req.user?.companyId,
+        finalCompanyId: companyId,
+      });
 
       if (!companyId) {
         return errorResponse(res, "Entreprise non trouvée", 400);
@@ -20,10 +29,11 @@ export class AttendanceController {
       }
 
       const employee = await attendanceService.findEmployeeByCodeOrEmail(
-        companyId,
+        companyId as string,
         searchTerm
       );
 
+      console.log("✅ Controller - Employé trouvé et retourné:", employee);
       return successResponse(res, employee, "Employé trouvé");
     } catch (error: any) {
       console.error("Erreur recherche employé:", error);
@@ -34,22 +44,38 @@ export class AttendanceController {
   // ⭐ Créer un pointage avec calcul automatique du statut
   async createAttendanceWithAutoStatus(req: Request, res: Response) {
     try {
-      const { employeeId, checkInTime, checkOutTime, notes } = req.body;
+      console.log("🔍 CreateAttendance - Body reçu:", req.body);
+
+      const { employeeCodeOrEmail, date, checkIn, checkOut, notes } = req.body;
+
       const companyId = req.user?.companyId;
 
       if (!companyId) {
         return errorResponse(res, "Entreprise non trouvée", 400);
       }
 
-      if (!employeeId || !checkInTime) {
-        return errorResponse(res, "ID employé et heure d'arrivée requis", 400);
+      if (!employeeCodeOrEmail || !date) {
+        return errorResponse(res, "Code/email employé et date requis", 400);
       }
 
-      const attendance = await attendanceService.createAttendanceWithAutoStatus(
-        employeeId,
+      // D'abord trouver l'employé
+      const employee = await attendanceService.findEmployeeByCodeOrEmail(
         companyId,
-        new Date(checkInTime),
-        checkOutTime ? new Date(checkOutTime) : null,
+        employeeCodeOrEmail
+      );
+
+      // Construire les dates/heures
+      const attendanceDate = new Date(date);
+      const checkInTime = checkIn
+        ? new Date(`${date}T${checkIn}:00`)
+        : new Date();
+      const checkOutTime = checkOut ? new Date(`${date}T${checkOut}:00`) : null;
+
+      const attendance = await attendanceService.createAttendanceWithAutoStatus(
+        employee.id,
+        companyId,
+        checkInTime,
+        checkOutTime,
         notes
       );
 

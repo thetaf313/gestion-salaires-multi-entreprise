@@ -24,6 +24,7 @@ import Settings from "./pages/Settings";
 import AttendancePage from "./pages/AttendancePage";
 import WorkSchedulePage from "./pages/WorkSchedulePage";
 import AttendanceStatsPage from "./pages/AttendanceStatsPage";
+import EmployeeQRCodesPage from "./pages/EmployeeQRCodesPage";
 import AdminLayout from "./components/AdminLayout";
 
 // Import du script de test en développement
@@ -160,6 +161,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <AttendanceStatsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* QR Codes des employés */}
+                    <Route
+                      path="/company/:companyId/employee-qr-codes"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <EmployeeQRCodesPage />
                         </ProtectedRoute>
                       }
                     />

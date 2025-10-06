@@ -26,9 +26,9 @@ import {
   Plus,
   Search,
   Filter,
+  Sparkles,
 } from "lucide-react";
-import ManualAttendanceForm from "../components/ManualAttendanceForm";
-import SmartAttendanceForm from "../components/SmartAttendanceForm";
+import NewAttendanceModal from "../components/NewAttendanceModal";
 import attendanceService from "../services/attendanceService";
 
 const AttendancePage = () => {
@@ -42,8 +42,7 @@ const AttendancePage = () => {
     status: "",
     isValidated: "",
   });
-  const [showManualForm, setShowManualForm] = useState(false);
-  const [showSmartForm, setShowSmartForm] = useState(false);
+  const [showNewAttendanceModal, setShowNewAttendanceModal] = useState(false);
 
   // Récupérer les pointages
   const fetchAttendances = async () => {
@@ -58,18 +57,30 @@ const AttendancePage = () => {
         }
       });
 
+      console.log("🔍 Frontend - Fetch attendances avec filtres:", apiFilters);
       const response = await attendanceService.getAttendances(apiFilters);
+      console.log("📋 Frontend - Réponse reçue:", response);
 
       if (response.success) {
-        setAttendances(response.data.attendances || []);
+        // Vérifier la structure des données
+        console.log("✅ Frontend - Structure des données:", response.data);
+
+        // Le backend retourne { data: { attendances: [], pagination: {} } }
+        const attendancesData =
+          response.data.data?.attendances || response.data.attendances || [];
+        console.log("📊 Frontend - Attendances extraites:", attendancesData);
+
+        setAttendances(Array.isArray(attendancesData) ? attendancesData : []);
       } else {
         console.error(
           "Erreur lors de la récupération des pointages:",
           response.error
         );
+        setAttendances([]);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des pointages:", error);
+      setAttendances([]);
     } finally {
       setLoading(false);
     }
@@ -165,8 +176,8 @@ const AttendancePage = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-2">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
             Gestion des Pointages
@@ -177,21 +188,19 @@ const AttendancePage = () => {
         </div>
         <div className="flex gap-2">
           <Button
-            onClick={() => setShowSmartForm(true)}
-            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setShowNewAttendanceModal(true)}
+            className="text-white bg-black shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            size="lg"
+            variant="default"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau Pointage
-          </Button>
-          <Button onClick={() => setShowManualForm(true)} variant="outline">
-            <Plus className="w-4 h-4 mr-2" />
-            Pointage Manuel
+            <Sparkles className="w-5 h-5 mr-2" />
+            Nouveau Pointage Intelligent
           </Button>
         </div>
       </div>
 
       {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center">
@@ -252,7 +261,7 @@ const AttendancePage = () => {
       </div>
 
       {/* Filtres */}
-      <Card>
+      <Card className="mb-4">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Filter className="w-5 h-5 mr-2" />
@@ -443,29 +452,15 @@ const AttendancePage = () => {
         </CardContent>
       </Card>
 
-      {/* Formulaire de pointage intelligent */}
-      {showSmartForm && (
-        <SmartAttendanceForm
-          companyId={companyId}
-          onClose={() => setShowSmartForm(false)}
-          onSubmit={() => {
-            fetchAttendances();
-            setShowSmartForm(false);
-          }}
-        />
-      )}
-
-      {/* Formulaire de pointage manuel */}
-      {showManualForm && (
-        <ManualAttendanceForm
-          employees={[]} // Plus besoin de la liste des employés
-          onClose={() => setShowManualForm(false)}
-          onSubmit={() => {
-            fetchAttendances();
-            setShowManualForm(false);
-          }}
-        />
-      )}
+      {/* Modal de nouveau pointage intelligent */}
+      <NewAttendanceModal
+        isOpen={showNewAttendanceModal}
+        onClose={() => setShowNewAttendanceModal(false)}
+        companyId={companyId}
+        onSuccess={() => {
+          fetchAttendances();
+        }}
+      />
     </div>
   );
 };

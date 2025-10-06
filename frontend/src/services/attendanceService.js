@@ -2,12 +2,19 @@ import api from "./api";
 
 const attendanceService = {
   // Rechercher un employé par code ou email
-  searchEmployee: async (searchTerm) => {
+  searchEmployee: async (companyId, searchTerm) => {
     try {
       const response = await api.get(`/attendances/search-employee`, {
-        params: { searchTerm },
+        params: { companyId, searchTerm },
       });
-      return { success: true, data: response.data };
+
+      // Le backend retourne { success: true, message: "...", data: employeeData }
+      // On retourne directement les données de l'employé
+      if (response.data.success) {
+        return { success: true, data: response.data.data };
+      } else {
+        return { success: false, error: response.data.message };
+      }
     } catch (error) {
       return {
         success: false,

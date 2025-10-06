@@ -41,7 +41,6 @@ export const corsOptions: CorsOptions = {
     "Accept",
     "Origin",
     "Cache-Control",
-    "X-Requested-With",
   ],
   exposedHeaders: ["Content-Length", "X-Foo", "X-Bar"],
   maxAge: 86400, // Cache des options préflight pendant 24h
@@ -52,7 +51,16 @@ export const corsDevOptions: CorsOptions = {
   origin: true, // Autorise toutes les origines en développement
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: "*",
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+    "Origin",
+    "Cache-Control",
+  ],
+  preflightContinue: false,
+  optionsSuccessStatus: 200,
 };
 
 export default corsOptions;

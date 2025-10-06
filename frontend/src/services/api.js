@@ -27,83 +27,22 @@ api.interceptors.request.use(
   }
 );
 
-// Variable pour éviter les appels multiples de refresh
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-
-  failedQueue = [];
-};
-
 // Intercepteur pour gérer les réponses
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-  async (error) => {
-    const originalRequest = error.config;
+  (error) => {
+    console.log("🔍 API Error:", error.response?.status, error.response?.data);
 
-    // Gérer les erreurs d'authentification (token expiré)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        // Si un refresh est déjà en cours, mettre en queue
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            return api(originalRequest);
-          })
-          .catch((err) => {
-            return Promise.reject(err);
-          });
-      }
+    // Si erreur 401, rediriger vers login sans tentative de refresh automatique
+    if (error.response?.status === 401) {
+      // Supprimer le token invalide
+      localStorage.removeItem("authToken");
 
-      originalRequest._retry = true;
-      isRefreshing = true;
-
-      try {
-        // Tenter de refresh le token
-        const response = await axios.post(
-          `${API_BASE_URL}/auth/refresh-token`,
-          {},
-          {
-            withCredentials: true, // Pour envoyer les cookies (refreshToken)
-          }
-        );
-
-        const { accessToken } = response.data.data;
-
-        // Stocker le nouveau token
-        localStorage.setItem("authToken", accessToken);
-
-        // Traiter la queue des requêtes en attente
-        processQueue(null, accessToken);
-
-        // Relancer la requête originale avec le nouveau token
-        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        // Le refresh a échoué, déconnecter l'utilisateur
-        processQueue(refreshError, null);
-        localStorage.removeItem("authToken");
-
-        // Rediriger vers la page de connexion si nécessaire
-        if (window.location.pathname !== "/login") {
-          window.location.href = "/login";
-        }
-
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
+      // Rediriger vers login si pas déjà sur la page de login
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
       }
     }
 

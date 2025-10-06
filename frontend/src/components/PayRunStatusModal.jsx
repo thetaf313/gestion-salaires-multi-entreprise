@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { payRunService } from "../services/payRunService";
 
-export function PayRunStatusModal({ payRun, isOpen, onClose, onUpdate }) {
+export function PayRunStatusModal({ payRun, companyId, isOpen, onClose, onUpdate }) {
   const [isLoading, setIsLoading] = useState(false);
 
   if (!payRun) return null;
@@ -99,7 +99,7 @@ export function PayRunStatusModal({ payRun, isOpen, onClose, onUpdate }) {
 
     setIsLoading(true);
     try {
-      await payRunService.updateStatus(payRun.id, nextStatus);
+      await payRunService.updateStatus(companyId, payRun.id, nextStatus);
       toast.success(
         nextStatus === "APPROVED"
           ? "Cycle de paie approuvé avec succès"

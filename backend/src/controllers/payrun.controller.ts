@@ -271,6 +271,54 @@ class PayRunController {
       );
     }
   }
+
+  // Mettre à jour uniquement le statut d'un cycle de paie
+  async updateStatus(req: Request, res: Response) {
+    try {
+      const { id, companyId } = req.params;
+      const { status } = req.body;
+
+      if (!id || !companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID du cycle et de l'entreprise requis"
+        );
+      }
+
+      if (!status) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Statut requis"
+        );
+      }
+
+      const payRun = await payRunService.updateStatus(id, companyId, status);
+
+      if (!payRun) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Cycle de paie non trouvé"
+        );
+      }
+
+      sendResponse(
+        res,
+        HttpStatus.OK,
+        "Statut du cycle de paie mis à jour avec succès",
+        payRun
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      sendResponse(
+        res,
+        HttpStatus.BAD_REQUEST,
+        error.message || "Erreur lors de la mise à jour du statut"
+      );
+    }
+  }
 }
 
 export const payRunController = new PayRunController();

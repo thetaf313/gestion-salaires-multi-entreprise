@@ -18,5 +18,9 @@ router.patch(
   "/company/:companyId/payruns/:id/approve",
   payRunController.approve
 );
+router.patch(
+  "/company/:companyId/payruns/:id/status",
+  payRunController.updateStatus
+);
 
 export default router;

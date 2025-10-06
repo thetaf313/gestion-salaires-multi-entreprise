@@ -489,6 +489,53 @@ class PayRunService {
       currentYearPayRuns,
     };
   }
+
+  // Mettre à jour uniquement le statut d'un cycle de paie
+  async updateStatus(id: string, companyId: string, status: PayRunStatus) {
+    // Vérifier que le cycle existe et appartient à l'entreprise
+    const existingPayRun = await prisma.payRun.findFirst({
+      where: { id, companyId },
+    });
+
+    if (!existingPayRun) {
+      return null;
+    }
+
+    // Mettre à jour uniquement le statut
+    return await prisma.payRun.update({
+      where: { id },
+      data: { status },
+      include: {
+        company: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        approvedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            payslips: true,
+          },
+        },
+      },
+    });
+  }
 }
 
 export const payRunService = new PayRunService();

@@ -114,11 +114,18 @@ export class AttendanceService {
 
   // ⭐ Rechercher un employé par code ou email
   async findEmployeeByCodeOrEmail(companyId: string, searchTerm: string) {
+    console.log(
+      `🔍 Recherche employé avec terme: "${searchTerm}" dans companyId: ${companyId}`
+    );
+
     const employee = await prisma.employee.findFirst({
       where: {
         companyId,
         isActive: true,
         OR: [
+          { employeeCode: { equals: searchTerm } },
+          { email: { equals: searchTerm } },
+          // Recherche partielle aussi
           { employeeCode: { contains: searchTerm } },
           { email: { contains: searchTerm } },
         ],
@@ -134,7 +141,32 @@ export class AttendanceService {
       },
     });
 
+    console.log(
+      `📋 Employé trouvé:`,
+      employee
+        ? {
+            id: employee.id,
+            employeeCode: employee.employeeCode,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            email: employee.email,
+          }
+        : "Aucun"
+    );
+
     if (!employee) {
+      // Affichons aussi les employés disponibles pour debug
+      const allEmployees = await prisma.employee.findMany({
+        where: { companyId, isActive: true },
+        select: {
+          employeeCode: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      });
+      console.log(`📋 Employés disponibles:`, allEmployees);
+
       throw new Error("Employé non trouvé avec ce code ou email");
     }
 
