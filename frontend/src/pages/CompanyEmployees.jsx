@@ -40,7 +40,6 @@ import {
 } from "lucide-react";
 import { employeeService } from "../services/employeeService";
 import { companyService } from "../services/companyService";
-import { CreateEmployeeModal } from "../components/CreateEmployeeModal";
 import { EmployeeDetailsModal } from "../components/EmployeeDetailsModal";
 import { EditEmployeeModal } from "../components/EditEmployeeModal";
 import { useAuth } from "../contexts/AuthContext";
@@ -246,10 +245,13 @@ export function CompanyEmployees() {
         </div>
 
         {canManageEmployees && (
-          <CreateEmployeeModal
-            companyId={companyId}
-            onEmployeeCreated={loadData}
-          />
+          <Button
+            onClick={() => navigate(`/company/${companyId}/employees/create`)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Nouvel employé
+          </Button>
         )}
       </div>
 
@@ -350,10 +352,24 @@ export function CompanyEmployees() {
       {/* Liste des employés */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Employés ({employees.length})
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              Employés ({employees.length})
+            </CardTitle>
+            {canManageEmployees && (
+              <Button
+                size="sm"
+                onClick={() =>
+                  navigate(`/company/${companyId}/employees/create`)
+                }
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {employees.length > 0 ? (

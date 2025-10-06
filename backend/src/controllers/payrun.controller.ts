@@ -287,11 +287,7 @@ class PayRunController {
       }
 
       if (!status) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Statut requis"
-        );
+        return sendResponse(res, HttpStatus.BAD_REQUEST, "Statut requis");
       }
 
       const payRun = await payRunService.updateStatus(id, companyId, status);

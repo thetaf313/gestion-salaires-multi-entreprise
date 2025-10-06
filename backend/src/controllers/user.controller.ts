@@ -213,6 +213,153 @@ export class UserController {
       );
     }
   }
+
+  // Désactiver un utilisateur
+  async deactivateUser(req: Request, res: Response) {
+    try {
+      const { userId } = req.params;
+      const currentUser = req.user;
+
+      if (!userId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID utilisateur manquant"
+        );
+      }
+
+      if (!currentUser) {
+        return sendResponse(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          "Utilisateur non authentifié"
+        );
+      }
+
+      // Vérifier les permissions (seuls SUPER_ADMIN et ADMIN peuvent désactiver)
+      if (currentUser.role === "CASHIER" || currentUser.role === "USER") {
+        return sendResponse(
+          res,
+          HttpStatus.FORBIDDEN,
+          "Permission insuffisante"
+        );
+      }
+
+      const result = await userService.updateUserStatus(userId, false);
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Utilisateur désactivé avec succès",
+        result
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la désactivation de l'utilisateur:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la désactivation de l'utilisateur"
+      );
+    }
+  }
+
+  // Réactiver un utilisateur
+  async activateUser(req: Request, res: Response) {
+    try {
+      const { userId } = req.params;
+      const currentUser = req.user;
+
+      if (!userId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID utilisateur manquant"
+        );
+      }
+
+      if (!currentUser) {
+        return sendResponse(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          "Utilisateur non authentifié"
+        );
+      }
+
+      // Vérifier les permissions (seuls SUPER_ADMIN et ADMIN peuvent réactiver)
+      if (currentUser.role === "CASHIER" || currentUser.role === "USER") {
+        return sendResponse(
+          res,
+          HttpStatus.FORBIDDEN,
+          "Permission insuffisante"
+        );
+      }
+
+      const result = await userService.updateUserStatus(userId, true);
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Utilisateur réactivé avec succès",
+        result
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la réactivation de l'utilisateur:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la réactivation de l'utilisateur"
+      );
+    }
+  }
+
+  // Réinitialiser le mot de passe d'un utilisateur
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const { userId } = req.params;
+      const currentUser = req.user;
+
+      if (!userId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "ID utilisateur manquant"
+        );
+      }
+
+      if (!currentUser) {
+        return sendResponse(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          "Utilisateur non authentifié"
+        );
+      }
+
+      // Vérifier les permissions (seuls SUPER_ADMIN et ADMIN peuvent réinitialiser)
+      if (currentUser.role === "CASHIER" || currentUser.role === "USER") {
+        return sendResponse(
+          res,
+          HttpStatus.FORBIDDEN,
+          "Permission insuffisante"
+        );
+      }
+
+      const result = await userService.resetUserPassword(userId);
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Mot de passe réinitialisé avec succès",
+        result
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la réinitialisation du mot de passe"
+      );
+    }
+  }
 }
 
 export default new UserController();

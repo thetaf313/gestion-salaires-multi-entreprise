@@ -1,0 +1,477 @@
+import { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
+import { employeeUserService } from "../services/employeeUser.service.js";
+import { HttpStatus } from "../constants/httpStatus.js";
+import { Messages } from "../constants/messages.js";
+import { sendResponse } from "../utils/response.js";
+
+const prisma = new PrismaClient();
+
+class EmployeeController {
+  // Créer un nouvel employé (utilise le nouveau système employeeUser)
+  async createEmployee(req: Request, res: Response) {
+    try {
+      const { companyId } = req.params;
+      const employeeData = req.body;
+
+      // Validation du companyId
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      // Vérifier que l'entreprise existe
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+      });
+
+      if (!company) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Entreprise non trouvée"
+        );
+      }
+
+      // Utiliser le service employeeUser pour créer l'employé
+      const newEmployee = await employeeUserService.createEmployee(
+        companyId,
+        employeeData
+      );
+
+      return sendResponse(
+        res,
+        HttpStatus.CREATED,
+        true,
+        "Employé créé avec succès",
+        newEmployee
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la création de l'employé:", error);
+      if (error.message) {
+        return sendResponse(res, HttpStatus.BAD_REQUEST, false, error.message);
+      }
+
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Obtenir les employés d'une entreprise avec pagination
+  async getEmployeesByCompany(req, res) {
+    try {
+      const { companyId } = req.params;
+      const { page = 1, limit = 10 } = req.query;
+
+      // Validation du companyId
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      // Récupérer les employés avec pagination
+      const employees = await prisma.employee.findMany({
+        where: { companyId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Compter le total d'employés
+      const total = await prisma.employee.count({
+        where: { companyId },
+      });
+
+      const result = {
+        employees,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / parseInt(limit)),
+        },
+      };
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Employés récupérés avec succès",
+        result
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération des employés:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Obtenir les statistiques des employés d'une entreprise
+  async getEmployeeStats(req, res) {
+    try {
+      const { companyId } = req.params;
+
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      const total = await prisma.employee.count({
+        where: { companyId },
+      });
+
+      const admins = await prisma.employee.count({
+        where: {
+          companyId,
+          user: {
+            role: "ADMIN",
+          },
+        },
+      });
+
+      const cashiers = await prisma.employee.count({
+        where: {
+          companyId,
+          user: {
+            role: "CASHIER",
+          },
+        },
+      });
+
+      const users = await prisma.employee.count({
+        where: {
+          companyId,
+          user: {
+            role: "USER",
+          },
+        },
+      });
+
+      const stats = {
+        total,
+        admins,
+        cashiers,
+        users,
+      };
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Statistiques récupérées avec succès",
+        stats
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération des statistiques:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Rechercher des employés dans une entreprise
+  async searchEmployees(req, res) {
+    try {
+      const { companyId } = req.params;
+      const { q: searchTerm } = req.query;
+
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      if (!searchTerm || searchTerm.trim().length < 2) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "Le terme de recherche doit contenir au moins 2 caractères"
+        );
+      }
+
+      const employees = await prisma.employee.findMany({
+        where: {
+          companyId,
+          OR: [
+            { firstName: { contains: searchTerm, mode: "insensitive" } },
+            { lastName: { contains: searchTerm, mode: "insensitive" } },
+            { employeeCode: { contains: searchTerm, mode: "insensitive" } },
+            { position: { contains: searchTerm, mode: "insensitive" } },
+            { user: { email: { contains: searchTerm, mode: "insensitive" } } },
+          ],
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Recherche effectuée avec succès",
+        employees
+      );
+    } catch (error) {
+      console.error("Erreur lors de la recherche d'employés:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Obtenir un employé par ID
+  async getEmployeeById(req, res) {
+    try {
+      const { employeeId } = req.params;
+
+      if (!employeeId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'employé est requis"
+        );
+      }
+
+      const employee = await prisma.employee.findUnique({
+        where: { id: employeeId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      if (!employee) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Employé non trouvé"
+        );
+      }
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Employé récupéré avec succès",
+        employee
+      );
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'employé:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Mettre à jour un employé
+  async updateEmployee(req, res) {
+    try {
+      const { employeeId } = req.params;
+      const updateData = req.body;
+
+      if (!employeeId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'employé est requis"
+        );
+      }
+
+      // Vérifier que l'employé existe
+      const existingEmployee = await prisma.employee.findUnique({
+        where: { id: employeeId },
+        include: { user: true },
+      });
+
+      if (!existingEmployee) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Employé non trouvé"
+        );
+      }
+
+      // Préparer les données pour la mise à jour
+      const { email, role, ...employeeFields } = updateData;
+
+      // Mettre à jour l'employé et l'utilisateur associé
+      const updatedEmployee = await prisma.$transaction(async (prisma) => {
+        // Mettre à jour l'employé
+        const employee = await prisma.employee.update({
+          where: { id: employeeId },
+          data: employeeFields,
+        });
+
+        // Mettre à jour l'utilisateur si nécessaire
+        if (email || role) {
+          await prisma.user.update({
+            where: { id: existingEmployee.userId },
+            data: {
+              ...(email && { email }),
+              ...(role && { role }),
+            },
+          });
+        }
+
+        return employee;
+      });
+
+      // Récupérer l'employé mis à jour avec ses relations
+      const employeeWithUser = await prisma.employee.findUnique({
+        where: { id: employeeId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      });
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Employé mis à jour avec succès",
+        employeeWithUser
+      );
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'employé:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Supprimer un employé
+  async deleteEmployee(req, res) {
+    try {
+      const { employeeId } = req.params;
+
+      if (!employeeId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          false,
+          "L'ID de l'employé est requis"
+        );
+      }
+
+      // Vérifier que l'employé existe
+      const existingEmployee = await prisma.employee.findUnique({
+        where: { id: employeeId },
+        include: { user: true },
+      });
+
+      if (!existingEmployee) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          false,
+          "Employé non trouvé"
+        );
+      }
+
+      // Supprimer l'employé et l'utilisateur associé
+      await prisma.$transaction(async (prisma) => {
+        // Supprimer l'employé (cela supprimera aussi les relations)
+        await prisma.employee.delete({
+          where: { id: employeeId },
+        });
+
+        // Supprimer l'utilisateur associé
+        await prisma.user.delete({
+          where: { id: existingEmployee.userId },
+        });
+      });
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        true,
+        "Employé supprimé avec succès"
+      );
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'employé:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        false,
+        "Erreur interne du serveur"
+      );
+    }
+  }
+}
+
+export default new EmployeeController();

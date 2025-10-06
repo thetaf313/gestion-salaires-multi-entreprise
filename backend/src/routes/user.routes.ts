@@ -13,6 +13,9 @@ router.get(
   "/company/:companyId",
   userController.getUsersByCompany.bind(userController)
 );
+router.patch("/:userId/deactivate", userController.deactivateUser.bind(userController));
+router.patch("/:userId/activate", userController.activateUser.bind(userController));
+router.patch("/:userId/reset-password", userController.resetPassword.bind(userController));
 router.get("/stats", userController.getUserStats.bind(userController));
 
 export default router;

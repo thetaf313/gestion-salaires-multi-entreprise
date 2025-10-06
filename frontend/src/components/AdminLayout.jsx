@@ -10,6 +10,7 @@ import {
   Menu,
   X,
   Users,
+  UserPlus,
   Calendar,
   FileText,
   CreditCard,
@@ -77,6 +78,12 @@ const AdminLayout = ({ children }) => {
         ? `/company/${user.companyId}/employees`
         : "/employees",
       roles: ["ADMIN"],
+    },
+    {
+      icon: UserPlus,
+      label: "Utilisateurs",
+      path: user?.companyId ? `/company/${user.companyId}/users` : "/users",
+      roles: ["ADMIN", "SUPER_ADMIN"],
     },
     {
       icon: Calendar,

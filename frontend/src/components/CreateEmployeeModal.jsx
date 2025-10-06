@@ -126,16 +126,10 @@ export function CreateEmployeeModal({ companyId, onEmployeeCreated, trigger }) {
       const employeeData = {
         ...formData,
         companyId,
-        // Convertir les montants en nombres
-        dailyRate: formData.dailyRate
-          ? parseFloat(formData.dailyRate)
-          : undefined,
-        fixedSalary: formData.fixedSalary
-          ? parseFloat(formData.fixedSalary)
-          : undefined,
-        hourlyRate: formData.hourlyRate
-          ? parseFloat(formData.hourlyRate)
-          : undefined,
+        // Garder les montants comme des strings pour préserver la précision
+        dailyRate: formData.dailyRate || undefined,
+        fixedSalary: formData.fixedSalary || undefined,
+        hourlyRate: formData.hourlyRate || undefined,
       };
 
       await employeeService.createEmployee(employeeData);

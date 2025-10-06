@@ -36,30 +36,37 @@ export const payRunService = {
 
   // Approuver un cycle de paie et générer les bulletins
   async approve(companyId, id) {
-    console.log('🔍 Service payRun.approve appelé avec:', { companyId, id });
-    
+    console.log("🔍 Service payRun.approve appelé avec:", { companyId, id });
+
     try {
       const response = await api.patch(
         `/company/${companyId}/payruns/${id}/approve`
       );
-      console.log('🔍 Réponse API approbation:', response);
+      console.log("🔍 Réponse API approbation:", response);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur dans payRun.approve:', error);
+      console.error("❌ Erreur dans payRun.approve:", error);
       throw error;
     }
   },
 
   // Mettre à jour le statut d'un cycle de paie
   async updateStatus(companyId, id, status) {
-    console.log('🔍 Service payRun.updateStatus appelé avec:', { companyId, id, status });
-    
+    console.log("🔍 Service payRun.updateStatus appelé avec:", {
+      companyId,
+      id,
+      status,
+    });
+
     try {
-      const response = await api.patch(`/company/${companyId}/payruns/${id}/status`, { status });
-      console.log('🔍 Réponse API updateStatus:', response);
+      const response = await api.patch(
+        `/company/${companyId}/payruns/${id}/status`,
+        { status }
+      );
+      console.log("🔍 Réponse API updateStatus:", response);
       return response.data;
     } catch (error) {
-      console.error('❌ Erreur dans payRun.updateStatus:', error);
+      console.error("❌ Erreur dans payRun.updateStatus:", error);
       throw error;
     }
   },

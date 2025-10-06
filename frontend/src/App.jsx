@@ -25,6 +25,7 @@ import AttendancePage from "./pages/AttendancePage";
 import WorkSchedulePage from "./pages/WorkSchedulePage";
 import AttendanceStatsPage from "./pages/AttendanceStatsPage";
 import EmployeeQRCodesPage from "./pages/EmployeeQRCodesPage";
+import CreateEmployeePage from "./pages/CreateEmployeePage";
 import AdminLayout from "./components/AdminLayout";
 
 // Import du script de test en développement
@@ -90,6 +91,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <CompanyEmployees />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Création d'employé */}
+                    <Route
+                      path="/company/:companyId/employees/create"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <CreateEmployeePage />
                         </ProtectedRoute>
                       }
                     />

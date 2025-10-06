@@ -15,6 +15,7 @@ enum UserRole {
   SUPER_ADMIN
   ADMIN
   CASHIER
+  USER // Employé simple
 }
 
 // Énumération pour les types de contrats
@@ -135,14 +136,17 @@ model Employee {
   employeeCode String       @unique // Code employé unique
   firstName    String
   lastName     String
-  email        String?
-  phone        String?
+  email        String       // Email obligatoire
+  phone        String       // Téléphone obligatoire
   address      String?
   contractType ContractType
   position     String // Poste occupé
   dailyRate    Decimal? // Taux journalier (pour les journaliers)
   fixedSalary  Decimal? // Salaire fixe (pour les salariés fixes)
   hourlyRate   Decimal? // Taux horaire (pour les honoraires)
+
+  // QR Code pour le pointage
+  qrCode       String? @db.Text // Code QR généré basé sur le matricule
 
   // Informations bancaires
   bankName      String?
@@ -160,7 +164,7 @@ model Employee {
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId String
 
-  // ⭐ NOUVEAU : Un employé peut avoir un compte utilisateur
+  // ⭐ NOUVEAU : Un employé peut avoir un compte utilisateur (relation inverse)
   user User?
 
   payslips    Payslip[]

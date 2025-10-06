@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -66,6 +67,17 @@ export class UserService {
               select: {
                 id: true,
                 name: true,
+              },
+            },
+            employee: {
+              select: {
+                id: true,
+                employeeCode: true,
+                firstName: true,
+                lastName: true,
+                position: true,
+                phone: true,
+                email: true,
               },
             },
           },
@@ -260,6 +272,57 @@ export class UserService {
         admins,
         cashiers,
         superAdmins,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Mettre à jour le statut d'un utilisateur (actif/inactif)
+  async updateUserStatus(userId: string, isActive: boolean) {
+    try {
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { isActive },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Réinitialiser le mot de passe d'un utilisateur
+  async resetUserPassword(userId: string) {
+    try {
+      // Générer un nouveau mot de passe temporaire
+      const newPassword = Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      const user = await prisma.user.update({
+        where: { id: userId },
+        data: { password: hashedPassword },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      return {
+        user,
+        newPassword, // Retourner le mot de passe en clair pour l'afficher à l'admin
       };
     } catch (error) {
       throw error;

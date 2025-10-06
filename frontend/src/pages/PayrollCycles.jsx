@@ -80,13 +80,16 @@ export default function PayrollCycles() {
 
   const handleApprove = async (cycleId) => {
     try {
-      console.log('🔍 Tentative d\'approbation du cycle:', { cycleId, companyId });
-      
+      console.log("🔍 Tentative d'approbation du cycle:", {
+        cycleId,
+        companyId,
+      });
+
       const response = await payRunService.approve(companyId, cycleId);
-      console.log('🔍 Réponse de l\'approbation:', response);
-      
+      console.log("🔍 Réponse de l'approbation:", response);
+
       if (response.success) {
-        console.log('✅ Approbation réussie, rechargement des données...');
+        console.log("✅ Approbation réussie, rechargement des données...");
         // Recharger les données
         await loadCycles();
         await loadStats();
@@ -94,18 +97,23 @@ export default function PayrollCycles() {
           "Cycle de paie approuvé et bulletins générés avec succès !"
         );
       } else {
-        console.error('❌ Échec de l\'approbation:', response);
-        toast.error(response.message || "Erreur lors de l'approbation du cycle de paie");
+        console.error("❌ Échec de l'approbation:", response);
+        toast.error(
+          response.message || "Erreur lors de l'approbation du cycle de paie"
+        );
       }
     } catch (error) {
       console.error("❌ Erreur lors de l'approbation:", error);
       console.error("❌ Détails de l'erreur:", {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
       });
-      
-      const errorMessage = error.response?.data?.message || error.message || "Erreur lors de l'approbation du cycle de paie";
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Erreur lors de l'approbation du cycle de paie";
       toast.error(errorMessage);
     }
   };

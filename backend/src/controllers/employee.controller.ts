@@ -1,191 +1,128 @@
 import { Request, Response } from "express";
-import employeeService from "../services/employee.service.js";
+import { PrismaClient } from "@prisma/client";
+// @ts-ignore
+import { employeeUserService } from "../services/employeeUser.service.js";
 import { HttpStatus } from "../constants/httpStatus.js";
 import { sendResponse } from "../utils/response.js";
 
-export class EmployeeController {
-  // Créer un nouvel employé
+const prisma = new PrismaClient();
+
+class EmployeeController {
+  // Créer un nouvel employé (utilise le nouveau système employeeUser)
   async createEmployee(req: Request, res: Response) {
     try {
-      const {
-        firstName,
-        lastName,
-        email,
-        phone,
-        position,
-        contractType,
-        dailyRate,
-        fixedSalary,
-        hourlyRate,
-        hireDate,
+      const { companyId } = req.params;
+      const employeeData = req.body;
+
+      // Validation du companyId
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      // Vérifier que l'entreprise existe
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+      });
+
+      if (!company) {
+        return sendResponse(
+          res,
+          HttpStatus.NOT_FOUND,
+          "Entreprise non trouvée"
+        );
+      }
+
+      // Utiliser le service employeeUser pour créer l'employé
+      const newEmployee = await employeeUserService.createEmployee(
         companyId,
-      } = req.body;
-
-      // Validation basique
-      if (
-        !firstName ||
-        !lastName ||
-        !position ||
-        !contractType ||
-        !hireDate ||
-        !companyId
-      ) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Tous les champs obligatoires doivent être remplis"
-        );
-      }
-
-      // Validation du type de contrat et salaire correspondant
-      if (contractType === "DAILY" && !dailyRate) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Le taux journalier est requis pour un contrat journalier"
-        );
-      }
-      if (contractType === "FIXED" && !fixedSalary) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Le salaire fixe est requis pour un contrat fixe"
-        );
-      }
-      if (contractType === "HONORARIUM" && !hourlyRate) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Le taux horaire est requis pour un honoraire"
-        );
-      }
-
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
-      }
-
-      // Vérification des permissions
-      if (currentUser.role === "CASHIER") {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Permission insuffisante"
-        );
-      }
-
-      // Un ADMIN ne peut créer des employés que pour sa propre entreprise
-      if (currentUser.role === "ADMIN" && currentUser.companyId !== companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez créer des employés que pour votre entreprise"
-        );
-      }
-
-      const employeeData: any = {
-        firstName,
-        lastName,
-        position,
-        contractType,
-        hireDate: new Date(hireDate),
-        companyId,
-      };
-
-      // Ajouter les champs optionnels seulement s'ils sont définis
-      if (email) employeeData.email = email;
-      if (phone) employeeData.phone = phone;
-
-      // Ajouter le type de salaire correspondant au contrat
-      if (contractType === "DAILY" && dailyRate) {
-        employeeData.dailyRate = parseFloat(dailyRate);
-      } else if (contractType === "FIXED" && fixedSalary) {
-        employeeData.fixedSalary = parseFloat(fixedSalary);
-      } else if (contractType === "HONORARIUM" && hourlyRate) {
-        employeeData.hourlyRate = parseFloat(hourlyRate);
-      }
-
-      const employee = await employeeService.createEmployee(employeeData);
+        employeeData
+      );
 
       return sendResponse(
         res,
         HttpStatus.CREATED,
         "Employé créé avec succès",
-        employee
+        newEmployee
       );
     } catch (error: any) {
       console.error("Erreur lors de la création de l'employé:", error);
+      if (error.message) {
+        return sendResponse(res, HttpStatus.BAD_REQUEST, error.message);
+      }
+
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la création de l'employé"
+        "Erreur interne du serveur"
       );
     }
   }
 
-  // Obtenir les employés d'une entreprise
+  // Obtenir les employés d'une entreprise avec pagination
   async getEmployeesByCompany(req: Request, res: Response) {
     try {
       const { companyId } = req.params;
-      const { page = 1, limit = 10 } = req.query;
+      const { page = 1, limit = 10, search = "" } = req.query;
 
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
-      }
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+      const offset = (pageNum - 1) * limitNum;
 
-      // Vérifier les permissions
-      if (currentUser.role === "CASHIER") {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Permission insuffisante"
-        );
-      }
-
-      // Un ADMIN ne peut voir que les employés de sa propre entreprise
-      if (currentUser.role === "ADMIN" && currentUser.companyId !== companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez voir que les employés de votre entreprise"
-        );
-      }
-
-      if (!companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "ID de l'entreprise requis"
-        );
-      }
-
-      const result = await employeeService.getEmployeesByCompany(
+      const whereClause: any = {
         companyId,
-        parseInt(page as string),
-        parseInt(limit as string)
-      );
+        isActive: true,
+      };
+
+      if (search) {
+        whereClause.OR = [
+          { firstName: { contains: search as string } },
+          { lastName: { contains: search as string } },
+          { email: { contains: search as string } },
+          { employeeCode: { contains: search as string } },
+        ];
+      }
+
+      const [employees, total] = await Promise.all([
+        prisma.employee.findMany({
+          where: whereClause,
+          include: {
+            company: {
+              select: {
+                name: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          skip: offset,
+          take: limitNum,
+        }),
+        prisma.employee.count({ where: whereClause }),
+      ]);
 
       return sendResponse(
         res,
         HttpStatus.OK,
         "Employés récupérés avec succès",
-        result
+        {
+          employees,
+          pagination: {
+            currentPage: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+            totalItems: total,
+            itemsPerPage: limitNum,
+          },
+        }
       );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des employés:", error);
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la récupération des employés"
+        "Erreur interne du serveur"
       );
     }
   }
@@ -193,37 +130,37 @@ export class EmployeeController {
   // Obtenir un employé par ID
   async getEmployeeById(req: Request, res: Response) {
     try {
-      const { employeeId } = req.params;
+      const { id } = req.params;
 
-      if (!employeeId) {
+      if (!id) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
-          "ID de l'employé requis"
+          "L'ID de l'employé est requis"
         );
       }
 
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
-      }
+      const employee = await prisma.employee.findFirst({
+        where: { id },
+        include: {
+          company: {
+            select: {
+              name: true,
+            },
+          },
+          user: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              isActive: true,
+            },
+          },
+        },
+      });
 
-      const employee = await employeeService.getEmployeeById(employeeId);
-
-      // Vérifier les permissions
-      if (
-        currentUser.role === "ADMIN" &&
-        employee.companyId !== currentUser.companyId
-      ) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Permission insuffisante"
-        );
+      if (!employee) {
+        return sendResponse(res, HttpStatus.NOT_FOUND, "Employé non trouvé");
       }
 
       return sendResponse(
@@ -236,8 +173,8 @@ export class EmployeeController {
       console.error("Erreur lors de la récupération de l'employé:", error);
       return sendResponse(
         res,
-        HttpStatus.NOT_FOUND,
-        error.message || "Employé non trouvé"
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Erreur interne du serveur"
       );
     }
   }
@@ -245,138 +182,165 @@ export class EmployeeController {
   // Mettre à jour un employé
   async updateEmployee(req: Request, res: Response) {
     try {
-      const { employeeId } = req.params;
+      const { id } = req.params;
       const updateData = req.body;
 
-      if (!employeeId) {
+      if (!id) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
-          "ID de l'employé requis"
+          "L'ID de l'employé est requis"
         );
       }
 
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
+      // Vérifier que l'employé existe
+      const existingEmployee = await prisma.employee.findFirst({
+        where: { id },
+      });
+
+      if (!existingEmployee) {
+        return sendResponse(res, HttpStatus.NOT_FOUND, "Employé non trouvé");
       }
 
-      // Récupérer l'employé à modifier
-      const employeeToUpdate = await employeeService.getEmployeeById(
-        employeeId
-      );
+      // Mettre à jour l'employé
+      const updatedEmployee = await prisma.employee.updateMany({
+        where: { id },
+        data: updateData,
+      });
 
-      // Vérifier les permissions
-      if (currentUser.role === "CASHIER") {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Permission insuffisante"
-        );
-      }
-
-      if (
-        currentUser.role === "ADMIN" &&
-        employeeToUpdate.companyId !== currentUser.companyId
-      ) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez modifier que les employés de votre entreprise"
-        );
-      }
-
-      // Conversion des montants en nombres si fournis
-      if (updateData.dailyRate)
-        updateData.dailyRate = parseFloat(updateData.dailyRate);
-      if (updateData.fixedSalary)
-        updateData.fixedSalary = parseFloat(updateData.fixedSalary);
-      if (updateData.hourlyRate)
-        updateData.hourlyRate = parseFloat(updateData.hourlyRate);
-      if (updateData.hireDate)
-        updateData.hireDate = new Date(updateData.hireDate);
-
-      const updatedEmployee = await employeeService.updateEmployee(
-        employeeId,
-        updateData
-      );
+      // Récupérer l'employé mis à jour
+      const employee = await prisma.employee.findFirst({
+        where: { id },
+        include: {
+          company: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
 
       return sendResponse(
         res,
         HttpStatus.OK,
         "Employé mis à jour avec succès",
-        updatedEmployee
+        employee
       );
     } catch (error: any) {
       console.error("Erreur lors de la mise à jour de l'employé:", error);
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la mise à jour de l'employé"
+        "Erreur interne du serveur"
       );
     }
   }
 
-  // Supprimer un employé
+  // Supprimer un employé (désactivation)
   async deleteEmployee(req: Request, res: Response) {
     try {
-      const { employeeId } = req.params;
+      const { id } = req.params;
 
-      if (!employeeId) {
+      if (!id) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
-          "ID de l'employé requis"
+          "L'ID de l'employé est requis"
         );
       }
 
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
+      // Vérifier que l'employé existe
+      const existingEmployee = await prisma.employee.findFirst({
+        where: { id },
+      });
+
+      if (!existingEmployee) {
+        return sendResponse(res, HttpStatus.NOT_FOUND, "Employé non trouvé");
       }
 
-      // Récupérer l'employé à supprimer
-      const employeeToDelete = await employeeService.getEmployeeById(
-        employeeId
+      // Désactiver l'employé au lieu de le supprimer
+      await prisma.employee.updateMany({
+        where: { id },
+        data: { isActive: false },
+      });
+
+      // Récupérer l'employé mis à jour
+      const deletedEmployee = await prisma.employee.findFirst({
+        where: { id },
+      });
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Employé supprimé avec succès",
+        deletedEmployee
       );
-
-      // Vérifier les permissions
-      if (currentUser.role === "CASHIER") {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Permission insuffisante"
-        );
-      }
-
-      if (
-        currentUser.role === "ADMIN" &&
-        employeeToDelete.companyId !== currentUser.companyId
-      ) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez supprimer que les employés de votre entreprise"
-        );
-      }
-
-      await employeeService.deleteEmployee(employeeId);
-
-      return sendResponse(res, HttpStatus.OK, "Employé supprimé avec succès");
     } catch (error: any) {
       console.error("Erreur lors de la suppression de l'employé:", error);
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la suppression de l'employé"
+        "Erreur interne du serveur"
+      );
+    }
+  }
+
+  // Rechercher des employés
+  async searchEmployees(req: Request, res: Response) {
+    try {
+      const { companyId } = req.params;
+      const { search = "" } = req.query;
+
+      if (!companyId) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "L'ID de l'entreprise est requis"
+        );
+      }
+
+      if (!search) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Le terme de recherche est requis"
+        );
+      }
+
+      const employees = await prisma.employee.findMany({
+        where: {
+          companyId,
+          isActive: true,
+          OR: [
+            { firstName: { contains: search as string } },
+            { lastName: { contains: search as string } },
+            { email: { contains: search as string } },
+            { employeeCode: { contains: search as string } },
+          ],
+        },
+        include: {
+          company: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 50, // Limiter à 50 résultats
+      });
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Recherche terminée avec succès",
+        employees
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la recherche d'employés:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "Erreur interne du serveur"
       );
     }
   }
@@ -390,100 +354,43 @@ export class EmployeeController {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
-          "ID de l'entreprise requis"
+          "L'ID de l'entreprise est requis"
         );
       }
 
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
-      }
+      const stats = await prisma.employee.groupBy({
+        by: ["contractType"],
+        where: {
+          companyId,
+          isActive: true,
+        },
+        _count: {
+          contractType: true,
+        },
+      });
 
-      // Vérifier les permissions
-      if (currentUser.role === "ADMIN" && currentUser.companyId !== companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez voir que les statistiques de votre entreprise"
-        );
-      }
-
-      const stats = await employeeService.getEmployeeStats(companyId);
+      const totalEmployees = await prisma.employee.count({
+        where: {
+          companyId,
+          isActive: true,
+        },
+      });
 
       return sendResponse(
         res,
         HttpStatus.OK,
         "Statistiques récupérées avec succès",
-        stats
+        {
+          totalEmployees,
+          byContractType: stats,
+        }
       );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des statistiques:", error);
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la récupération des statistiques"
-      );
-    }
-  }
-
-  // Rechercher des employés
-  async searchEmployees(req: Request, res: Response) {
-    try {
-      const { companyId } = req.params;
-      const { query } = req.query;
-
-      if (!companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "ID de l'entreprise requis"
-        );
-      }
-
-      if (!query || typeof query !== "string") {
-        return sendResponse(
-          res,
-          HttpStatus.BAD_REQUEST,
-          "Paramètre de recherche requis"
-        );
-      }
-
-      const currentUser = req.user;
-      if (!currentUser) {
-        return sendResponse(
-          res,
-          HttpStatus.UNAUTHORIZED,
-          "Utilisateur non authentifié"
-        );
-      }
-
-      // Vérifier les permissions
-      if (currentUser.role === "ADMIN" && currentUser.companyId !== companyId) {
-        return sendResponse(
-          res,
-          HttpStatus.FORBIDDEN,
-          "Vous ne pouvez rechercher que dans votre entreprise"
-        );
-      }
-
-      const employees = await employeeService.searchEmployees(companyId, query);
-
-      return sendResponse(
-        res,
-        HttpStatus.OK,
-        "Recherche effectuée avec succès",
-        employees
-      );
-    } catch (error: any) {
-      console.error("Erreur lors de la recherche:", error);
-      return sendResponse(
-        res,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        error.message || "Erreur lors de la recherche"
+        "Erreur interne du serveur"
       );
     }
   }

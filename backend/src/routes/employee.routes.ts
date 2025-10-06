@@ -7,8 +7,21 @@ const router = Router();
 // Toutes les routes des employés nécessitent une authentification
 router.use(validateToken);
 
-// Créer un nouvel employé
-router.post("/", employeeController.createEmployee);
+// Créer un nouvel employé pour une entreprise spécifique
+router.post("/company/:companyId", employeeController.createEmployee);
+
+// Créer un nouvel employé (ancien endpoint, redirige vers le nouveau)
+router.post("/", (req, res) => {
+  const { companyId } = req.body;
+  if (!companyId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "L'ID de l'entreprise est requis" });
+  }
+  // Créer un nouveau req avec companyId dans params
+  const newReq = { ...req, params: { ...req.params, companyId } };
+  employeeController.createEmployee(newReq as any, res);
+});
 
 // Obtenir les employés d'une entreprise avec pagination
 router.get("/company/:companyId", employeeController.getEmployeesByCompany);

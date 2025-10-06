@@ -2,7 +2,17 @@ import api from "./api";
 
 export const employeeService = {
   // Créer un nouvel employé
-  async createEmployee(employeeData) {
+  async createEmployee(employeeData, companyId = null) {
+    // Si companyId est fourni, utiliser l'endpoint spécifique
+    if (companyId) {
+      const response = await api.post(
+        `/employees/company/${companyId}`,
+        employeeData
+      );
+      return response.data;
+    }
+
+    // Sinon, utiliser l'ancien endpoint (companyId doit être dans employeeData)
     const response = await api.post("/employees", employeeData);
     return response.data;
   },

@@ -1,277 +1,310 @@
 import { useState } from "react";
-import { Card } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { X, UserPlus, Save } from "lucide-react";
-import { authService } from "../services/auth.service";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Search,
+  User,
+  Mail,
+  Phone,
+  Briefcase,
+  Building,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { toast } from "sonner";
+import userService from "../services/userService";
 
-const CreateUserModal = ({ isOpen, onClose, onSuccess, companyId = null }) => {
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    role: "CASHIER",
-    companyId: companyId,
-  });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+export default function CreateUserModal({
+  isOpen,
+  onClose,
+  onUserCreated,
+  companyId,
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: null }));
-    }
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "Le prénom est obligatoire";
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Le nom est obligatoire";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "L'email est obligatoire";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Email invalide";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Le mot de passe est obligatoire";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Le mot de passe doit faire au moins 6 caractères";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Les mots de passe ne correspondent pas";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
+  // Rechercher un employé
+  const searchEmployee = async () => {
+    if (!searchTerm.trim() || searchTerm.length < 2) {
+      toast.error("Veuillez saisir au moins 2 caractères");
       return;
     }
 
-    setLoading(true);
-
+    setSearchLoading(true);
     try {
-      // Utiliser le service d'authentification pour créer un utilisateur
-      const userData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        ...(formData.companyId && { companyId: formData.companyId }),
-      };
-
-      const response = await authService.register(userData);
-
-      if (response.success) {
-        onSuccess(response.data);
-        onClose();
-        // Reset form
-        setFormData({
-          firstName: "",
-          lastName: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          role: "CASHIER",
-          companyId: companyId,
-        });
+      const response = await userService.searchEmployeeForUser(
+        companyId,
+        searchTerm.trim()
+      );
+      console.log("Réponse de la recherche d'employé:", response);
+      if (response.success && response.data) {
+        console.log("Données de l'employé trouvé:", response.data);
+        setSelectedEmployee(response.data);
+        toast.success("Employé trouvé");
+      } else {
+        setSelectedEmployee(null);
+        toast.error(
+          "Aucun employé trouvé ou l'employé a déjà un compte utilisateur"
+        );
       }
     } catch (error) {
-      console.error("Erreur lors de la création:", error);
-      if (error.response?.data?.message) {
-        setErrors({ general: error.response.data.message });
+      console.error("Erreur lors de la recherche:", error);
+      setSelectedEmployee(null);
+      if (error.response?.status === 404) {
+        toast.error(
+          "Aucun employé trouvé ou l'employé a déjà un compte utilisateur"
+        );
       } else {
-        setErrors({ general: "Erreur lors de la création de l'utilisateur" });
+        toast.error("Erreur lors de la recherche de l'employé");
       }
     } finally {
-      setLoading(false);
+      setSearchLoading(false);
     }
   };
 
-  if (!isOpen) return null;
+  // Créer le compte utilisateur
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedEmployee) {
+      toast.error("Veuillez d'abord rechercher et sélectionner un employé");
+      return;
+    }
+
+    if (!password || password.length < 6) {
+      toast.error("Le mot de passe doit contenir au moins 6 caractères");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const response = await userService.createUserForEmployee(
+        selectedEmployee.id,
+        {
+          password: password,
+        }
+      );
+
+      if (response.success) {
+        toast.success("Compte utilisateur créé avec succès");
+        onUserCreated?.();
+        handleClose();
+      } else {
+        toast.error(response.message || "Erreur lors de la création du compte");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "Erreur lors de la création du compte utilisateur"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Fermer le modal et réinitialiser
+  const handleClose = () => {
+    setSearchTerm("");
+    setSelectedEmployee(null);
+    setPassword("");
+    setConfirmPassword("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <UserPlus className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Nouvel Utilisateur
-                </h2>
-                <p className="text-sm text-gray-600">
-                  Créer un nouveau compte utilisateur
-                </p>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Créer un compte utilisateur</DialogTitle>
+          <DialogDescription>
+            Recherchez un employé par email ou matricule, puis créez son compte
+            utilisateur.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Étape 1: Recherche d'employé */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="searchTerm">
+                Email ou matricule de l'employé
+              </Label>
+              <div className="flex space-x-2 mt-1">
+                <Input
+                  id="searchTerm"
+                  type="text"
+                  placeholder="Tapez l'email ou le matricule..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && (e.preventDefault(), searchEmployee())
+                  }
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={searchEmployee}
+                  disabled={searchLoading || !searchTerm.trim()}
+                  className="px-3"
+                >
+                  {searchLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  ) : (
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X size={16} />
-            </Button>
+
+            {/* Informations de l'employé trouvé */}
+            {selectedEmployee && (
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-start space-x-3">
+                  <div className="bg-green-100 p-2 rounded-full">
+                    <User className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-green-800">
+                      {selectedEmployee.firstName} {selectedEmployee.lastName}
+                    </h4>
+                    <div className="mt-2 space-y-1 text-sm text-green-700">
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4" />
+                        <span>{selectedEmployee.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{selectedEmployee.phone}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Briefcase className="h-4 w-4" />
+                        <span>{selectedEmployee.position}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Building className="h-4 w-4" />
+                        <span>Code: {selectedEmployee.employeeCode}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Error général */}
-          {errors.general && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{errors.general}</p>
+          {/* Étape 2: Saisie du mot de passe */}
+          {selectedEmployee && (
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="password">Mot de passe</Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Saisissez le mot de passe (min. 6 caractères)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword">
+                  Confirmer le mot de passe
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirmez le mot de passe"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {password && confirmPassword && password !== confirmPassword && (
+                <p className="text-sm text-red-600">
+                  Les mots de passe ne correspondent pas
+                </p>
+              )}
             </div>
           )}
 
-          {/* Formulaire */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="firstName">Prénom *</Label>
-                <Input
-                  id="firstName"
-                  value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
-                  placeholder="Jean"
-                  className={errors.firstName ? "border-red-500" : ""}
-                />
-                {errors.firstName && (
-                  <p className="text-xs text-red-600 mt-1">
-                    {errors.firstName}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="lastName">Nom *</Label>
-                <Input
-                  id="lastName"
-                  value={formData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
-                  placeholder="Dupont"
-                  className={errors.lastName ? "border-red-500" : ""}
-                />
-                {errors.lastName && (
-                  <p className="text-xs text-red-600 mt-1">{errors.lastName}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="jean.dupont@example.com"
-                className={errors.email ? "border-red-500" : ""}
-              />
-              {errors.email && (
-                <p className="text-xs text-red-600 mt-1">{errors.email}</p>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                !selectedEmployee ||
+                !password ||
+                !confirmPassword ||
+                password !== confirmPassword ||
+                isSubmitting
+              }
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Création...
+                </>
+              ) : (
+                "Créer le compte"
               )}
-            </div>
-
-            <div>
-              <Label htmlFor="role">Rôle</Label>
-              <select
-                id="role"
-                value={formData.role}
-                onChange={(e) => handleInputChange("role", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="CASHIER">Caissier</option>
-                <option value="ADMIN">Administrateur</option>
-                {/* Seul le SUPER_ADMIN peut créer d'autres SUPER_ADMIN */}
-                {/* <option value="SUPER_ADMIN">Super Administrateur</option> */}
-              </select>
-            </div>
-
-            <div>
-              <Label htmlFor="password">Mot de passe *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
-                placeholder="••••••••"
-                className={errors.password ? "border-red-500" : ""}
-              />
-              {errors.password && (
-                <p className="text-xs text-red-600 mt-1">{errors.password}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="confirmPassword">
-                Confirmer le mot de passe *
-              </Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) =>
-                  handleInputChange("confirmPassword", e.target.value)
-                }
-                placeholder="••••••••"
-                className={errors.confirmPassword ? "border-red-500" : ""}
-              />
-              {errors.confirmPassword && (
-                <p className="text-xs text-red-600 mt-1">
-                  {errors.confirmPassword}
-                </p>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end space-x-3 pt-6 border-t">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={loading}
-              >
-                Annuler
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Création...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Save size={16} />
-                    <span>Créer l'utilisateur</span>
-                  </div>
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Card>
-    </div>
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default CreateUserModal;
+}

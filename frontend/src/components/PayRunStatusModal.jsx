@@ -20,7 +20,13 @@ import {
 } from "lucide-react";
 import { payRunService } from "../services/payRunService";
 
-export function PayRunStatusModal({ payRun, companyId, isOpen, onClose, onUpdate }) {
+export function PayRunStatusModal({
+  payRun,
+  companyId,
+  isOpen,
+  onClose,
+  onUpdate,
+}) {
   const [isLoading, setIsLoading] = useState(false);
 
   if (!payRun) return null;
