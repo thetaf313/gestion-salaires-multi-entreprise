@@ -358,32 +358,48 @@ class EmployeeController {
         );
       }
 
-      const stats = await prisma.employee.groupBy({
-        by: ["contractType"],
-        where: {
-          companyId,
-          isActive: true,
-        },
-        _count: {
-          contractType: true,
+      // Statistiques complètes comme attendues par le frontend
+      const [total, active, inactive, dailyCount, fixedCount, honorariumCount] =
+        await Promise.all([
+          prisma.employee.count({ where: { companyId } }),
+          prisma.employee.count({ where: { companyId, isActive: true } }),
+          prisma.employee.count({ where: { companyId, isActive: false } }),
+          prisma.employee.count({
+            where: { companyId, contractType: "DAILY", isActive: true },
+          }),
+          prisma.employee.count({
+            where: { companyId, contractType: "FIXED", isActive: true },
+          }),
+          prisma.employee.count({
+            where: { companyId, contractType: "HONORARIUM", isActive: true },
+          }),
+        ]);
+
+      // Calcul du salaire total (seulement pour les employés actifs avec salaire fixe)
+      const totalSalary = await prisma.employee.aggregate({
+        where: { companyId, isActive: true, fixedSalary: { not: null } },
+        _sum: {
+          fixedSalary: true,
         },
       });
 
-      const totalEmployees = await prisma.employee.count({
-        where: {
-          companyId,
-          isActive: true,
+      const stats = {
+        total,
+        active,
+        inactive,
+        contractTypes: {
+          daily: dailyCount,
+          fixed: fixedCount,
+          honorarium: honorariumCount,
         },
-      });
+        totalMonthlySalary: Number(totalSalary._sum?.fixedSalary || 0),
+      };
 
       return sendResponse(
         res,
         HttpStatus.OK,
         "Statistiques récupérées avec succès",
-        {
-          totalEmployees,
-          byContractType: stats,
-        }
+        stats
       );
     } catch (error: any) {
       console.error("Erreur lors de la récupération des statistiques:", error);

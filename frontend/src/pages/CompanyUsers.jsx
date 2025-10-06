@@ -2,14 +2,20 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  UserPlus, 
-  Search, 
-  Users, 
-  Shield, 
+import {
+  UserPlus,
+  Search,
+  Users,
+  Shield,
   ShieldCheck,
   User,
   Mail,
@@ -18,7 +24,7 @@ import {
   Calendar,
   Eye,
   EyeOff,
-  RotateCcw
+  RotateCcw,
 } from "lucide-react";
 import {
   Dialog,
@@ -40,7 +46,11 @@ export default function CompanyUsers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(null);
-  const [alertDialog, setAlertDialog] = useState({ open: false, type: '', user: null });
+  const [alertDialog, setAlertDialog] = useState({
+    open: false,
+    type: "",
+    user: null,
+  });
 
   const loadUsers = async () => {
     try {
@@ -65,22 +75,26 @@ export default function CompanyUsers() {
     }
   }, [companyId]);
 
-  const filteredUsers = users.filter(user => 
-    user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (user.employee?.employeeCode && user.employee.employeeCode.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredUsers = users.filter(
+    (user) =>
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.employee?.employeeCode &&
+        user.employee.employeeCode
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()))
   );
 
   const getRoleIcon = (role) => {
     switch (role) {
-      case 'SUPER_ADMIN':
+      case "SUPER_ADMIN":
         return <ShieldCheck className="h-4 w-4" />;
-      case 'ADMIN':
+      case "ADMIN":
         return <Shield className="h-4 w-4" />;
-      case 'CASHIER':
+      case "CASHIER":
         return <User className="h-4 w-4" />;
-      case 'USER':
+      case "USER":
         return <User className="h-4 w-4" />;
       default:
         return <User className="h-4 w-4" />;
@@ -89,38 +103,44 @@ export default function CompanyUsers() {
 
   const getRoleBadgeVariant = (role) => {
     switch (role) {
-      case 'SUPER_ADMIN':
-        return 'destructive';
-      case 'ADMIN':
-        return 'default';
-      case 'CASHIER':
-        return 'secondary';
-      case 'USER':
-        return 'outline';
+      case "SUPER_ADMIN":
+        return "destructive";
+      case "ADMIN":
+        return "default";
+      case "CASHIER":
+        return "secondary";
+      case "USER":
+        return "outline";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const handleToggleUserStatus = async (userId, isActive) => {
     setActionLoading(userId);
     try {
-      const response = isActive 
+      const response = isActive
         ? await userService.deactivateUser(userId)
         : await userService.activateUser(userId);
-      
+
       if (response.success) {
-        toast.success(`Utilisateur ${isActive ? 'désactivé' : 'réactivé'} avec succès`);
+        toast.success(
+          `Utilisateur ${isActive ? "désactivé" : "réactivé"} avec succès`
+        );
         loadUsers();
       } else {
-        toast.error(`Erreur lors de la ${isActive ? 'désactivation' : 'réactivation'}`);
+        toast.error(
+          `Erreur lors de la ${isActive ? "désactivation" : "réactivation"}`
+        );
       }
     } catch (error) {
       console.error("Erreur:", error);
-      toast.error(`Erreur lors de la ${isActive ? 'désactivation' : 'réactivation'}`);
+      toast.error(
+        `Erreur lors de la ${isActive ? "désactivation" : "réactivation"}`
+      );
     } finally {
       setActionLoading(null);
-      setAlertDialog({ open: false, type: '', user: null });
+      setAlertDialog({ open: false, type: "", user: null });
     }
   };
 
@@ -130,17 +150,20 @@ export default function CompanyUsers() {
       const response = await userService.resetUserPassword(userId);
       if (response.success) {
         toast.success(`Mot de passe réinitialisé: ${response.newPassword}`, {
-          duration: 10000
+          duration: 10000,
         });
       } else {
-        toast.error(response.message || "Erreur lors de la réinitialisation du mot de passe");
+        toast.error(
+          response.message ||
+            "Erreur lors de la réinitialisation du mot de passe"
+        );
       }
     } catch (error) {
       console.error("Erreur:", error);
       toast.error("Erreur lors de la réinitialisation du mot de passe");
     } finally {
       setActionLoading(null);
-      setAlertDialog({ open: false, type: '', user: null });
+      setAlertDialog({ open: false, type: "", user: null });
     }
   };
 
@@ -157,12 +180,17 @@ export default function CompanyUsers() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Gestion des Utilisateurs</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Gestion des Utilisateurs
+            </h1>
             <p className="text-gray-600 mt-1">
               Gérez les comptes utilisateurs de votre entreprise
             </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)} className="w-full sm:w-auto">
+          <Button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="w-full sm:w-auto"
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Créer un compte
           </Button>
@@ -185,7 +213,9 @@ export default function CompanyUsers() {
               <div className="flex items-center space-x-2">
                 <Eye className="h-8 w-8 text-green-600" />
                 <div>
-                  <p className="text-2xl font-bold">{users.filter(u => u.isActive).length}</p>
+                  <p className="text-2xl font-bold">
+                    {users.filter((u) => u.isActive).length}
+                  </p>
                   <p className="text-sm text-gray-600">Actifs</p>
                 </div>
               </div>
@@ -196,7 +226,9 @@ export default function CompanyUsers() {
               <div className="flex items-center space-x-2">
                 <EyeOff className="h-8 w-8 text-red-600" />
                 <div>
-                  <p className="text-2xl font-bold">{users.filter(u => !u.isActive).length}</p>
+                  <p className="text-2xl font-bold">
+                    {users.filter((u) => !u.isActive).length}
+                  </p>
                   <p className="text-sm text-gray-600">Inactifs</p>
                 </div>
               </div>
@@ -207,7 +239,9 @@ export default function CompanyUsers() {
               <div className="flex items-center space-x-2">
                 <Shield className="h-8 w-8 text-purple-600" />
                 <div>
-                  <p className="text-2xl font-bold">{users.filter(u => u.role === 'ADMIN').length}</p>
+                  <p className="text-2xl font-bold">
+                    {users.filter((u) => u.role === "ADMIN").length}
+                  </p>
                   <p className="text-sm text-gray-600">Administrateurs</p>
                 </div>
               </div>
@@ -242,7 +276,9 @@ export default function CompanyUsers() {
           <CardContent className="p-0">
             {filteredUsers.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
-                {searchTerm ? "Aucun utilisateur trouvé pour cette recherche." : "Aucun utilisateur trouvé."}
+                {searchTerm
+                  ? "Aucun utilisateur trouvé pour cette recherche."
+                  : "Aucun utilisateur trouvé."}
               </div>
             ) : (
               <div className="divide-y">
@@ -250,9 +286,11 @@ export default function CompanyUsers() {
                   <div key={userItem.id} className="p-4 hover:bg-gray-50">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          userItem.isActive ? 'bg-green-100' : 'bg-gray-100'
-                        }`}>
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            userItem.isActive ? "bg-green-100" : "bg-gray-100"
+                          }`}
+                        >
                           {getRoleIcon(userItem.role)}
                         </div>
                         <div className="flex-1">
@@ -278,7 +316,9 @@ export default function CompanyUsers() {
                               <>
                                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                                   <Building className="h-4 w-4" />
-                                  <span>Code: {userItem.employee.employeeCode}</span>
+                                  <span>
+                                    Code: {userItem.employee.employeeCode}
+                                  </span>
                                   <span>• {userItem.employee.position}</span>
                                 </div>
                                 {userItem.employee.phone && (
@@ -291,20 +331,29 @@ export default function CompanyUsers() {
                             )}
                             <div className="flex items-center space-x-2 text-sm text-gray-600">
                               <Calendar className="h-4 w-4" />
-                              <span>Créé le {new Date(userItem.createdAt).toLocaleDateString()}</span>
+                              <span>
+                                Créé le{" "}
+                                {new Date(
+                                  userItem.createdAt
+                                ).toLocaleDateString()}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => setAlertDialog({
-                            open: true,
-                            type: userItem.isActive ? 'deactivate' : 'activate',
-                            user: userItem
-                          })}
+                          onClick={() =>
+                            setAlertDialog({
+                              open: true,
+                              type: userItem.isActive
+                                ? "deactivate"
+                                : "activate",
+                              user: userItem,
+                            })
+                          }
                           disabled={actionLoading === userItem.id}
                         >
                           {actionLoading === userItem.id ? (
@@ -321,14 +370,16 @@ export default function CompanyUsers() {
                             </>
                           )}
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => setAlertDialog({
-                            open: true,
-                            type: 'resetPassword',
-                            user: userItem
-                          })}
+                          onClick={() =>
+                            setAlertDialog({
+                              open: true,
+                              type: "resetPassword",
+                              user: userItem,
+                            })
+                          }
                           disabled={actionLoading === userItem.id}
                         >
                           <RotateCcw className="h-4 w-4 mr-1" />
@@ -351,39 +402,55 @@ export default function CompanyUsers() {
         companyId={companyId}
       />
 
-      <Dialog open={alertDialog.open} onOpenChange={(open) => setAlertDialog({ ...alertDialog, open })}>
+      <Dialog
+        open={alertDialog.open}
+        onOpenChange={(open) => setAlertDialog({ ...alertDialog, open })}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {alertDialog.type === 'deactivate' && "Désactiver l'utilisateur"}
-              {alertDialog.type === 'activate' && "Réactiver l'utilisateur"}
-              {alertDialog.type === 'resetPassword' && "Réinitialiser le mot de passe"}
+              {alertDialog.type === "deactivate" && "Désactiver l'utilisateur"}
+              {alertDialog.type === "activate" && "Réactiver l'utilisateur"}
+              {alertDialog.type === "resetPassword" &&
+                "Réinitialiser le mot de passe"}
             </DialogTitle>
             <DialogDescription>
-              {alertDialog.type === 'deactivate' && `Êtes-vous sûr de vouloir désactiver le compte de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ? L'utilisateur ne pourra plus se connecter.`}
-              {alertDialog.type === 'activate' && `Êtes-vous sûr de vouloir réactiver le compte de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ?`}
-              {alertDialog.type === 'resetPassword' && `Êtes-vous sûr de vouloir réinitialiser le mot de passe de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ? Un nouveau mot de passe sera généré automatiquement.`}
+              {alertDialog.type === "deactivate" &&
+                `Êtes-vous sûr de vouloir désactiver le compte de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ? L'utilisateur ne pourra plus se connecter.`}
+              {alertDialog.type === "activate" &&
+                `Êtes-vous sûr de vouloir réactiver le compte de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ?`}
+              {alertDialog.type === "resetPassword" &&
+                `Êtes-vous sûr de vouloir réinitialiser le mot de passe de ${alertDialog.user?.firstName} ${alertDialog.user?.lastName} ? Un nouveau mot de passe sera généré automatiquement.`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="space-x-2">
-            <Button variant="outline" onClick={() => setAlertDialog({ open: false, type: '', user: null })}>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setAlertDialog({ open: false, type: "", user: null })
+              }
+            >
               Annuler
             </Button>
             <Button
               onClick={() => {
-                if (alertDialog.type === 'deactivate') {
+                if (alertDialog.type === "deactivate") {
                   handleToggleUserStatus(alertDialog.user.id, true);
-                } else if (alertDialog.type === 'activate') {
+                } else if (alertDialog.type === "activate") {
                   handleToggleUserStatus(alertDialog.user.id, false);
-                } else if (alertDialog.type === 'resetPassword') {
+                } else if (alertDialog.type === "resetPassword") {
                   handleResetPassword(alertDialog.user.id);
                 }
               }}
-              className={alertDialog.type === 'deactivate' ? 'bg-red-600 hover:bg-red-700' : ''}
+              className={
+                alertDialog.type === "deactivate"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : ""
+              }
             >
-              {alertDialog.type === 'deactivate' && 'Désactiver'}
-              {alertDialog.type === 'activate' && 'Réactiver'}
-              {alertDialog.type === 'resetPassword' && 'Réinitialiser'}
+              {alertDialog.type === "deactivate" && "Désactiver"}
+              {alertDialog.type === "activate" && "Réactiver"}
+              {alertDialog.type === "resetPassword" && "Réinitialiser"}
             </Button>
           </DialogFooter>
         </DialogContent>

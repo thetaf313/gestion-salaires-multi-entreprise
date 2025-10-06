@@ -60,7 +60,7 @@ export const employeeService = {
   // Rechercher des employés
   async searchEmployees(companyId, query) {
     const response = await api.get(
-      `/employees/company/${companyId}/search?query=${encodeURIComponent(
+      `/employees/company/${companyId}/search?search=${encodeURIComponent(
         query
       )}`
     );

@@ -49,13 +49,15 @@ class UserService {
       return {
         success: true,
         data: response.data.data.users, // Extraire les utilisateurs de la réponse
-        pagination: response.data.data.pagination
+        pagination: response.data.data.pagination,
       };
     } catch (error) {
       console.error("Erreur lors de la récupération des utilisateurs:", error);
       return {
         success: false,
-        message: error.response?.data?.message || "Erreur lors de la récupération des utilisateurs"
+        message:
+          error.response?.data?.message ||
+          "Erreur lors de la récupération des utilisateurs",
       };
     }
   }
@@ -69,7 +71,8 @@ class UserService {
       console.error("Erreur lors de la désactivation de l'utilisateur:", error);
       return {
         success: false,
-        message: error.response?.data?.message || "Erreur lors de la désactivation"
+        message:
+          error.response?.data?.message || "Erreur lors de la désactivation",
       };
     }
   }
@@ -83,7 +86,8 @@ class UserService {
       console.error("Erreur lors de la réactivation de l'utilisateur:", error);
       return {
         success: false,
-        message: error.response?.data?.message || "Erreur lors de la réactivation"
+        message:
+          error.response?.data?.message || "Erreur lors de la réactivation",
       };
     }
   }
@@ -92,16 +96,20 @@ class UserService {
   async resetUserPassword(userId) {
     try {
       const response = await api.patch(`/users/${userId}/reset-password`);
-      return { 
-        success: true, 
+      return {
+        success: true,
         message: "Mot de passe réinitialisé avec succès",
-        newPassword: response.data.data.newPassword 
+        newPassword: response.data.data.newPassword,
       };
     } catch (error) {
-      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+      console.error(
+        "Erreur lors de la réinitialisation du mot de passe:",
+        error
+      );
       return {
         success: false,
-        message: error.response?.data?.message || "Erreur lors de la réinitialisation"
+        message:
+          error.response?.data?.message || "Erreur lors de la réinitialisation",
       };
     }
   }

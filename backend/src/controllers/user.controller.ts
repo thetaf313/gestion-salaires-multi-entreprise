@@ -352,7 +352,10 @@ export class UserController {
         result
       );
     } catch (error: any) {
-      console.error("Erreur lors de la réinitialisation du mot de passe:", error);
+      console.error(
+        "Erreur lors de la réinitialisation du mot de passe:",
+        error
+      );
       return sendResponse(
         res,
         HttpStatus.INTERNAL_SERVER_ERROR,
