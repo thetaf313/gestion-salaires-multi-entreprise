@@ -47,7 +47,6 @@ import {
 } from "lucide-react";
 import { employeeService } from "../services/employeeService";
 import { companyService } from "../services/companyService";
-import { EmployeeDetailsModal } from "../components/EmployeeDetailsModal";
 import { EditEmployeeModal } from "../components/EditEmployeeModal";
 import { CreateEmployeeModal } from "../components/CreateEmployeeModal";
 import { useAuth } from "../contexts/AuthContext";
@@ -66,7 +65,6 @@ export function CompanyEmployees() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
@@ -185,9 +183,8 @@ export function CompanyEmployees() {
   };
 
   const handleViewEmployee = (employee) => {
-    // Ouvrir une modal ou naviguer vers la page de détails
-    setSelectedEmployee(employee);
-    setViewModalOpen(true);
+    // Naviguer vers la page de détails de l'employé
+    navigate(`/company/${companyId}/employees/${employee.id}`);
   };
 
   const handleEditEmployee = (employee) => {
@@ -436,186 +433,104 @@ export function CompanyEmployees() {
         </CardHeader>
         <CardContent>
           {employees.length > 0 ? (
-            <>
-              {/* Version desktop - Table */}
-              <div className="hidden lg:block">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Employé</TableHead>
-                        <TableHead>Contact</TableHead>
-                        <TableHead>Poste</TableHead>
-                        <TableHead>Contrat</TableHead>
-                        <TableHead>Rémunération</TableHead>
-                        <TableHead>Embauche</TableHead>
-                        {canManageEmployees && <TableHead>Actions</TableHead>}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {employees.map((employee) => (
-                        <TableRow key={employee.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">
-                                {employee.firstName} {employee.lastName}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                ID:{" "}
-                                {employee.employeeCode || employee.id.slice(0, 8)}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              {employee.email && (
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Mail className="w-3 h-3" />
-                                  {employee.email}
-                                </div>
-                              )}
-                              {employee.phone && (
-                                <div className="flex items-center gap-1 text-sm">
-                                  <Phone className="w-3 h-3" />
-                                  {employee.phone}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>{employee.position}</TableCell>
-                          <TableCell>
+            <div className="space-y-4">
+              {employees.map((employee) => (
+                <Card key={employee.id} className="p-4 hover:shadow-md transition-shadow">
+                  <div className="space-y-4">
+                    {/* En-tête avec nom, poste et actions */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-lg text-gray-900 truncate">
+                              {employee.firstName} {employee.lastName}
+                            </h3>
+                            <p className="text-gray-600 text-sm truncate">
+                              {employee.position}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              ID: {employee.employeeCode || employee.id.slice(0, 8)}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
                             {getContractTypeBadge(employee.contractType)}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="w-3 h-3 text-green-500" />
-                              <span className="text-sm font-medium">
-                                {getSalaryDisplay(employee)}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 text-sm">
-                              <Calendar className="w-3 h-3" />
-                              {formatDate(employee.hireDate)}
-                            </div>
-                          </TableCell>
-                          {canManageEmployees && (
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleViewEmployee(employee)}
-                                >
-                                  <Eye className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handleEditEmployee(employee)}
-                                >
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => confirmDelete(employee)}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Actions (toujours visibles mais compactes sur mobile) */}
+                      {canManageEmployees && (
+                        <div className="flex gap-2 sm:flex-col sm:gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewEmployee(employee)}
+                            className="flex-1 sm:flex-initial"
+                          >
+                            <Eye className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline text-xs">Voir</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditEmployee(employee)}
+                            className="flex-1 sm:flex-initial"
+                          >
+                            <Edit className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline text-xs">Modifier</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => confirmDelete(employee)}
+                            className="flex-1 sm:flex-initial"
+                          >
+                            <Trash2 className="w-3 h-3 sm:mr-1" />
+                            <span className="hidden sm:inline text-xs">Supprimer</span>
+                          </Button>
+                        </div>
+                      )}
+                    </div>
 
-              {/* Version mobile/tablet - Cards */}
-              <div className="lg:hidden space-y-4">
-                {employees.map((employee) => (
-                  <Card key={employee.id} className="p-4">
-                    <div className="space-y-3">
-                      {/* En-tête avec nom et statut */}
-                      <div className="flex items-start justify-between">
+                    {/* Informations de contact */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {employee.email && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                          <span className="truncate text-gray-700">{employee.email}</span>
+                        </div>
+                      )}
+                      {employee.phone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
+                          <span className="text-gray-700">{employee.phone}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Informations financières et de date */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                         <div>
-                          <h3 className="font-medium text-lg">
-                            {employee.firstName} {employee.lastName}
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            {employee.position}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            ID: {employee.employeeCode || employee.id.slice(0, 8)}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {getContractTypeBadge(employee.contractType)}
-                          {canManageEmployees && (
-                            <div className="flex gap-1">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleViewEmployee(employee)}
-                              >
-                                <Eye className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditEmployee(employee)}
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => confirmDelete(employee)}
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Informations de contact */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        {employee.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                            <span className="truncate">{employee.email}</span>
-                          </div>
-                        )}
-                        {employee.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                            <span>{employee.phone}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Informations financières et date */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                        <div className="flex items-center gap-2">
-                          <DollarSign className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                          <span className="font-medium">
+                          <span className="font-medium text-gray-900">
                             {getSalaryDisplay(employee)}
                           </span>
+                          <p className="text-xs text-gray-500">Rémunération</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-purple-500 flex-shrink-0" />
-                          <span>{formatDate(employee.hireDate)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Calendar className="w-4 h-4 text-purple-500 flex-shrink-0" />
+                        <div>
+                          <span className="text-gray-900">{formatDate(employee.hireDate)}</span>
+                          <p className="text-xs text-gray-500">Date d'embauche</p>
                         </div>
                       </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </>
+                  </div>
+                </Card>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -672,15 +587,6 @@ export function CompanyEmployees() {
       )}
 
       {/* Modals */}
-      <EmployeeDetailsModal
-        employee={selectedEmployee}
-        isOpen={viewModalOpen}
-        onClose={() => {
-          setViewModalOpen(false);
-          setSelectedEmployee(null);
-        }}
-      />
-
       <EditEmployeeModal
         employee={selectedEmployee}
         isOpen={editModalOpen}

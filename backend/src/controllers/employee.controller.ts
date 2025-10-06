@@ -130,9 +130,9 @@ class EmployeeController {
   // Obtenir un employé par ID
   async getEmployeeById(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const { employeeId } = req.params;
 
-      if (!id) {
+      if (!employeeId) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
@@ -141,7 +141,7 @@ class EmployeeController {
       }
 
       const employee = await prisma.employee.findFirst({
-        where: { id },
+        where: { id: employeeId },
         include: {
           company: {
             select: {
@@ -182,10 +182,10 @@ class EmployeeController {
   // Mettre à jour un employé
   async updateEmployee(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const { employeeId } = req.params;
       const updateData = req.body;
 
-      if (!id) {
+      if (!employeeId) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
@@ -195,22 +195,22 @@ class EmployeeController {
 
       // Vérifier que l'employé existe
       const existingEmployee = await prisma.employee.findFirst({
-        where: { id },
+        where: { id: employeeId },
       });
 
       if (!existingEmployee) {
         return sendResponse(res, HttpStatus.NOT_FOUND, "Employé non trouvé");
       }
 
-      // Mettre à jour l'employé
-      const updatedEmployee = await prisma.employee.updateMany({
-        where: { id },
-        data: updateData,
-      });
+      // Convertir la date d'embauche si présente
+      if (updateData.hireDate && typeof updateData.hireDate === 'string') {
+        updateData.hireDate = new Date(updateData.hireDate + 'T00:00:00.000Z');
+      }
 
-      // Récupérer l'employé mis à jour
-      const employee = await prisma.employee.findFirst({
-        where: { id },
+      // Mettre à jour l'employé
+      const employee = await prisma.employee.update({
+        where: { id: employeeId },
+        data: updateData,
         include: {
           company: {
             select: {
@@ -239,9 +239,9 @@ class EmployeeController {
   // Supprimer un employé (désactivation)
   async deleteEmployee(req: Request, res: Response) {
     try {
-      const { id } = req.params;
+      const { employeeId } = req.params;
 
-      if (!id) {
+      if (!employeeId) {
         return sendResponse(
           res,
           HttpStatus.BAD_REQUEST,
@@ -251,7 +251,7 @@ class EmployeeController {
 
       // Vérifier que l'employé existe
       const existingEmployee = await prisma.employee.findFirst({
-        where: { id },
+        where: { id: employeeId },
       });
 
       if (!existingEmployee) {
@@ -260,13 +260,13 @@ class EmployeeController {
 
       // Désactiver l'employé au lieu de le supprimer
       await prisma.employee.updateMany({
-        where: { id },
+        where: { id: employeeId },
         data: { isActive: false },
       });
 
       // Récupérer l'employé mis à jour
       const deletedEmployee = await prisma.employee.findFirst({
-        where: { id },
+        where: { id: employeeId },
       });
 
       return sendResponse(

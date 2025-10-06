@@ -15,6 +15,7 @@ import Companies from "./pages/Companies";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import CompanyUsers from "./pages/CompanyUsers";
 import CompanyEmployees from "./pages/CompanyEmployees";
+import EmployeeDetails from "./pages/EmployeeDetails";
 import PayrollCycles from "./pages/PayrollCycles";
 import Payslips from "./pages/Payslips";
 import Payments from "./pages/Payments";
@@ -91,6 +92,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <CompanyEmployees />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Détails d'un employé */}
+                    <Route
+                      path="/company/:companyId/employees/:employeeId"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <EmployeeDetails />
                         </ProtectedRoute>
                       }
                     />
