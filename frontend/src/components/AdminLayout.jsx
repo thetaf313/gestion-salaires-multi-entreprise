@@ -83,7 +83,7 @@ const AdminLayout = ({ children }) => {
       icon: UserPlus,
       label: "Utilisateurs",
       path: user?.companyId ? `/company/${user.companyId}/users` : "/users",
-      roles: ["ADMIN", "SUPER_ADMIN"],
+      roles: ["ADMIN"],
     },
     {
       icon: Calendar,

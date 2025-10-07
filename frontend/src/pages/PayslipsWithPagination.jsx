@@ -44,7 +44,7 @@ export function PayslipsWithPagination() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // États des modals
+  // États locaux
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPayslip, setSelectedPayslip] = useState(null);
   const [downloadLoading, setDownloadLoading] = useState(false);
@@ -151,8 +151,17 @@ export function PayslipsWithPagination() {
 
   // Gestionnaires d'événements
   const handleViewPayslip = (payslip) => {
-    // Pour l'instant, télécharger le bulletin car il n'y a pas de page de détails
-    handleDownloadPayslip(payslip);
+    navigate(`/company/${companyId}/payslips/${payslip.id}`);
+  };
+
+  const handleCreatePayment = (payslip) => {
+    navigate(`/company/${companyId}/payslips/${payslip.id}/payment`);
+  };
+
+  const handlePaymentCreated = () => {
+    // Actualiser la liste des bulletins
+    pagination.reload();
+    toast.success("Paiement effectué avec succès");
   };
 
   const handleDownloadPayslip = async (payslip) => {
@@ -443,14 +452,28 @@ export function PayslipsWithPagination() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewPayslip(payslip)}
+                            title="Voir les détails et paiements"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
+                          {(payslip.status === "UNPAID" ||
+                            payslip.status === "PARTIALLY_PAID") && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCreatePayment(payslip)}
+                              className="text-green-600 hover:text-green-700"
+                              title="Effectuer un paiement"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleDownloadPayslip(payslip)}
                             disabled={downloadLoading}
+                            title="Télécharger le bulletin"
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -460,6 +483,7 @@ export function PayslipsWithPagination() {
                               variant="outline"
                               size="sm"
                               onClick={() => handleDeletePayslip(payslip)}
+                              title="Supprimer le bulletin"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -481,7 +505,7 @@ export function PayslipsWithPagination() {
         limitOptions={[10, 20, 50, 100]}
       />
 
-      {/* Modals */}
+      {/* Dialogs */}
       <ConfirmDialog
         isOpen={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}

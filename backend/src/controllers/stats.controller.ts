@@ -158,10 +158,7 @@ class StatsController {
   async getCashierStats(req: Request, res: Response) {
     try {
       const user = req.user;
-      if (
-        !user ||
-        user.role === UserRole.USER
-      ) {
+      if (!user || user.role === UserRole.USER) {
         return sendResponse(
           res,
           HttpStatus.FORBIDDEN,

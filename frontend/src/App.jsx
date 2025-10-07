@@ -22,7 +22,9 @@ import EmployeeDetails from "./pages/EmployeeDetails";
 import PayrollCyclesWithPagination from "./pages/PayrollCyclesWithPagination"; // Nouvelle version avec pagination
 // import Payslips from "./pages/Payslips"; // Ancienne version sans pagination
 import PayslipsWithPagination from "./pages/PayslipsWithPagination"; // Nouvelle version avec pagination
-import Payments from "./pages/Payments";
+import PayslipDetailsPage from "./pages/PayslipDetailsPage";
+import CreatePaymentPage from "./pages/CreatePaymentPage";
+import PaymentPage from "./pages/PaymentPage";
 import Reports from "./pages/Reports";
 import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
@@ -152,12 +154,32 @@ function App() {
                       }
                     />
 
+                    {/* Détails d'un bulletin de paie */}
+                    <Route
+                      path="/company/:companyId/payslips/:payslipId"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <PayslipDetailsPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Créer un paiement pour un bulletin */}
+                    <Route
+                      path="/company/:companyId/payslips/:payslipId/payment"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <CreatePaymentPage />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     {/* Paiements */}
                     <Route
                       path="/company/:companyId/payments"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <Payments />
+                          <PaymentPage />
                         </ProtectedRoute>
                       }
                     />
