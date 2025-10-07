@@ -299,7 +299,7 @@ export default function Payments() {
                 <SelectItem value="all">Toutes les méthodes</SelectItem>
                 <SelectItem value="BANK_TRANSFER">Virement</SelectItem>
                 <SelectItem value="CASH">Espèces</SelectItem>
-                <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem>
+                {/* <SelectItem value="MOBILE_MONEY">Mobile Money</SelectItem> */}
                 <SelectItem value="CHECK">Chèque</SelectItem>
               </SelectContent>
             </Select>

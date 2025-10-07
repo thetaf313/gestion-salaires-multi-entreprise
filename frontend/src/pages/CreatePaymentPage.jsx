@@ -55,16 +55,22 @@ const CreatePaymentPage = () => {
       description: "Mobile money Wave",
     },
     {
-      value: "FREE_MONEY",
-      label: "Free Money",
-      icon: "💳",
-      description: "Mobile money Free",
+      value: "MOBILE_MONEY",
+      label: "Mobile Money",
+      icon: "�",
+      description: "Autres mobile money",
     },
     {
-      value: "CRYPTO",
-      label: "Cryptomonnaie",
-      icon: "₿",
-      description: "Paiement en crypto",
+      value: "CHECK",
+      label: "Chèque",
+      icon: "📝",
+      description: "Paiement par chèque",
+    },
+    {
+      value: "OTHER",
+      label: "Autre",
+      icon: "💳",
+      description: "Autre méthode de paiement",
     },
   ];
 
@@ -156,6 +162,11 @@ const CreatePaymentPage = () => {
     setError("");
 
     try {
+      // Vérification côté frontend avant envoi
+      if (payslip?.status === 'PAID') {
+        throw new Error("Ce bulletin de paie est déjà complètement payé");
+      }
+
       // Validation
       const amount = parseFloat(formData.amount);
       if (!amount || amount <= 0) {
@@ -163,6 +174,10 @@ const CreatePaymentPage = () => {
       }
 
       const remainingAmount = getRemainingAmount();
+      if (remainingAmount <= 0) {
+        throw new Error("Ce bulletin de paie est déjà complètement payé");
+      }
+      
       if (amount > remainingAmount) {
         throw new Error(
           `Le montant ne peut pas dépasser ${formatAmount(remainingAmount)}`
@@ -184,6 +199,18 @@ const CreatePaymentPage = () => {
         navigate(`/company/${companyId}/payslips/${payslipId}`);
       }, 2000);
     } catch (error) {
+      console.error("Erreur lors de la création du paiement:", error);
+      
+      // Gestion spécifique pour les bulletins déjà payés
+      if (error.message?.includes("déjà entièrement payé") || error.message?.includes("déjà complètement payé")) {
+        // Rediriger vers la page de détails avec un message
+        navigate(`/company/${companyId}/payslips/${payslipId}`, {
+          replace: true,
+          state: { message: "Ce bulletin de paie est déjà complètement payé." }
+        });
+        return;
+      }
+      
       setError(error.message || "Erreur lors de la création du paiement");
     } finally {
       setSubmitting(false);

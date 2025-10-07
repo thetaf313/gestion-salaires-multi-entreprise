@@ -29,8 +29,9 @@ const PaymentModal = ({ companyId, payslip, onClose, onSuccess }) => {
     { value: "BANK_TRANSFER", label: "Virement bancaire", icon: "🏦" },
     { value: "ORANGE_MONEY", label: "Orange Money", icon: "🟠" },
     { value: "WAVE", label: "Wave", icon: "🌊" },
-    { value: "FREE_MONEY", label: "Free Money", icon: "💳" },
-    { value: "CRYPTO", label: "Cryptomonnaie", icon: "₿" },
+    { value: "MOBILE_MONEY", label: "Mobile Money", icon: "�" },
+    { value: "CHECK", label: "Chèque", icon: "📝" },
+    { value: "OTHER", label: "Autre", icon: "💳" },
   ];
 
   // Charger les bulletins disponibles si aucun n'est sélectionné

@@ -1,7 +1,5 @@
-import { PrismaClient, PaymentMethod } from "@prisma/client";
-import { payslipService } from "./payslip.service.js";
-
-const prisma = new PrismaClient();
+import { PaymentMethod, PayslipStatus, Prisma } from "@prisma/client";
+import { prisma } from "../config/database.js";
 
 interface CreatePaymentData {
   payslipId: string;
@@ -22,33 +20,94 @@ interface PaymentFilters {
 class PaymentService {
   // Créer un nouveau paiement
   async create(data: CreatePaymentData) {
-    // Vérifier que le bulletin existe et calculer le montant restant
-    const remainingAmount = await payslipService.getRemainingAmount(
-      data.payslipId
-    );
-
-    if (remainingAmount <= 0) {
-      throw new Error("Ce bulletin de paie est déjà entièrement payé");
-    }
-
-    if (data.amount > remainingAmount) {
-      throw new Error(
-        `Le montant ne peut pas dépasser le montant restant (${remainingAmount})`
-      );
-    }
-
-    // Utiliser une transaction pour garantir la cohérence
-    const result = await prisma.$transaction(async (tx) => {
-      // Créer le paiement
-      const payment = await tx.payment.create({
-        data: {
-          payslipId: data.payslipId,
-          amount: data.amount,
-          method: data.method,
-          reference: data.reference || null,
-          notes: data.notes || null,
-          processedById: data.processedById,
+    try {
+      // Vérifications préliminaires sans transaction
+      const payslip = await prisma.payslip.findUnique({
+        where: { id: data.payslipId },
+        select: {
+          id: true,
+          netAmount: true,
+          amountPaid: true,
+          status: true,
         },
+      });
+
+      if (!payslip) {
+        throw new Error("Bulletin de paie non trouvé");
+      }
+
+      // Calculer le montant réellement payé en additionnant tous les paiements
+      const existingPayments = await prisma.payment.findMany({
+        where: { payslipId: data.payslipId },
+        select: { amount: true }
+      });
+
+      const actualPaid = existingPayments.reduce((total, payment) => total + Number(payment.amount), 0);
+      const netAmount = Number(payslip.netAmount) || 0;
+      const remainingAmount = netAmount - actualPaid;
+
+      console.log("💰 Vérification paiement:", {
+        payslipId: data.payslipId,
+        netAmount,
+        amountPaidField: Number(payslip.amountPaid) || 0,
+        actualPaid,
+        remainingAmount,
+        payslipStatus: payslip.status,
+        existingPaymentsCount: existingPayments.length
+      });
+
+      if (remainingAmount <= 0) {
+        throw new Error(`Ce bulletin de paie est déjà entièrement payé. Net: ${netAmount} FCFA, Déjà payé: ${actualPaid} FCFA`);
+      }
+
+      if (data.amount > remainingAmount) {
+        throw new Error(
+          `Le montant ne peut pas dépasser le montant restant (${remainingAmount} FCFA)`
+        );
+      }
+
+      // Transaction simplifiée pour les opérations critiques
+      const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // Créer le paiement
+        const payment = await tx.payment.create({
+          data: {
+            payslipId: data.payslipId,
+            amount: data.amount,
+            method: data.method,
+            reference: data.reference || null,
+            notes: data.notes || null,
+            processedById: data.processedById,
+          },
+        });
+
+        // Calculer le nouveau montant total payé
+        const newTotalPaid = actualPaid + data.amount;
+
+        // Déterminer le nouveau statut
+        let newStatus: PayslipStatus;
+        if (newTotalPaid >= netAmount) {
+          newStatus = PayslipStatus.PAID;
+        } else if (newTotalPaid > 0) {
+          newStatus = PayslipStatus.PARTIAL;
+        } else {
+          newStatus = PayslipStatus.PENDING;
+        }
+
+        // Mettre à jour le bulletin de paie
+        await tx.payslip.update({
+          where: { id: data.payslipId },
+          data: {
+            amountPaid: newTotalPaid,
+            status: newStatus,
+          },
+        });
+
+        return payment;
+      });
+
+      // Récupérer le paiement complet après la transaction
+      const completePayment = await prisma.payment.findUnique({
+        where: { id: result.id },
         include: {
           payslip: {
             include: {
@@ -78,13 +137,11 @@ class PaymentService {
         },
       });
 
-      // Mettre à jour le montant payé dans le bulletin
-      await payslipService.updateAmountPaid(data.payslipId, data.amount);
-
-      return payment;
-    });
-
-    return result;
+      return completePayment;
+    } catch (error) {
+      console.error("Erreur lors de la création du paiement:", error);
+      throw error;
+    }
   }
 
   // Obtenir les paiements par entreprise

@@ -358,10 +358,10 @@ export function PayrollCyclesWithPagination() {
                           <Users className="w-4 h-4" />
                           {payrun._count?.payslips || 0} employés
                         </div>
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
                           {new Intl.NumberFormat('fr-FR').format(payrun.totalAmount || 0)} XOF
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FaArrowLeft,
   FaUser,
@@ -12,41 +12,58 @@ import {
 import { paymentService } from "../services/paymentService";
 import { payslipService } from "../services/payslipService";
 import { formatDate } from "../utils/dateUtils";
+import { Button } from "@/components/ui/button";
 
 const PayslipDetailsPage = () => {
   const { companyId, payslipId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [payslip, setPayslip] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState(location.state?.message || "");
+
+  // Fonction pour recharger les données
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // Charger les détails du bulletin
+      const payslipData = await payslipService.getById(companyId, payslipId);
+      setPayslip(payslipData.data || payslipData);
+
+      // Charger les paiements associés
+      const paymentsData = await paymentService.getByPayslip(
+        companyId,
+        payslipId
+      );
+      const paymentsResult = paymentsData.data || paymentsData || [];
+      setPayments(paymentsResult);
+    } catch (error) {
+      console.error("Erreur lors du chargement des données:", error);
+      setError("Erreur lors du chargement des données");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true);
-
-        // Charger les détails du bulletin
-        const payslipData = await payslipService.getById(companyId, payslipId);
-        setPayslip(payslipData.data || payslipData);
-
-        // Charger les paiements associés
-        const paymentsData = await paymentService.getByPayslip(
-          companyId,
-          payslipId
-        );
-        setPayments(paymentsData.data || paymentsData || []);
-      } catch (error) {
-        console.error("Erreur lors du chargement des données:", error);
-        setError("Erreur lors du chargement des données");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (companyId && payslipId) {
       loadData();
     }
+  }, [companyId, payslipId]);
+
+  // Recharger les données quand la fenêtre reprend le focus
+  useEffect(() => {
+    const handleFocus = () => {
+      if (companyId && payslipId) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, [companyId, payslipId]);
 
   const formatAmount = (amount) => {
@@ -60,7 +77,8 @@ const PayslipDetailsPage = () => {
   };
 
   const getTotalPaid = () => {
-    return payments.reduce((total, payment) => total + payment.amount, 0);
+    const total = payments.reduce((total, payment) => total + payment.amount, 0);
+    return total;
   };
 
   const getRemainingAmount = () => {
@@ -101,8 +119,9 @@ const PayslipDetailsPage = () => {
       BANK_TRANSFER: "Virement bancaire",
       ORANGE_MONEY: "Orange Money",
       WAVE: "Wave",
-      FREE_MONEY: "Free Money",
-      CRYPTO: "Cryptomonnaie",
+      MOBILE_MONEY: "Mobile Money",
+      CHECK: "Chèque",
+      OTHER: "Autre",
     };
     return methods[method] || method;
   };
@@ -163,15 +182,33 @@ const PayslipDetailsPage = () => {
         </div>
 
         {getRemainingAmount() > 0 && (
-          <button
+          <Button
             onClick={handleNewPayment}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+            variant="default"
           >
             <FaPlus className="text-sm" />
             Effectuer un paiement
-          </button>
+          </Button>
         )}
       </div>
+
+      {/* Message d'information */}
+      {message && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-blue-700">
+            <FaMoneyBillWave className="text-blue-600" />
+            <span className="font-medium">Information</span>
+          </div>
+          <p className="text-blue-600 text-sm mt-1">{message}</p>
+          <button
+            onClick={() => setMessage("")}
+            className="text-blue-500 hover:text-blue-700 text-sm mt-2 underline"
+          >
+            Masquer
+          </button>
+        </div>
+      )}
 
       {/* Informations de l'employé */}
       <div className="bg-white rounded-lg shadow border p-6">
@@ -412,16 +449,16 @@ const PayslipDetailsPage = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 Aucun paiement effectué
               </h3>
-              <p className="text-gray-500 mb-4">
+              {/* <p className="text-gray-500 mb-4">
                 Ce bulletin de paie n'a pas encore été payé.
-              </p>
-              <button
+              </p> */}
+              {/* <button
                 onClick={handleNewPayment}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2 transition-colors"
               >
                 <FaPlus className="text-sm" />
                 Effectuer le premier paiement
-              </button>
+              </button> */}
             </div>
           )}
         </div>

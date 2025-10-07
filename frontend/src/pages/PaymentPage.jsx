@@ -49,8 +49,9 @@ const PaymentPage = () => {
     { value: "BANK_TRANSFER", label: "Virement bancaire" },
     { value: "ORANGE_MONEY", label: "Orange Money" },
     { value: "WAVE", label: "Wave" },
-    { value: "FREE_MONEY", label: "Free Money" },
-    { value: "CRYPTO", label: "Cryptomonnaie" },
+    { value: "MOBILE_MONEY", label: "Mobile Money" },
+    { value: "CHECK", label: "Chèque" },
+    { value: "OTHER", label: "Autre" },
   ];
 
   // Charger les statistiques et les bulletins disponibles
