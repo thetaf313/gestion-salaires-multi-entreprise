@@ -708,6 +708,199 @@ export class AttendanceService {
       where: { id: attendanceId },
     });
   }
+
+  // ⭐ NOUVEAU : Pointage intelligent - Détermine automatiquement si c'est un check-in ou check-out
+  async smartClockIn(employeeId: string, companyId: string, notes?: string) {
+    const today = startOfDay(new Date());
+    const now = new Date();
+
+    console.log(`🕐 Pointage intelligent pour employé ${employeeId} à ${now.toISOString()}`);
+
+    // Vérifier si l'employé existe et est actif
+    const employee = await prisma.employee.findFirst({
+      where: {
+        id: employeeId,
+        companyId: companyId,
+        isActive: true,
+      },
+    });
+
+    if (!employee) {
+      throw new Error("Employé non trouvé ou inactif");
+    }
+
+    // Chercher le pointage existant pour aujourd'hui
+    const existingAttendance = await prisma.attendance.findUnique({
+      where: {
+        employeeId_date: {
+          employeeId: employeeId,
+          date: today,
+        },
+      },
+    });
+
+    // Récupérer les horaires de travail pour calculer le retard
+    const dayOfWeek = now.getDay();
+    const workSchedule = await prisma.workSchedule.findUnique({
+      where: {
+        companyId_dayOfWeek: {
+          companyId: companyId,
+          dayOfWeek: dayOfWeek,
+        },
+      },
+    });
+
+    let lateMinutes = 0;
+    let status: AttendanceStatus = AttendanceStatus.PRESENT;
+
+    // CAS 1: Premier pointage du jour (Check-in)
+    if (!existingAttendance || !existingAttendance.checkIn) {
+      console.log("📥 Premier pointage - Enregistrement de l'heure d'arrivée");
+
+      if (workSchedule && workSchedule.isWorkingDay) {
+        const [startHour, startMinute] = workSchedule.startTime
+          .split(":")
+          .map(Number);
+        const expectedStartTime = new Date(today);
+        expectedStartTime.setHours(startHour || 0, startMinute || 0, 0, 0);
+
+        if (now > expectedStartTime) {
+          lateMinutes = differenceInMinutes(now, expectedStartTime);
+          status = lateMinutes > 15 ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
+        }
+      }
+
+      const attendanceData = {
+        employeeId,
+        companyId,
+        date: today,
+        checkIn: now,
+        status,
+        lateMinutes,
+        notes: notes || null,
+      };
+
+      if (existingAttendance) {
+        const updated = await prisma.attendance.update({
+          where: { id: existingAttendance.id },
+          data: {
+            checkIn: now,
+            status,
+            lateMinutes,
+            notes: notes || existingAttendance.notes,
+          },
+          include: {
+            employee: {
+              select: {
+                firstName: true,
+                lastName: true,
+                employeeCode: true,
+              },
+            },
+          },
+        });
+
+        return {
+          attendance: updated,
+          action: "CHECK_IN",
+          message: `Arrivée enregistrée à ${format(now, "HH:mm")}`,
+          isLate: lateMinutes > 0,
+          lateMinutes,
+        };
+      } else {
+        const created = await prisma.attendance.create({
+          data: attendanceData,
+          include: {
+            employee: {
+              select: {
+                firstName: true,
+                lastName: true,
+                employeeCode: true,
+              },
+            },
+          },
+        });
+
+        return {
+          attendance: created,
+          action: "CHECK_IN",
+          message: `Arrivée enregistrée à ${format(now, "HH:mm")}`,
+          isLate: lateMinutes > 0,
+          lateMinutes,
+        };
+      }
+    }
+
+    // CAS 2: Deuxième pointage du jour (Check-out)
+    if (existingAttendance.checkIn && !existingAttendance.checkOut) {
+      console.log("📤 Deuxième pointage - Enregistrement de l'heure de départ");
+
+      // Calculer les heures travaillées
+      const hoursWorked = differenceInMinutes(now, existingAttendance.checkIn) / 60;
+
+      // Recalculer le statut basé sur les heures travaillées
+      if (workSchedule && workSchedule.isWorkingDay) {
+        const [startHour, startMinute] = workSchedule.startTime.split(":").map(Number);
+        const [endHour, endMinute] = workSchedule.endTime.split(":").map(Number);
+        
+        const expectedStartTime = new Date(today);
+        expectedStartTime.setHours(startHour || 0, startMinute || 0, 0, 0);
+        
+        const expectedEndTime = new Date(today);
+        expectedEndTime.setHours(endHour || 0, endMinute || 0, 0, 0);
+        
+        const expectedDuration = differenceInMinutes(expectedEndTime, expectedStartTime) / 60;
+        
+        // Si moins de 50% du temps de travail attendu, c'est une demi-journée
+        if (hoursWorked < expectedDuration * 0.5) {
+          status = AttendanceStatus.HALF_DAY;
+        } else if (existingAttendance.lateMinutes > 15) {
+          status = AttendanceStatus.LATE;
+        } else {
+          status = AttendanceStatus.PRESENT;
+        }
+      }
+
+      const updated = await prisma.attendance.update({
+        where: { id: existingAttendance.id },
+        data: {
+          checkOut: now,
+          hoursWorked: new Prisma.Decimal(hoursWorked.toFixed(2)),
+          status,
+          notes: notes || existingAttendance.notes,
+        },
+        include: {
+          employee: {
+            select: {
+              firstName: true,
+              lastName: true,
+              employeeCode: true,
+            },
+          },
+        },
+      });
+
+      return {
+        attendance: updated,
+        action: "CHECK_OUT",
+        message: `Départ enregistré à ${format(now, "HH:mm")}`,
+        hoursWorked: hoursWorked.toFixed(2),
+        totalMinutes: Math.round(hoursWorked * 60),
+      };
+    }
+
+    // CAS 3: Les deux pointages sont déjà effectués
+    if (existingAttendance.checkIn && existingAttendance.checkOut) {
+      throw new Error(
+        `Pointages déjà complets pour aujourd'hui. Arrivée: ${format(
+          existingAttendance.checkIn,
+          "HH:mm"
+        )}, Départ: ${format(existingAttendance.checkOut, "HH:mm")}`
+      );
+    }
+
+    throw new Error("État de pointage incohérent");
+  }
 }
 
 export const attendanceService = new AttendanceService();

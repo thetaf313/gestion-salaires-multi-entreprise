@@ -255,10 +255,10 @@ export function AttendanceWithPagination() {
             <QrCode className="w-4 h-4 mr-2" />
             Pointage Intelligent
           </Button>
-          <Button onClick={handleCreateAttendance}>
+          {/* <Button onClick={handleCreateAttendance}>
             <Plus className="w-4 h-4 mr-2" />
             Nouveau Pointage
-          </Button>
+          </Button> */}
         </div>
       </div>
 

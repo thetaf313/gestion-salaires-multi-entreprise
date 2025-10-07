@@ -44,6 +44,7 @@ const AdminLayout = ({ children }) => {
   const isAttendanceActive = () => {
     return (
       location.pathname.includes("/attendance") ||
+      location.pathname.includes("/smart-clock") ||
       location.pathname.includes("/work-schedule") ||
       location.pathname.includes("/attendance-stats") ||
       location.pathname.includes("/employee-qr-codes")
@@ -121,6 +122,13 @@ const AdminLayout = ({ children }) => {
       roles: ["ADMIN"],
       isSubmenu: true,
       submenuItems: [
+        {
+          icon: Clock,
+          label: "Pointage Intelligent",
+          path: user?.companyId
+            ? `/company/${user.companyId}/smart-clock`
+            : "/smart-clock",
+        },
         {
           icon: Clock,
           label: "Gestion Pointage",

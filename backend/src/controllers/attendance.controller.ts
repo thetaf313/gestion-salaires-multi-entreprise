@@ -506,6 +506,48 @@ export class AttendanceController {
       return errorResponse(res, error.message || "Erreur lors du pointage");
     }
   }
+
+  // ⭐ NOUVEAU : Pointage intelligent
+  async smartClockIn(req: Request, res: Response) {
+    try {
+      console.log("🕐 Smart Clock-In - Body reçu:", req.body);
+
+      const { employeeCodeOrEmail, notes } = req.body;
+      const companyId = req.user?.companyId;
+
+      if (!companyId) {
+        return errorResponse(res, "Entreprise non trouvée", 400);
+      }
+
+      if (!employeeCodeOrEmail) {
+        return errorResponse(res, "Code employé ou email requis", 400);
+      }
+
+      // 1. Rechercher l'employé
+      const employee = await attendanceService.findEmployeeByCodeOrEmail(
+        companyId,
+        employeeCodeOrEmail
+      );
+
+      // 2. Effectuer le pointage intelligent
+      const result = await attendanceService.smartClockIn(
+        employee.id,
+        companyId,
+        notes
+      );
+
+      console.log("✅ Smart Clock-In - Résultat:", result);
+
+      return successResponse(
+        res,
+        result,
+        result.message
+      );
+    } catch (error: any) {
+      console.error("Erreur pointage intelligent:", error);
+      return errorResponse(res, error.message || "Erreur lors du pointage intelligent");
+    }
+  }
 }
 
 export const attendanceController = new AttendanceController();

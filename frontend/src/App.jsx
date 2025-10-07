@@ -25,6 +25,7 @@ import PayslipsWithPagination from "./pages/PayslipsWithPagination"; // Nouvelle
 import PayslipDetailsPage from "./pages/PayslipDetailsPage";
 import CreatePaymentPage from "./pages/CreatePaymentPage";
 import PaymentPageFixed from "./pages/PaymentPageFixed";
+import SmartClockInPage from "./pages/SmartClockInPage";
 import Reports from "./pages/Reports";
 import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
@@ -200,6 +201,16 @@ function App() {
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
                           <AttendanceWithPagination />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Pointage intelligent */}
+                    <Route
+                      path="/company/:companyId/smart-clock"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "CASHIER", "USER"]}>
+                          <SmartClockInPage />
                         </ProtectedRoute>
                       }
                     />

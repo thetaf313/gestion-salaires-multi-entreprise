@@ -14,6 +14,9 @@ router.post(
   attendanceController.createAttendanceWithAutoStatus
 );
 
+// ⭐ NOUVEAU : Route de pointage intelligent
+router.post("/smart-clock", attendanceController.smartClockIn);
+
 // Routes principales pour les pointages
 router.get("/", attendanceController.getAttendances);
 router.post("/manual", attendanceController.createManualAttendance);

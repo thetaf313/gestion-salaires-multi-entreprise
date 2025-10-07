@@ -58,6 +58,36 @@ const attendanceService = {
     }
   },
 
+  // ⭐ NOUVEAU : Pointage intelligent
+  smartClockIn: async (employeeCodeOrEmail, notes = "") => {
+    try {
+      const response = await api.post(`/attendances/smart-clock`, {
+        employeeCodeOrEmail,
+        notes,
+      });
+
+      if (response.data.success) {
+        return { 
+          success: true, 
+          data: response.data.data,
+          message: response.data.message 
+        };
+      } else {
+        return { 
+          success: false, 
+          error: response.data.message 
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          "Erreur lors du pointage intelligent",
+      };
+    }
+  },
+
   // Créer un pointage manuel
   createManual: async (data) => {
     try {
