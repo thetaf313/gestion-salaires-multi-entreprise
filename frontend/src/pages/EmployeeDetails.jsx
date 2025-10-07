@@ -28,14 +28,14 @@ const EmployeeDetails = () => {
   const { employeeId, companyId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [employee, setEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // Vérifier les permissions
-  const canManageEmployees = 
+  const canManageEmployees =
     user?.role === "SUPER_ADMIN" ||
     (user?.role === "ADMIN" && user?.companyId === companyId);
 
@@ -85,10 +85,10 @@ const EmployeeDetails = () => {
   const getContractTypeBadge = (type) => {
     const variants = {
       DAILY: "default",
-      FIXED: "secondary", 
-      HONORARIUM: "outline"
+      FIXED: "secondary",
+      HONORARIUM: "outline",
     };
-    
+
     return (
       <Badge variant={variants[type] || "default"}>
         {getContractTypeLabel(type)}
@@ -120,7 +120,7 @@ const EmployeeDetails = () => {
     return (
       <div className="p-4 sm:p-6 space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/company/${companyId}/employees`)}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="h-8 w-64 bg-gray-200 rounded animate-pulse"></div>
@@ -143,7 +143,7 @@ const EmployeeDetails = () => {
     return (
       <div className="p-4 sm:p-6">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/company/${companyId}/employees`)}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-xl font-semibold">Employé non trouvé</h1>
@@ -157,7 +157,7 @@ const EmployeeDetails = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/company/${companyId}/employees`)}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
@@ -207,7 +207,9 @@ const EmployeeDetails = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-gray-600">Prénom</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Prénom
+                </label>
                 <p className="text-gray-900">{employee.firstName}</p>
               </div>
               <div>
@@ -215,24 +217,34 @@ const EmployeeDetails = () => {
                 <p className="text-gray-900">{employee.lastName}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Email</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Email
+                </label>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-blue-500" />
-                  <p className="text-gray-900">{employee.email || "Non défini"}</p>
+                  <p className="text-gray-900">
+                    {employee.email || "Non défini"}
+                  </p>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Téléphone</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Téléphone
+                </label>
                 <div className="flex items-center gap-2">
                   <Phone className="w-4 h-4 text-green-500" />
-                  <p className="text-gray-900">{employee.phone || "Non défini"}</p>
+                  <p className="text-gray-900">
+                    {employee.phone || "Non défini"}
+                  </p>
                 </div>
               </div>
             </div>
-            
+
             {employee.address && (
               <div>
-                <label className="text-sm font-medium text-gray-600">Adresse</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Adresse
+                </label>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-red-500 mt-1 flex-shrink-0" />
                   <p className="text-gray-900">{employee.address}</p>
@@ -252,21 +264,27 @@ const EmployeeDetails = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Type de contrat</label>
+              <label className="text-sm font-medium text-gray-600">
+                Type de contrat
+              </label>
               <div className="mt-1">
                 {getContractTypeBadge(employee.contractType)}
               </div>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-600">Code employé</label>
+              <label className="text-sm font-medium text-gray-600">
+                Code employé
+              </label>
               <p className="text-gray-900 font-mono text-sm">
                 {employee.employeeCode || employee.id.slice(0, 8)}
               </p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-600">Statut</label>
+              <label className="text-sm font-medium text-gray-600">
+                Statut
+              </label>
               <div className="mt-1">
                 <Badge variant={employee.isActive ? "default" : "secondary"}>
                   {employee.isActive ? "Actif" : "Inactif"}
@@ -276,7 +294,9 @@ const EmployeeDetails = () => {
 
             {employee.user && (
               <div>
-                <label className="text-sm font-medium text-gray-600">Compte utilisateur</label>
+                <label className="text-sm font-medium text-gray-600">
+                  Compte utilisateur
+                </label>
                 <div className="flex items-center gap-2 mt-1">
                   <UserCheck className="w-4 h-4 text-green-500" />
                   <span className="text-sm text-gray-900">
@@ -303,9 +323,11 @@ const EmployeeDetails = () => {
               <label className="text-sm font-medium text-gray-600">Poste</label>
               <p className="text-gray-900 font-medium">{employee.position}</p>
             </div>
-            
+
             <div>
-              <label className="text-sm font-medium text-gray-600">Date d'embauche</label>
+              <label className="text-sm font-medium text-gray-600">
+                Date d'embauche
+              </label>
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-purple-500" />
                 <p className="text-gray-900">{formatDate(employee.hireDate)}</p>
@@ -313,18 +335,26 @@ const EmployeeDetails = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-600">Rémunération</label>
+              <label className="text-sm font-medium text-gray-600">
+                Rémunération
+              </label>
               <div className="flex items-center gap-2">
                 <DollarSign className="w-4 h-4 text-emerald-500" />
-                <p className="text-gray-900 font-medium">{getSalaryDisplay(employee)}</p>
+                <p className="text-gray-900 font-medium">
+                  {getSalaryDisplay(employee)}
+                </p>
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-gray-600">Créé le</label>
+              <label className="text-sm font-medium text-gray-600">
+                Créé le
+              </label>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-900">{formatDate(employee.createdAt)}</p>
+                <p className="text-gray-900">
+                  {formatDate(employee.createdAt)}
+                </p>
               </div>
             </div>
           </div>
@@ -371,8 +401,11 @@ const EmployeeDetails = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600 mb-4">
-                Êtes-vous sûr de vouloir supprimer l'employé <strong>{employee.firstName} {employee.lastName}</strong> ?
-                Cette action désactivera le compte de l'employé.
+                Êtes-vous sûr de vouloir supprimer l'employé{" "}
+                <strong>
+                  {employee.firstName} {employee.lastName}
+                </strong>{" "}
+                ? Cette action désactivera le compte de l'employé.
               </p>
               <div className="flex gap-2 justify-end">
                 <Button
@@ -381,10 +414,7 @@ const EmployeeDetails = () => {
                 >
                   Annuler
                 </Button>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteEmployee}
-                >
+                <Button variant="destructive" onClick={handleDeleteEmployee}>
                   Supprimer
                 </Button>
               </div>

@@ -72,9 +72,9 @@ export function CompanyEmployees() {
   const applyFiltersAndSearch = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       let filteredEmployees = [];
-      
+
       // Si on a une recherche textuelle (minimum 2 caractères)
       if (searchQuery.trim() && searchQuery.trim().length >= 2) {
         const response = await employeeService.searchEmployees(
@@ -84,17 +84,21 @@ export function CompanyEmployees() {
         filteredEmployees = response.data || [];
       } else {
         // Sinon, charger tous les employés
-        const response = await employeeService.getEmployeesByCompany(companyId, 1, 100);
+        const response = await employeeService.getEmployeesByCompany(
+          companyId,
+          1,
+          100
+        );
         filteredEmployees = response.data?.employees || [];
       }
-      
+
       // Appliquer le filtre de type de contrat côté client
       if (contractTypeFilter && contractTypeFilter !== "ALL") {
         filteredEmployees = filteredEmployees.filter(
-          emp => emp.contractType === contractTypeFilter
+          (emp) => emp.contractType === contractTypeFilter
         );
       }
-      
+
       setEmployees(filteredEmployees);
       setPage(1);
       setTotalPages(1);
@@ -112,7 +116,10 @@ export function CompanyEmployees() {
 
   // Appliquer les filtres quand contractTypeFilter change
   useEffect(() => {
-    if (contractTypeFilter === "ALL" && (!searchQuery.trim() || searchQuery.trim().length < 2)) {
+    if (
+      contractTypeFilter === "ALL" &&
+      (!searchQuery.trim() || searchQuery.trim().length < 2)
+    ) {
       loadData();
     } else {
       applyFiltersAndSearch();
@@ -124,7 +131,10 @@ export function CompanyEmployees() {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim().length >= 2 || contractTypeFilter !== "ALL") {
         applyFiltersAndSearch();
-      } else if (searchQuery.trim().length === 0 && contractTypeFilter === "ALL") {
+      } else if (
+        searchQuery.trim().length === 0 &&
+        contractTypeFilter === "ALL"
+      ) {
         loadData();
       }
     }, 500); // Délai de 500ms pour éviter trop de requêtes
@@ -312,7 +322,9 @@ export function CompanyEmployees() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xl sm:text-2xl font-bold truncate">{stats.total || 0}</p>
+                  <p className="text-xl sm:text-2xl font-bold truncate">
+                    {stats.total || 0}
+                  </p>
                   <p className="text-xs sm:text-sm text-muted-foreground">
                     Total employés
                   </p>
@@ -329,7 +341,9 @@ export function CompanyEmployees() {
                   <p className="text-xl sm:text-2xl font-bold truncate">
                     {stats.active || 0}
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Actifs</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Actifs
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -341,14 +355,16 @@ export function CompanyEmployees() {
                 <DollarSign className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                 <div className="min-w-0">
                   <p className="text-lg sm:text-xl font-bold truncate">
-                    {new Intl.NumberFormat('fr-FR', {
-                      style: 'currency',
-                      currency: 'XOF',
+                    {new Intl.NumberFormat("fr-FR", {
+                      style: "currency",
+                      currency: "XOF",
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 0,
                     }).format(stats.totalMonthlySalary || 0)}
                   </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">Masse salariale</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">
+                    Masse salariale
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -371,10 +387,10 @@ export function CompanyEmployees() {
                   className="pl-10"
                 />
               </div>
-              
+
               <div className="w-full sm:w-48">
-                <Select 
-                  value={contractTypeFilter} 
+                <Select
+                  value={contractTypeFilter}
                   onValueChange={(value) => {
                     setContractTypeFilter(value);
                   }}
@@ -395,11 +411,7 @@ export function CompanyEmployees() {
             {/* Boutons d'action */}
             {(searchQuery || contractTypeFilter !== "ALL") && (
               <div className="flex justify-end">
-                <Button
-                  variant="outline"
-                  onClick={clearFilters}
-                  size="sm"
-                >
+                <Button variant="outline" onClick={clearFilters} size="sm">
                   <span className="hidden sm:inline">Effacer filtres</span>
                   <span className="sm:hidden">✕</span>
                 </Button>
@@ -435,7 +447,10 @@ export function CompanyEmployees() {
           {employees.length > 0 ? (
             <div className="space-y-4">
               {employees.map((employee) => (
-                <Card key={employee.id} className="p-4 hover:shadow-md transition-shadow">
+                <Card
+                  key={employee.id}
+                  className="p-4 hover:shadow-md transition-shadow"
+                >
                   <div className="space-y-4">
                     {/* En-tête avec nom, poste et actions */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -449,7 +464,8 @@ export function CompanyEmployees() {
                               {employee.position}
                             </p>
                             <p className="text-xs text-gray-500">
-                              ID: {employee.employeeCode || employee.id.slice(0, 8)}
+                              ID:{" "}
+                              {employee.employeeCode || employee.id.slice(0, 8)}
                             </p>
                           </div>
                           <div className="flex flex-col items-end gap-2">
@@ -457,7 +473,7 @@ export function CompanyEmployees() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Actions (toujours visibles mais compactes sur mobile) */}
                       {canManageEmployees && (
                         <div className="flex gap-2 sm:flex-col sm:gap-1">
@@ -468,7 +484,9 @@ export function CompanyEmployees() {
                             className="flex-1 sm:flex-initial"
                           >
                             <Eye className="w-3 h-3 sm:mr-1" />
-                            <span className="hidden sm:inline text-xs">Voir</span>
+                            <span className="hidden sm:inline text-xs">
+                              Voir
+                            </span>
                           </Button>
                           <Button
                             size="sm"
@@ -477,7 +495,9 @@ export function CompanyEmployees() {
                             className="flex-1 sm:flex-initial"
                           >
                             <Edit className="w-3 h-3 sm:mr-1" />
-                            <span className="hidden sm:inline text-xs">Modifier</span>
+                            <span className="hidden sm:inline text-xs">
+                              Modifier
+                            </span>
                           </Button>
                           <Button
                             size="sm"
@@ -486,7 +506,9 @@ export function CompanyEmployees() {
                             className="flex-1 sm:flex-initial"
                           >
                             <Trash2 className="w-3 h-3 sm:mr-1" />
-                            <span className="hidden sm:inline text-xs">Supprimer</span>
+                            <span className="hidden sm:inline text-xs">
+                              Supprimer
+                            </span>
                           </Button>
                         </div>
                       )}
@@ -497,13 +519,17 @@ export function CompanyEmployees() {
                       {employee.email && (
                         <div className="flex items-center gap-2 text-sm">
                           <Mail className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                          <span className="truncate text-gray-700">{employee.email}</span>
+                          <span className="truncate text-gray-700">
+                            {employee.email}
+                          </span>
                         </div>
                       )}
                       {employee.phone && (
                         <div className="flex items-center gap-2 text-sm">
                           <Phone className="w-4 h-4 text-green-500 flex-shrink-0" />
-                          <span className="text-gray-700">{employee.phone}</span>
+                          <span className="text-gray-700">
+                            {employee.phone}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -522,8 +548,12 @@ export function CompanyEmployees() {
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="w-4 h-4 text-purple-500 flex-shrink-0" />
                         <div>
-                          <span className="text-gray-900">{formatDate(employee.hireDate)}</span>
-                          <p className="text-xs text-gray-500">Date d'embauche</p>
+                          <span className="text-gray-900">
+                            {formatDate(employee.hireDate)}
+                          </span>
+                          <p className="text-xs text-gray-500">
+                            Date d'embauche
+                          </p>
                         </div>
                       </div>
                     </div>

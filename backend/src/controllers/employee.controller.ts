@@ -203,8 +203,8 @@ class EmployeeController {
       }
 
       // Convertir la date d'embauche si présente
-      if (updateData.hireDate && typeof updateData.hireDate === 'string') {
-        updateData.hireDate = new Date(updateData.hireDate + 'T00:00:00.000Z');
+      if (updateData.hireDate && typeof updateData.hireDate === "string") {
+        updateData.hireDate = new Date(updateData.hireDate + "T00:00:00.000Z");
       }
 
       // Mettre à jour l'employé

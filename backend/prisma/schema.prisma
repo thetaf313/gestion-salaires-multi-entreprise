@@ -41,9 +41,10 @@ enum PayRunStatus {
 
 // Énumération pour les statuts des bulletins de paie
 enum PayslipStatus {
-  PENDING // En attente
-  PARTIAL // Partiellement payé
-  PAID // Payé
+  ARCHIVED // Archivé (avant approbation du cycle)
+  PENDING  // En attente (après approbation du cycle)
+  PARTIAL  // Partiellement payé
+  PAID     // Payé
 }
 
 // Énumération pour les modes de paiement

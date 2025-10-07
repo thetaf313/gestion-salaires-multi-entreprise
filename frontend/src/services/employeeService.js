@@ -18,19 +18,29 @@ export const employeeService = {
   },
 
   // Obtenir les employés d'une entreprise
-  async getEmployeesByCompany(companyId, page = 1, limit = 10) {
+  async getEmployeesByCompany(companyId, params = {}) {
+    const { page = 1, limit = 10, ...otherParams } = params;
+    
+    // Construire les paramètres de requête
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...Object.fromEntries(
+        Object.entries(otherParams).filter(([key, value]) => 
+          value !== null && value !== undefined && value !== ''
+        )
+      )
+    });
+
     const response = await api.get(
-      `/employees/company/${companyId}?page=${page}&limit=${limit}`
+      `/employees/company/${companyId}?${queryParams.toString()}`
     );
     return response.data;
   },
 
   // Alias pour getEmployeesByCompany (utilisé dans CreatePayRunModal)
   async getByCompany(companyId, page = 1, limit = 100) {
-    const response = await api.get(
-      `/employees/company/${companyId}?page=${page}&limit=${limit}`
-    );
-    return response.data;
+    return this.getEmployeesByCompany(companyId, { page, limit });
   },
 
   // Obtenir un employé par ID

@@ -8,8 +8,8 @@ export class EmployeeService {
     employeeCode?: string;
     firstName: string;
     lastName: string;
-    email?: string;
-    phone?: string;
+    email: string;
+    phone: string;
     position: string;
     contractType: "DAILY" | "FIXED" | "HONORARIUM";
     dailyRate?: number;
@@ -32,8 +32,8 @@ export class EmployeeService {
           employeeCode,
           firstName: employeeData.firstName,
           lastName: employeeData.lastName,
-          email: employeeData.email || null,
-          phone: employeeData.phone || null,
+          email: employeeData.email,
+          phone: employeeData.phone,
           position: employeeData.position,
           contractType: employeeData.contractType,
           dailyRate: employeeData.dailyRate || null,

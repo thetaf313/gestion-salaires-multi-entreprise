@@ -19,7 +19,7 @@ interface PayRunFilters {
 }
 
 class PayRunService {
-  // Créer un nouveau cycle de paie
+  // Créer un nouveau cycle de paie et générer les bulletins
   async create(data: CreatePayRunData) {
     const { employeeIds, ...payRunData } = data;
 
@@ -37,33 +37,130 @@ class PayRunService {
       );
     }
 
-    const payRun = await prisma.payRun.create({
-      data: {
-        title: payRunData.title,
-        periodStart: startDate,
-        periodEnd: endDate,
-        description: payRunData.description || null,
-        companyId: payRunData.companyId,
-        createdById: payRunData.createdById,
-      },
-      include: {
-        company: {
-          select: {
-            id: true,
-            name: true,
+    console.log(`🚀 Création du cycle de paie: ${payRunData.title}`);
+
+    // Utiliser une transaction pour créer le cycle et les bulletins
+    const result = await prisma.$transaction(async (tx) => {
+      // Créer le cycle de paie
+      const payRun = await tx.payRun.create({
+        data: {
+          title: payRunData.title,
+          periodStart: startDate,
+          periodEnd: endDate,
+          description: payRunData.description || null,
+          companyId: payRunData.companyId,
+          createdById: payRunData.createdById,
+        },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-        createdBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
+      });
+
+      console.log(`✅ Cycle créé: ${payRun.id}`);
+
+      // Récupérer tous les employés actifs de l'entreprise
+      const employees = await tx.employee.findMany({
+        where: {
+          companyId: payRunData.companyId,
+          isActive: true,
+        },
+      });
+
+      console.log(`👥 ${employees.length} employés actifs trouvés`);
+
+      if (employees.length === 0) {
+        console.log("⚠️ Aucun employé actif, cycle créé sans bulletins");
+        return payRun;
+      }
+
+      // Générer les bulletins de paie pour tous les employés (status ARCHIVED)
+      let totalGross = 0;
+      let totalNet = 0;
+      let bulletinsCreated = 0;
+
+      for (const employee of employees) {
+        try {
+          const payslipData = await this.calculatePayslip(employee, payRun);
+
+          const payslip = await tx.payslip.create({
+            data: {
+              payslipNumber: await this.generatePayslipNumber(
+                employee.employeeCode,
+                payRun.id
+              ),
+              employeeId: employee.id,
+              payRunId: payRun.id,
+              grossAmount: payslipData.grossAmount,
+              totalDeductions: payslipData.totalDeductions,
+              netAmount: payslipData.netAmount,
+              daysWorked: payslipData.daysWorked,
+              hoursWorked: payslipData.hoursWorked,
+              status: 'ARCHIVED', // Statut archivé jusqu'à approbation
+            },
+          });
+
+          // Créer les déductions
+          if (payslipData.deductions.length > 0) {
+            await tx.payslipDeduction.createMany({
+              data: payslipData.deductions.map((deduction) => ({
+                ...deduction,
+                payslipId: payslip.id,
+              })),
+            });
+          }
+
+          totalGross += Number(payslipData.grossAmount);
+          totalNet += Number(payslipData.netAmount);
+          bulletinsCreated++;
+
+          console.log(`✅ Bulletin créé pour ${employee.firstName} ${employee.lastName}`);
+        } catch (error: any) {
+          console.error(`❌ Erreur pour ${employee.firstName} ${employee.lastName}:`, error.message);
+        }
+      }
+
+      // Mettre à jour les totaux du cycle de paie
+      const updatedPayRun = await tx.payRun.update({
+        where: { id: payRun.id },
+        data: {
+          totalGross,
+          totalNet,
+        },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          createdBy: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+            },
           },
         },
-      },
+      });
+
+      console.log(`🎉 ${bulletinsCreated} bulletins archivés générés pour le cycle ${payRun.title}`);
+
+      return updatedPayRun;
     });
 
-    return payRun;
+    return result;
   }
 
   // Obtenir les cycles de paie par entreprise
@@ -257,17 +354,24 @@ class PayRunService {
     return true;
   }
 
-  // Approuver un cycle de paie et générer les bulletins
+  // Approuver un cycle de paie et désarchiver les bulletins
   async approve(id: string, companyId: string, approvedById: string) {
+    console.log(`🔄 Approbation du cycle de paie: ${id}`);
+
     // Vérifier que le cycle existe et appartient à l'entreprise
     const existingPayRun = await prisma.payRun.findFirst({
       where: { id, companyId },
       include: {
-        company: true,
+        _count: {
+          select: {
+            payslips: true
+          }
+        }
       },
     });
 
     if (!existingPayRun) {
+      console.log(`❌ Cycle de paie non trouvé: ${id}`);
       return null;
     }
 
@@ -275,17 +379,7 @@ class PayRunService {
       throw new Error("Ce cycle de paie est déjà approuvé");
     }
 
-    // Obtenir tous les employés actifs de l'entreprise
-    const employees = await prisma.employee.findMany({
-      where: {
-        companyId,
-        isActive: true,
-      },
-    });
-
-    if (employees.length === 0) {
-      throw new Error("Aucun employé actif trouvé pour cette entreprise");
-    }
+    console.log(`📋 ${existingPayRun._count.payslips} bulletins archivés trouvés`);
 
     // Utiliser une transaction pour garantir la cohérence
     const result = await prisma.$transaction(async (tx) => {
@@ -299,68 +393,26 @@ class PayRunService {
         },
       });
 
-      // Générer les bulletins de paie pour tous les employés
-      const payslips = [];
-      let totalGross = 0;
-      let totalNet = 0;
-
-      for (const employee of employees) {
-        const payslipData = await this.calculatePayslip(
-          employee,
-          existingPayRun
-        );
-
-        const payslip = await tx.payslip.create({
-          data: {
-            payslipNumber: await this.generatePayslipNumber(
-              employee.employeeCode,
-              existingPayRun.id
-            ),
-            employeeId: employee.id,
-            payRunId: id,
-            grossAmount: payslipData.grossAmount,
-            totalDeductions: payslipData.totalDeductions,
-            netAmount: payslipData.netAmount,
-            daysWorked: payslipData.daysWorked,
-            hoursWorked: payslipData.hoursWorked,
-          },
-        });
-
-        // Créer les déductions si nécessaire
-        if (payslipData.deductions.length > 0) {
-          await tx.payslipDeduction.createMany({
-            data: payslipData.deductions.map((deduction) => ({
-              ...deduction,
-              payslipId: payslip.id,
-            })),
-          });
-        }
-
-        payslips.push(payslip);
-        totalGross += Number(payslipData.grossAmount);
-        totalNet += Number(payslipData.netAmount);
-      }
-
-      // Mettre à jour les totaux du cycle de paie
-      await tx.payRun.update({
-        where: { id },
-        data: {
-          totalGross,
-          totalNet,
+      // Désarchiver tous les bulletins du cycle (ARCHIVED → PENDING)
+      const updatedPayslips = await tx.payslip.updateMany({
+        where: {
+          payRunId: id,
+          status: 'ARCHIVED'
         },
+        data: {
+          status: 'PENDING'
+        }
       });
+
+      console.log(`✅ ${updatedPayslips.count} bulletins désarchivés`);
 
       return {
         payRun: updatedPayRun,
-        payslips,
-        summary: {
-          totalEmployees: employees.length,
-          totalGross,
-          totalNet,
-        },
+        payslipsCount: updatedPayslips.count
       };
     });
 
+    console.log(`🎉 Cycle de paie approuvé avec succès: ${result.payslipsCount} bulletins disponibles pour paiement`);
     return result;
   }
 

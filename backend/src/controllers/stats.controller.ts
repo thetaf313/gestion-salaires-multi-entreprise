@@ -160,9 +160,7 @@ class StatsController {
       const user = req.user;
       if (
         !user ||
-        ![UserRole.CASHIER, UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(
-          user.role
-        )
+        user.role === UserRole.USER
       ) {
         return sendResponse(
           res,

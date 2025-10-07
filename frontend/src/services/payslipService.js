@@ -30,4 +30,26 @@ export const payslipService = {
     const response = await api.get(`/company/${companyId}/payslips/stats`);
     return response.data;
   },
+
+  // Méthodes supplémentaires pour la pagination
+  async getPayslipsByCompany(companyId, params = {}) {
+    return await this.getByCompany(companyId, params);
+  },
+
+  async getPayslipsByPayrun(companyId, payrunId, params = {}) {
+    const paramsWithPayrun = { ...params, payRunId: payrunId };
+    return await this.getByCompany(companyId, paramsWithPayrun);
+  },
+
+  async downloadPayslip(companyId, payslipId) {
+    const response = await api.get(`/company/${companyId}/payslips/${payslipId}/download`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
+
+  async deletePayslip(companyId, payslipId) {
+    const response = await api.delete(`/company/${companyId}/payslips/${payslipId}`);
+    return response.data;
+  },
 };

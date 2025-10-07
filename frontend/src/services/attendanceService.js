@@ -102,6 +102,57 @@ const attendanceService = {
       };
     }
   },
+
+  // Méthodes supplémentaires pour la pagination
+  getAttendanceByCompany: async (companyId, params = {}) => {
+    try {
+      // Le backend utilise /api/attendances avec filtrage automatique par companyId
+      const response = await api.get(`/attendances`, { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
+        "Erreur lors de la récupération des pointages"
+      );
+    }
+  },
+
+  createAttendance: async (companyId, data) => {
+    try {
+      // Utilise la route pour création manuelle
+      const response = await api.post(`/attendances/manual`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
+        "Erreur lors de la création du pointage"
+      );
+    }
+  },
+
+  updateAttendance: async (companyId, attendanceId, data) => {
+    try {
+      const response = await api.patch(`/attendances/${attendanceId}`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
+        "Erreur lors de la mise à jour du pointage"
+      );
+    }
+  },
+
+  deleteAttendance: async (companyId, attendanceId) => {
+    try {
+      const response = await api.delete(`/attendances/${attendanceId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
+        "Erreur lors de la suppression du pointage"
+      );
+    }
+  },
 };
 
 export default attendanceService;

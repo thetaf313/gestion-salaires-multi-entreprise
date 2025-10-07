@@ -13,16 +13,21 @@ import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import CompanyDashboard from "./pages/CompanyDashboard";
-import CompanyUsers from "./pages/CompanyUsers";
-import CompanyEmployees from "./pages/CompanyEmployees";
+// import CompanyUsers from "./pages/CompanyUsers"; // Ancienne version sans pagination
+import CompanyUsersWithPagination from "./pages/CompanyUsersWithPagination"; // Nouvelle version avec pagination
+// import CompanyEmployees from "./pages/CompanyEmployees"; // Ancienne version sans pagination
+import CompanyEmployeesWithPagination from "./pages/CompanyEmployeesWithPagination"; // Nouvelle version avec pagination
 import EmployeeDetails from "./pages/EmployeeDetails";
-import PayrollCycles from "./pages/PayrollCycles";
-import Payslips from "./pages/Payslips";
+// import PayrollCycles from "./pages/PayrollCycles"; // Ancienne version sans pagination
+import PayrollCyclesWithPagination from "./pages/PayrollCyclesWithPagination"; // Nouvelle version avec pagination
+// import Payslips from "./pages/Payslips"; // Ancienne version sans pagination
+import PayslipsWithPagination from "./pages/PayslipsWithPagination"; // Nouvelle version avec pagination
 import Payments from "./pages/Payments";
 import Reports from "./pages/Reports";
 import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
-import AttendancePage from "./pages/AttendancePage";
+// import AttendancePage from "./pages/AttendancePage"; // Ancienne version sans pagination
+import AttendanceWithPagination from "./pages/AttendanceWithPagination"; // Nouvelle version avec pagination
 import WorkSchedulePage from "./pages/WorkSchedulePage";
 import AttendanceStatsPage from "./pages/AttendanceStatsPage";
 import EmployeeQRCodesPage from "./pages/EmployeeQRCodesPage";
@@ -81,7 +86,7 @@ function App() {
                       path="/company/:companyId/users"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CompanyUsers />
+                          <CompanyUsersWithPagination />
                         </ProtectedRoute>
                       }
                     />
@@ -91,7 +96,7 @@ function App() {
                       path="/company/:companyId/employees"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CompanyEmployees />
+                          <CompanyEmployeesWithPagination />
                         </ProtectedRoute>
                       }
                     />
@@ -122,7 +127,7 @@ function App() {
                       path="/company/:companyId/payroll-cycles"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PayrollCycles />
+                          <PayrollCyclesWithPagination />
                         </ProtectedRoute>
                       }
                     />
@@ -132,7 +137,17 @@ function App() {
                       path="/company/:companyId/payslips"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <Payslips />
+                          <PayslipsWithPagination />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    {/* Bulletins de paie d'un cycle spécifique */}
+                    <Route
+                      path="/company/:companyId/payroll/:payrunId/payslips"
+                      element={
+                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
+                          <PayslipsWithPagination />
                         </ProtectedRoute>
                       }
                     />
@@ -162,7 +177,7 @@ function App() {
                       path="/company/:companyId/attendance"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <AttendancePage />
+                          <AttendanceWithPagination />
                         </ProtectedRoute>
                       }
                     />

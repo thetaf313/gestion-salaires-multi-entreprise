@@ -26,6 +26,7 @@ import {
   Edit,
   Trash2,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
@@ -275,17 +276,17 @@ export default function PayrollCycles() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
-              <DollarSign className="w-5 h-5 text-purple-500" />
+              <FileText className="w-5 h-5 text-purple-500" />
               <div>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(
-                    cycles.reduce(
-                      (sum, c) => sum + (Number(c.totalNet) || 0),
-                      0
-                    )
+                  {cycles.reduce(
+                    (sum, c) => sum + (Number(c.payslipsCount) || 0),
+                    0
                   )}
                 </p>
-                <p className="text-sm text-muted-foreground">Total versé</p>
+                <p className="text-sm text-muted-foreground">
+                  Bulletins générés
+                </p>
               </div>
             </div>
           </CardContent>

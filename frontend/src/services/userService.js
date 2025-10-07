@@ -62,6 +62,30 @@ class UserService {
     }
   }
 
+  // Obtenir les utilisateurs de l'entreprise avec pagination et filtres
+  async getCompanyUsersPaginated(companyId, params = {}) {
+    try {
+      const { page = 1, limit = 10, ...otherParams } = params;
+      
+      // Construire les paramètres de requête
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...Object.fromEntries(
+          Object.entries(otherParams).filter(([key, value]) => 
+            value !== null && value !== undefined && value !== ''
+          )
+        )
+      });
+
+      const response = await api.get(`/users/company/${companyId}?${queryParams.toString()}`);
+      return response.data; // Retourne directement la réponse avec wrapper
+    } catch (error) {
+      console.error("Erreur lors de la récupération des utilisateurs:", error);
+      throw error;
+    }
+  }
+
   // Désactiver un utilisateur
   async deactivateUser(userId) {
     try {
