@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import {
   FaEye,
@@ -23,24 +23,39 @@ const PaymentPage = () => {
     search: "",
   });
 
+  console.log("🚀 PaymentPage - Composant chargé");
+  console.log("🏢 CompanyId:", companyId);
+  console.log("🔍 Filters:", filters);
+
   // Configuration de la pagination avec API
   const {
     data: payments,
     pagination,
     loading,
     error,
-    refresh,
-  } = useApiPagination(
-    (page, limit) =>
-      paymentService.getByCompany(companyId, {
-        page,
-        limit,
+    reload,
+  } = useApiPagination({
+    apiFunction: async (params) => {
+      console.log("📞 API Call avec params:", params);
+      const response = await paymentService.getByCompany(companyId, {
+        page: params.page,
+        limit: params.limit,
         method: filters.method !== "all" ? filters.method : undefined,
         payRunId: filters.payRunId || undefined,
         search: filters.search || undefined,
-      }),
-    [companyId, filters]
-  );
+      });
+      console.log("� API Response:", response);
+      return response;
+    },
+    dependencies: [companyId, filters],
+    defaultLimit: 10,
+  });
+
+  console.log("🎯 PaymentPage State:");
+  console.log("💰 Payments:", payments);
+  console.log("📄 Pagination:", pagination);
+  console.log("🔄 Loading:", loading);
+  console.log("❌ Error:", error);
 
   // Méthodes de paiement disponibles
   const paymentMethods = [

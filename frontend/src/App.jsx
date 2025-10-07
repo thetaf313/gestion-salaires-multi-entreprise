@@ -24,7 +24,7 @@ import PayrollCyclesWithPagination from "./pages/PayrollCyclesWithPagination"; /
 import PayslipsWithPagination from "./pages/PayslipsWithPagination"; // Nouvelle version avec pagination
 import PayslipDetailsPage from "./pages/PayslipDetailsPage";
 import CreatePaymentPage from "./pages/CreatePaymentPage";
-import PaymentPage from "./pages/PaymentPage";
+import PaymentPageFixed from "./pages/PaymentPageFixed";
 import Reports from "./pages/Reports";
 import CompanySettings from "./pages/CompanySettings";
 import Settings from "./pages/Settings";
@@ -179,7 +179,7 @@ function App() {
                       path="/company/:companyId/payments"
                       element={
                         <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PaymentPage />
+                          <PaymentPageFixed />
                         </ProtectedRoute>
                       }
                     />

@@ -48,17 +48,48 @@ export default function Payments() {
   useEffect(() => {
     loadPayments();
     loadStats();
-  }, [companyId]);
+  }, [companyId, methodFilter]); // Ajouter methodFilter comme dépendance
+
+  // Debug: Logger l'état des paiements
+  useEffect(() => {
+    console.log("🔄 État des paiements mis à jour:", payments);
+    console.log("📏 Longueur du tableau:", payments.length);
+  }, [payments]);
 
   const loadPayments = async () => {
     try {
       setLoading(true);
-      const response = await paymentService.getByCompany(companyId);
+      console.log("🔍 Chargement des paiements pour companyId:", companyId);
+      
+      // Ajouter les paramètres de pagination et filtres
+      const params = {
+        page: 1,
+        limit: 100, // Charger beaucoup de paiements pour la vue d'ensemble
+        method: methodFilter !== "all" ? methodFilter : undefined,
+      };
+      
+      console.log("📋 Paramètres de la requête:", params);
+      
+      const response = await paymentService.getByCompany(companyId, params);
+      console.log("🌐 Response complète des paiements:", response);
+      console.log("✅ Success:", response.success);
+      console.log("📊 Data structure:", response.data);
+      console.log("💰 Payments array:", response.data?.data);
+      console.log("📄 Pagination:", response.data?.pagination);
+      
       if (response.success) {
-        setPayments(response.data.data || []);
+        // La structure est response.data.data pour accéder aux paiements
+        const paymentsArray = response.data?.data || [];
+        console.log("🎯 Paiements extraits:", paymentsArray);
+        console.log("🔢 Nombre de paiements:", paymentsArray.length);
+        setPayments(paymentsArray);
+      } else {
+        console.error("❌ Erreur dans la réponse:", response);
+        setPayments([]);
       }
     } catch (error) {
-      console.error("Erreur lors du chargement des paiements:", error);
+      console.error("💥 Erreur lors du chargement des paiements:", error);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -147,8 +178,27 @@ export default function Payments() {
     const matchesMethod =
       methodFilter === "all" || payment.method === methodFilter;
 
-    return matchesSearch && matchesStatus && matchesMethod;
+    const result = matchesSearch && matchesStatus && matchesMethod;
+    
+    // Debug chaque paiement
+    console.log("🔍 Filtrage paiement:", {
+      paymentId: payment.id,
+      searchQuery,
+      statusFilter,
+      methodFilter,
+      matchesSearch,
+      matchesStatus,
+      matchesMethod,
+      result,
+      payment: payment
+    });
+
+    return result;
   });
+
+  // Debug filteredPayments
+  console.log("🎯 Paiements filtrés:", filteredPayments);
+  console.log("📊 Nombre de paiements filtrés:", filteredPayments.length);
 
   // Statistics are now from backend stats
   if (loading) {
