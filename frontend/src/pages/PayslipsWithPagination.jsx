@@ -167,11 +167,15 @@ export function PayslipsWithPagination() {
   const handleDownloadPayslip = async (payslip) => {
     setDownloadLoading(true);
     try {
-      const blob = await payslipService.downloadPayslip(companyId, payslip.id);
+      const response = await payslipService.downloadPayslip(companyId, payslip.id);
+      const blob = response.data || response;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `bulletin-${payslip.employee.firstName}-${payslip.employee.lastName}-${payslip.periodStart}.pdf`;
+      // Prefer payRun period or fall back to payslip id/date
+      const period = payslip.payRun?.period || payslip.period || payslip.payRun?.title || payslip.id;
+      const safePeriod = String(period).replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_.]/g, "");
+      a.download = `bulletin-${payslip.employee.firstName}-${payslip.employee.lastName}-${safePeriod}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

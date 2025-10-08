@@ -11,6 +11,7 @@ router.use(validateToken);
 router.get("/company/:companyId/payslips", payslipController.getByCompany);
 router.get("/company/:companyId/payslips/stats", payslipController.getStats);
 router.get("/company/:companyId/payslips/:id", payslipController.getById);
+router.get("/company/:companyId/payslips/:id/download", payslipController.download);
 router.patch(
   "/company/:companyId/payslips/:id/status",
   payslipController.updateStatus

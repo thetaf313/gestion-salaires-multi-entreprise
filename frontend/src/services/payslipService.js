@@ -42,10 +42,11 @@ export const payslipService = {
   },
 
   async downloadPayslip(companyId, payslipId) {
+    // Return the full axios response so callers can inspect headers or data
     const response = await api.get(`/company/${companyId}/payslips/${payslipId}/download`, {
-      responseType: 'blob'
+      responseType: 'blob',
     });
-    return response.data;
+    return response; // response.data will be the blob
   },
 
   async deletePayslip(companyId, payslipId) {
