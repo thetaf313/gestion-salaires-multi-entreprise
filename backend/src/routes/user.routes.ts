@@ -7,6 +7,9 @@ const router = Router();
 // Route existante pour le profil
 router.get("/me", authController.getProfile);
 
+// Route pour mettre à jour le profil
+router.put("/profile", userController.updateProfile.bind(userController));
+
 // Nouvelles routes pour la gestion des utilisateurs (déjà protégées par le middleware global)
 router.post("/", userController.createUser.bind(userController));
 router.get(

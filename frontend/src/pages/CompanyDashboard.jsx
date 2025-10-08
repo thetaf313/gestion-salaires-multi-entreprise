@@ -132,7 +132,15 @@ const CompanyDashboard = () => {
           )}
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-blue-100 rounded-lg">
-              <Building2 className="h-8 w-8 text-blue-600" />
+              {company.logo ? (
+                <img 
+                  src={company.logo} 
+                  alt={`Logo ${company.name}`}
+                  className="h-8 w-8 object-contain"
+                />
+              ) : (
+                <Building2 className="h-8 w-8 text-blue-600" />
+              )}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">

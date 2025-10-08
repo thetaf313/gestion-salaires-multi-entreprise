@@ -328,6 +328,48 @@ export class UserService {
       throw error;
     }
   }
+
+  // Mettre à jour le profil utilisateur
+  async updateProfile(userId: string, updateData: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+  }) {
+    try {
+      // Vérifier si l'email est déjà utilisé par un autre utilisateur
+      if (updateData.email) {
+        const existingUser = await prisma.user.findFirst({
+          where: {
+            email: updateData.email,
+            NOT: { id: userId }
+          }
+        });
+
+        if (existingUser) {
+          throw new Error("Cet email est déjà utilisé par un autre utilisateur");
+        }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          role: true,
+          companyId: true,
+        }
+      });
+
+      return updatedUser;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new UserService();

@@ -363,6 +363,114 @@ export class UserController {
       );
     }
   }
+
+  // Mettre à jour le profil utilisateur
+  async updateProfile(req: Request, res: Response) {
+    try {
+      const currentUser = req.user;
+      if (!currentUser) {
+        return sendResponse(
+          res,
+          HttpStatus.UNAUTHORIZED,
+          "Utilisateur non authentifié"
+        );
+      }
+
+      const { firstName, lastName, email, currentPassword, newPassword } = req.body;
+
+      // Validation basique
+      if (!firstName || !lastName || !email) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Le prénom, nom et email sont obligatoires"
+        );
+      }
+
+      // Validation de l'email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return sendResponse(
+          res,
+          HttpStatus.BAD_REQUEST,
+          "Format d'email invalide"
+        );
+      }
+
+      // Si changement de mot de passe, validation
+      if (newPassword) {
+        if (!currentPassword) {
+          return sendResponse(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Le mot de passe actuel est requis pour changer le mot de passe"
+          );
+        }
+
+        if (newPassword.length < 6) {
+          return sendResponse(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Le nouveau mot de passe doit faire au moins 6 caractères"
+          );
+        }
+
+        // Récupérer l'utilisateur avec le mot de passe pour validation
+        const fullUser = await userService.getUserById(currentUser.id);
+        if (!fullUser) {
+          return sendResponse(
+            res,
+            HttpStatus.NOT_FOUND,
+            "Utilisateur non trouvé"
+          );
+        }
+
+        // Vérifier le mot de passe actuel
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, fullUser.password);
+        if (!isCurrentPasswordValid) {
+          return sendResponse(
+            res,
+            HttpStatus.BAD_REQUEST,
+            "Mot de passe actuel incorrect"
+          );
+        }
+      }
+
+      // Préparer les données à mettre à jour
+      const updateData: any = {
+        firstName,
+        lastName,
+        email,
+      };
+
+      // Ajouter le nouveau mot de passe haché si fourni
+      if (newPassword) {
+        updateData.password = await bcrypt.hash(newPassword, 10);
+      }
+
+      const updatedUser = await userService.updateProfile(currentUser.id, updateData);
+
+      return sendResponse(
+        res,
+        HttpStatus.OK,
+        "Profil mis à jour avec succès",
+        {
+          id: updatedUser.id,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          role: updatedUser.role,
+        }
+      );
+    } catch (error: any) {
+      console.error("Erreur lors de la mise à jour du profil:", error);
+      return sendResponse(
+        res,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.message || "Erreur lors de la mise à jour du profil"
+      );
+    }
+  }
 }
 
 export default new UserController();

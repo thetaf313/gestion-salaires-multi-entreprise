@@ -137,6 +137,19 @@ class UserService {
       };
     }
   }
+
+  // Mettre à jour le profil utilisateur
+  async updateProfile(userData) {
+    try {
+      const response = await api.put('/users/profile', userData);
+      return response.data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du profil:", error);
+      throw new Error(
+        error.response?.data?.message || "Erreur lors de la mise à jour du profil"
+      );
+    }
+  }
 }
 
 export default new UserService();

@@ -218,7 +218,15 @@ const Companies = () => {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <Building2 className="h-6 w-6 text-blue-600" />
+                    {company.logo ? (
+                      <img 
+                        src={company.logo} 
+                        alt={`Logo ${company.name}`}
+                        className="h-6 w-6 object-contain"
+                      />
+                    ) : (
+                      <Building2 className="h-6 w-6 text-blue-600" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">

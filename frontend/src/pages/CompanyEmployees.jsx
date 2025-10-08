@@ -296,7 +296,15 @@ export function CompanyEmployees() {
             </h1>
             {company && (
               <p className="text-sm sm:text-base text-muted-foreground flex items-center gap-2">
-                <Building className="w-3 h-3 sm:w-4 sm:h-4" />
+                {company.logo ? (
+                  <img 
+                    src={company.logo} 
+                    alt={`Logo ${company.name}`}
+                    className="w-3 h-3 sm:w-4 sm:h-4 object-contain"
+                  />
+                ) : (
+                  <Building className="w-3 h-3 sm:w-4 sm:h-4" />
+                )}
                 {company.name}
               </p>
             )}
