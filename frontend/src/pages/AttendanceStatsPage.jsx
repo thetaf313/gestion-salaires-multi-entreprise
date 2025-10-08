@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 import {
   Card,
   CardContent,
@@ -36,6 +37,7 @@ import {
 } from "lucide-react";
 
 const AttendanceStatsPage = () => {
+  const { user } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
   const [dateRange, setDateRange] = useState({
@@ -47,6 +49,21 @@ const AttendanceStatsPage = () => {
   const [stats, setStats] = useState(null);
   const [attendances, setAttendances] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Vérifications de rôle
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const canViewAllStats = user?.role === 'SUPER_ADMIN';
+  const isCashier = user?.role === 'CASHIER';
+
+  // Mappage des types de contrat
+  const getContractTypeLabel = (contractType) => {
+    const contractTypeMap = {
+      'DAILY': 'Journalier',
+      'FIXED': 'Fixe',
+      'HONORARIUM': 'Honoraire'
+    };
+    return contractTypeMap[contractType] || contractType;
+  };
 
   // Récupérer la liste des employés
   const fetchEmployees = async () => {
@@ -61,7 +78,18 @@ const AttendanceStatsPage = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setEmployees(data.data || []);
+        let employeesData = data.data || [];
+        
+        // Filtrage selon le rôle
+        if (isCashier) {
+          // Les caissiers ne voient que leurs propres données si ils sont aussi employés
+          employeesData = employeesData.filter(emp => emp.id === user?.employeeId);
+        } else if (!canViewAllStats && isAdmin) {
+          // Les admins voient seulement les employés de leur entreprise
+          employeesData = employeesData.filter(emp => emp.companyId === user?.companyId);
+        }
+        
+        setEmployees(employeesData);
       }
     } catch (error) {
       console.error("Erreur lors de la récupération des employés:", error);
@@ -204,8 +232,21 @@ const AttendanceStatsPage = () => {
             Statistiques de Présence
           </h1>
           <p className="text-gray-600">
-            Analysez les données de pointage par employé
+            {canViewAllStats 
+              ? "Analysez les données de pointage de toutes les entreprises"
+              : isAdmin 
+              ? "Analysez les données de pointage de votre entreprise"
+              : "Consultez vos statistiques de présence"
+            }
           </p>
+          {isCashier && (
+            <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <Target className="inline w-4 h-4 mr-1" />
+                Accès limité : Vous ne pouvez consulter que vos propres statistiques
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -221,9 +262,18 @@ const AttendanceStatsPage = () => {
               <Select
                 value={selectedEmployeeId}
                 onValueChange={setSelectedEmployeeId}
+                disabled={employees.length === 0}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un employé" />
+                  <SelectValue 
+                    placeholder={
+                      employees.length === 0 
+                        ? isCashier 
+                          ? "Aucun profil employé associé" 
+                          : "Aucun employé disponible"
+                        : "Sélectionner un employé"
+                    } 
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {employees.map((employee) => (
@@ -405,11 +455,7 @@ const AttendanceStatsPage = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-600">Type de contrat:</span>
                     <span className="font-medium">
-                      {selectedEmployee.contractType === "FIXED"
-                        ? "Salaire fixe"
-                        : selectedEmployee.contractType === "DAILY"
-                        ? "Journalier"
-                        : "Honoraire"}
+                      {getContractTypeLabel(selectedEmployee.contractType)}
                     </span>
                   </div>
                 </div>
@@ -469,16 +515,35 @@ const AttendanceStatsPage = () => {
         </>
       )}
 
-      {!selectedEmployeeId && (
+      {!selectedEmployeeId && employees.length > 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <TrendingUp className="mx-auto h-12 w-12 text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Sélectionnez un employé
+              {isCashier ? "Consultez vos statistiques" : "Sélectionnez un employé"}
             </h3>
             <p className="text-gray-600">
-              Choisissez un employé dans la liste pour voir ses statistiques de
-              présence
+              {isCashier 
+                ? "Sélectionnez votre profil pour consulter vos statistiques de présence"
+                : "Choisissez un employé dans la liste pour voir ses statistiques de présence"
+              }
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {employees.length === 0 && (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <AlertTriangle className="mx-auto h-12 w-12 text-yellow-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Aucun employé disponible
+            </h3>
+            <p className="text-gray-600">
+              {isCashier 
+                ? "Aucun profil employé n'est associé à votre compte. Contactez votre administrateur."
+                : "Aucun employé n'est disponible pour afficher les statistiques."
+              }
             </p>
           </CardContent>
         </Card>
