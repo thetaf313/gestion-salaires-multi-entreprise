@@ -27,11 +27,15 @@ import {
   Trash2,
   ArrowRight,
   FileText,
+  Check,
+  X,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { payRunService } from "../services/payRunService.js";
 import { CreatePayRunModal } from "../components/CreatePayRunModal";
+import { EditPayRunModal } from "../components/EditPayRunModal";
 import { PayRunDetailsModal } from "../components/PayRunDetailsModal";
 import { PayRunStatusModal } from "../components/PayRunStatusModal";
 
@@ -45,6 +49,7 @@ export default function PayrollCycles() {
 
   // États pour les modals
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [selectedPayRun, setSelectedPayRun] = useState(null);
@@ -124,12 +129,22 @@ export default function PayrollCycles() {
     setShowDetailsModal(true);
   };
 
+  const handleEditPayRun = (payRun) => {
+    setSelectedPayRun(payRun);
+    setShowEditModal(true);
+  };
+
   const handleChangeStatus = (payRun) => {
     setSelectedPayRun(payRun);
     setShowStatusModal(true);
   };
 
   const handleCreateSuccess = () => {
+    loadCycles();
+    loadStats();
+  };
+
+  const handleEditSuccess = () => {
     loadCycles();
     loadStats();
   };
@@ -398,36 +413,64 @@ export default function PayrollCycles() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
+                          {/* Bouton Voir - Toujours visible */}
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleViewPayRun(cycle)}
+                            className="h-8 px-3 hover:bg-gray-100"
+                            title="Voir les détails"
                           >
                             <Eye className="w-3 h-3 mr-1" />
                             Voir
                           </Button>
 
-                          {(cycle.status === "DRAFT" ||
-                            cycle.status === "APPROVED") && (
+                          {/* Bouton Modifier - Visible pour DRAFT seulement */}
+                          {cycle.status === "DRAFT" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditPayRun(cycle)}
+                              className="h-8 px-3 hover:bg-blue-50 hover:border-blue-300 text-blue-600 border-blue-200"
+                              title="Modifier"
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              Modifier
+                            </Button>
+                          )}
+
+                          {/* Bouton Approuver - Visible pour DRAFT seulement */}
+                          {cycle.status === "DRAFT" && (
                             <Button
                               size="sm"
                               onClick={() => handleChangeStatus(cycle)}
-                              variant={
-                                cycle.status === "DRAFT" ? "default" : "outline"
-                              }
+                              className="h-8 px-3 bg-green-600 hover:bg-green-700 text-white"
+                              title="Approuver"
                             >
-                              {cycle.status === "DRAFT" ? (
-                                <>
-                                  <Play className="w-3 h-3 mr-1" />
-                                  Approuver
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  Clôturer
-                                </>
-                              )}
+                              <Check className="w-3 h-3 mr-1" />
+                              Approuver
                             </Button>
+                          )}
+
+                          {/* Bouton Clôturer - Visible pour APPROVED seulement */}
+                          {cycle.status === "APPROVED" && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleChangeStatus(cycle)}
+                              className="h-8 px-3 bg-purple-600 hover:bg-purple-700 text-white"
+                              title="Clôturer"
+                            >
+                              <Lock className="w-3 h-3 mr-1" />
+                              Clôturer
+                            </Button>
+                          )}
+
+                          {/* Indicateur pour les cycles complétés */}
+                          {cycle.status === "COMPLETED" && (
+                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+                              <CheckCircle className="h-3 w-3" />
+                              <span className="text-xs font-medium">Complété</span>
+                            </div>
                           )}
                         </div>
                       </TableCell>
@@ -446,6 +489,17 @@ export default function PayrollCycles() {
         onClose={() => setShowCreateModal(false)}
         companyId={companyId}
         onPayRunCreated={handleCreateSuccess}
+      />
+
+      <EditPayRunModal
+        payRun={selectedPayRun}
+        companyId={companyId}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedPayRun(null);
+        }}
+        onPayRunUpdated={handleEditSuccess}
       />
 
       <PayRunDetailsModal

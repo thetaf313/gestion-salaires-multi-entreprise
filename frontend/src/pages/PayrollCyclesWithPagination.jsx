@@ -20,13 +20,18 @@ import {
   XCircle,
   AlertCircle,
   ArrowLeft,
-  FileText
+  FileText,
+  Check,
+  X,
+  Lock,
+  Play
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 import { payRunService } from "../services/payRunService";
 import { adaptPaginationResponse, logPaginationResponse } from "../utils/paginationAdapter";
 import { CreatePayRunModal } from "../components/CreatePayRunModal";
+import { EditPayRunModal } from "../components/EditPayRunModal";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { formatPeriod } from "../utils/dateUtils";
 
@@ -37,6 +42,7 @@ export function PayrollCyclesWithPagination() {
 
   // États des modals
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPayrun, setSelectedPayrun] = useState(null);
   const [approvalLoading, setApprovalLoading] = useState(false);
@@ -139,14 +145,20 @@ export function PayrollCyclesWithPagination() {
     navigate(`/company/${companyId}/payroll/${payrun.id}/payslips`);
   };
 
+  const handleEditPayrun = (payrun) => {
+    console.log("handleEditPayrun called with:", payrun);
+    setSelectedPayrun(payrun);
+    setShowEditModal(true);
+  };
+
   const handleDeletePayrun = (payrun) => {
     setSelectedPayrun(payrun);
     setShowDeleteDialog(true);
   };
 
   const handleApprovePayrun = async (payrun) => {
-    if (payrun.status !== 'PENDING') {
-      toast.error("Seuls les cycles en attente peuvent être approuvés");
+    if (payrun.status !== 'DRAFT') {
+      toast.error("Seuls les cycles en brouillon peuvent être approuvés");
       return;
     }
 
@@ -157,6 +169,24 @@ export function PayrollCyclesWithPagination() {
       pagination.reload();
     } catch (error) {
       toast.error("Erreur lors de l'approbation du cycle");
+    } finally {
+      setApprovalLoading(false);
+    }
+  };
+
+  const handleClosePayrun = async (payrun) => {
+    if (payrun.status !== 'APPROVED') {
+      toast.error("Seuls les cycles approuvés peuvent être clôturés");
+      return;
+    }
+
+    setApprovalLoading(true);
+    try {
+      await payRunService.updateStatus(companyId, payrun.id, 'COMPLETED');
+      toast.success("Cycle de paie clôturé avec succès");
+      pagination.reload();
+    } catch (error) {
+      toast.error("Erreur lors de la clôture du cycle");
     } finally {
       setApprovalLoading(false);
     }
@@ -370,35 +400,78 @@ export function PayrollCyclesWithPagination() {
                     {getStatusBadge(payrun.status)}
                     
                     <div className="flex gap-2">
+                      {/* Bouton Voir - Toujours visible */}
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleViewPayrun(payrun)}
+                        className="hover:bg-gray-100"
+                        title="Voir les détails"
                       >
                         <Eye className="w-4 h-4 mr-1" />
                         Voir
                       </Button>
                       
-                      {payrun.status === 'PENDING' && (
+                      {/* Bouton Modifier - Visible pour PENDING/DRAFT seulement */}
+                      {(payrun.status === 'PENDING' || payrun.status === 'DRAFT') && (
                         <Button
-                          variant="default"
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleApprovePayrun(payrun)}
-                          disabled={approvalLoading}
+                          onClick={() => handleEditPayrun(payrun)}
+                          className="hover:bg-blue-50 hover:border-blue-300 text-blue-600 border-blue-200"
+                          title="Modifier"
                         >
-                          <CheckCircle className="w-4 h-4 mr-1" />
-                          Approuver
+                          <Edit className="w-4 h-4 mr-1" />
+                          Modifier
                         </Button>
                       )}
                       
-                      {payrun.status === 'PENDING' && (
+                      {/* Bouton Approuver - Visible pour DRAFT seulement */}
+                      {payrun.status === 'DRAFT' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprovePayrun(payrun)}
+                          disabled={approvalLoading}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                          title="Approuver"
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Approuver
+                        </Button>
+                      )}
+
+                      {/* Bouton Clôturer - Visible pour APPROVED seulement */}
+                      {payrun.status === 'APPROVED' && (
+                        <Button
+                          size="sm"
+                          onClick={() => handleClosePayrun(payrun)}
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
+                          title="Clôturer"
+                        >
+                          <Lock className="w-4 h-4 mr-1" />
+                          Clôturer
+                        </Button>
+                      )}
+                      
+                      {/* Bouton Supprimer - Visible pour DRAFT seulement */}
+                      {payrun.status === 'DRAFT' && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDeletePayrun(payrun)}
+                          className="hover:bg-red-50 hover:border-red-300 text-red-600 border-red-200"
+                          title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
+                      )}
+
+                      {/* Indicateur pour les cycles complétés */}
+                      {payrun.status === 'COMPLETED' && (
+                        <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
+                          <CheckCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Complété</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -421,6 +494,17 @@ export function PayrollCyclesWithPagination() {
         onClose={() => setShowCreateModal(false)}
         companyId={companyId}
         onPayrunCreated={onPayrunCreated}
+      />
+
+      <EditPayRunModal
+        payRun={selectedPayrun}
+        companyId={companyId}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedPayrun(null);
+        }}
+        onPayRunUpdated={onPayrunCreated} // Recharge les données après modification
       />
 
       <ConfirmDialog

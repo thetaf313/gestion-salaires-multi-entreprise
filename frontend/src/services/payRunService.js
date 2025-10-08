@@ -28,6 +28,16 @@ export const payRunService = {
     return response.data;
   },
 
+  // Mettre à jour un cycle de paie (alias pour la modal d'édition)
+  async updatePayRun(id, data) {
+    // Utiliser la méthode update existante avec extraction du companyId depuis les données
+    const companyId = data.companyId || localStorage.getItem('currentCompanyId');
+    if (!companyId) {
+      throw new Error('ID de l\'entreprise requis pour la mise à jour');
+    }
+    return this.update(companyId, id, data);
+  },
+
   // Supprimer un cycle de paie
   async delete(companyId, id) {
     const response = await api.delete(`/company/${companyId}/payruns/${id}`);
