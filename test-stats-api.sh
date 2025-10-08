@@ -9,7 +9,7 @@ echo "🔐 Connexion pour obtenir un token..."
 TOKEN_RESPONSE=$(curl -s -X POST "http://localhost:3003/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "superadmin@gestion-salaires.com",
+    "email": "superadmin@synergypay.com",
     "password": "superadmin123"
   }')
 

@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { AnimatedButton } from "../components/ui/animated-button";
+import { AnimatedInput } from "../components/ui/animated-input";
+import { AnimatedCard } from "../components/ui/animated-card";
+import { AnimatedBackground } from "../components/ui/animated-background";
+import { ParticlesBackground } from "../components/ui/particles-background";
 import { Label } from "../components/ui/label";
 import { useAuth } from "../contexts/AuthContext";
-import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle, Sparkles } from "lucide-react";
 import { email } from "zod";
 
 export default function LoginPage() {
@@ -119,45 +122,96 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen flex items-center justify-center relative">
+        <AnimatedBackground />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="relative z-10"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-[#212121]" />
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 p-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gestion Salaires
-          </h1>
-          <p className="text-gray-600">Connectez-vous à votre compte</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Arrière-plan avec particules */}
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100">
+        <ParticlesBackground />
+      </div>
+      
+      <div className="w-full max-w-lg space-y-8 p-8 relative z-10">
+        {/* Header animé */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-center"
+        >
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            transition={{ 
+              duration: 0.8, 
+              delay: 0.3,
+              type: "spring",
+              stiffness: 100
+            }}
+            className="flex items-center justify-center mb-6"
+          >
+            <Sparkles className="h-10 w-10 text-[#212121] mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#212121] to-[#aaaaac] bg-clip-text text-transparent">
+              Synergy Pay
+            </h1>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="text-gray-600 text-lg"
+          >
+            Connectez-vous à votre compte
+          </motion.p>
+        </motion.div>
 
         {/* Formulaire de connexion */}
-        <Card>
+        <AnimatedCard delay={0.7}>
           <CardHeader>
-            <CardTitle>Connexion</CardTitle>
+            <CardTitle className="text-[#212121]">Connexion</CardTitle>
             <CardDescription>
               Entrez vos identifiants pour accéder à votre compte
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Affichage des erreurs */}
-              {formErrors.global && (
-                <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{formErrors.global}</span>
-                </div>
-              )}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Affichage des erreurs avec animation */}
+              <AnimatePresence>
+                {formErrors.global && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md"
+                  >
+                    <AlertCircle className="h-4 w-4" />
+                    <span>{formErrors.global}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.9, duration: 0.5 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="email" className="text-[#212121]">Email</Label>
+                <AnimatedInput
                   id="email"
                   name="email"
                   type="text"
@@ -165,15 +219,32 @@ export default function LoginPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
+                  error={!!formErrors.email}
                 />
-                <p className="text-sm text-destructive">{formErrors.email}</p>
-              </div>
+                <AnimatePresence>
+                  {formErrors.email && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="text-sm text-red-500"
+                    >
+                      {formErrors.email}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Mot de passe */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.1, duration: 0.5 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="password" className="text-[#212121]">Mot de passe</Label>
                 <div className="relative">
-                  <Input
+                  <AnimatedInput
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
@@ -181,76 +252,104 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="pr-10"
+                    error={!!formErrors.password}
+                    className="pr-12"
                   />
-                  <p className="text-sm text-destructive">
-                    {formErrors.password}
-                  </p>
-
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#212121] transition-colors p-1"
                     disabled={isSubmitting}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
                     ) : (
                       <Eye className="h-4 w-4" />
                     )}
-                  </button>
+                  </motion.button>
                 </div>
-              </div>
+                <AnimatePresence>
+                  {formErrors.password && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="text-sm text-red-500"
+                    >
+                      {formErrors.password}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Bouton de connexion */}
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Connexion...
-                  </>
-                ) : (
-                  "Se connecter"
-                )}
-              </Button>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3, duration: 0.5 }}
+                className="flex justify-center pt-4"
+              >
+                <AnimatedButton 
+                  type="submit" 
+                  variant="primary"
+                  className="w-full max-w-xs"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Connexion...
+                    </>
+                  ) : (
+                    "Se connecter"
+                  )}
+                </AnimatedButton>
+              </motion.div>
             </form>
 
             {/* Lien vers inscription */}
-            {/* <div className="mt-6 text-center">
+            {/* <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+              className="mt-6 text-center"
+            >
               <p className="text-sm text-gray-600">
                 Pas encore de compte ?{" "}
                 <Link
                   to="/register"
-                  className="font-medium text-primary hover:underline"
+                  className="font-medium text-[#212121] hover:text-[#aaaaac] transition-colors hover:underline"
                 >
                   Créer un compte
                 </Link>
               </p>
-            </div> */}
+            </motion.div> */}
           </CardContent>
-        </Card>
+        </AnimatedCard>
 
-        {/* Comptes de test */}
-        {/* <Card className="mt-6">
+        {/* Comptes de test - optionnel */}
+        {/* <AnimatedCard delay={1.7} className="mt-6">
           <CardHeader>
-            <CardTitle className="text-sm">Comptes de test</CardTitle>
+            <CardTitle className="text-sm text-[#212121]">Comptes de test</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="text-xs">
+            <div className="text-xs text-gray-600">
               <p>
-                <strong>SUPER_ADMIN:</strong> superadmin@gestion-salaires.com /
+                <strong>SUPER_ADMIN:</strong> superadmin@synergypay.com /
                 superadmin123
               </p>
               <p>
                 <strong>ADMIN:</strong> admin@techsolutions.com / admin123
               </p>
               <p>
-                <strong>CASHIER:</strong> cashier@gestion-salaires.com /
+                <strong>CASHIER:</strong> cashier@synergypay.com /
                 cashier123
               </p>
             </div>
           </CardContent>
-        </Card> */}
+        </AnimatedCard> */}
       </div>
     </div>
   );

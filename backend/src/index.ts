@@ -38,7 +38,7 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // Routes public
 app.get("/api", (req, res) => {
-  res.send("Saas Gestion Salaires Multi-Entreprise API");
+  res.send("Synergy Pay - Multi-Company Payroll Management API");
 });
 app.use("/api/auth", authRoutes);
 

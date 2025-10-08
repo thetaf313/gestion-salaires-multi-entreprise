@@ -297,7 +297,7 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-2xl font-bold text-gray-900">
-                Gestion Salaires
+                Synergy Pay
               </h1>
             </div>
 
@@ -363,7 +363,7 @@ export default function DashboardPage() {
                       {user?.role === 'CASHIER' ? '1' : employeeStats.totalActiveEmployees || stats.totalEmployees}
                     </p>
                   </div>
-                  <Users className="h-8 w-8 text-blue-600" />
+                  <Users className="h-8 w-8 text-[#212121]" />
                 </div>
               </CardContent>
             </Card>
@@ -611,7 +611,7 @@ export default function DashboardPage() {
 
         {loading && (
           <div className="flex justify-center items-center h-32 mb-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#212121]"></div>
             <span className="ml-2 text-gray-600">Chargement des statistiques...</span>
           </div>
         )}
@@ -686,14 +686,14 @@ export default function DashboardPage() {
                 {user?.role === "SUPER_ADMIN" && (
                   <>
                     <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                      <Building className="h-8 w-8 text-blue-600 mb-2" />
+                      <Building className="h-8 w-8 text-[#212121] mb-2" />
                       <h3 className="font-medium mb-1">
                         Gestion des entreprises
                       </h3>
                       <p className="text-sm text-gray-600">
                         Créer et gérer toutes les entreprises du système
                       </p>
-                      <p className="text-xs text-blue-600 mt-1 font-medium">
+                      <p className="text-xs text-[#212121] mt-1 font-medium">
                         {stats.totalCompanies || 0} entreprise(s) enregistrée(s)
                       </p>
                     </div>
@@ -786,12 +786,12 @@ export default function DashboardPage() {
                 {/* Action spécifique pour les caissiers */}
                 {user?.role === "CASHIER" && (
                   <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                    <Clock className="h-8 w-8 text-blue-600 mb-2" />
+                    <Clock className="h-8 w-8 text-[#212121] mb-2" />
                     <h3 className="font-medium mb-1">Mon pointage</h3>
                     <p className="text-sm text-gray-600">
                       Pointer vos heures d'arrivée et de départ
                     </p>
-                    <p className="text-xs text-blue-600 mt-1 font-medium">
+                    <p className="text-xs text-[#212121] mt-1 font-medium">
                       Taux de présence: {monthlyStats.attendanceRate ? monthlyStats.attendanceRate.toFixed(1) : '0'}%
                     </p>
                   </div>

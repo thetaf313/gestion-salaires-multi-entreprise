@@ -140,9 +140,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8 p-8">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gestion Salaires
-          </h1>
+                      <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
+            Synergy Pay
+            </h1>
           <p className="text-gray-600">Créez votre compte</p>
         </div>
 

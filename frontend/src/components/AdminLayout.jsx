@@ -191,7 +191,7 @@ const AdminLayout = ({ children }) => {
       {/* Sidebar Desktop */}
       <div className="hidden md:flex md:w-64 bg-white shadow-lg flex-col fixed h-full z-30">
         <div className="p-6 border-b flex-shrink-0">
-          <h1 className="text-xl font-bold text-gray-800">Gestion Salaires</h1>
+          <h1 className="text-xl font-bold text-gray-800">Synergy Pay</h1>
           <p className="text-sm text-gray-500 mt-1">Multi-Entreprise</p>
         </div>
 
@@ -232,7 +232,7 @@ const AdminLayout = ({ children }) => {
                             to={subItem.path}
                             className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
                               isActive(subItem.path)
-                                ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                ? "bg-blue-50 text-[#212121] border border-blue-100"
                                 : "text-gray-500 hover:bg-gray-50"
                             }`}
                           >
@@ -273,7 +273,7 @@ const AdminLayout = ({ children }) => {
             <div className="p-6 border-b flex justify-between items-center flex-shrink-0">
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
-                  Gestion Salaires
+                  Synergy Pay
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">Multi-Entreprise</p>
               </div>
@@ -326,7 +326,7 @@ const AdminLayout = ({ children }) => {
                                 onClick={() => setSidebarOpen(false)}
                                 className={`flex items-center space-x-3 px-4 py-2 rounded-lg transition-colors text-sm ${
                                   isActive(subItem.path)
-                                    ? "bg-blue-50 text-blue-600 border border-blue-100"
+                                    ? "bg-blue-50 text-[#212121] border border-blue-100"
                                     : "text-gray-500 hover:bg-gray-50"
                                 }`}
                               >

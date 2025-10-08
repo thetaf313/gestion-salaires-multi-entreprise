@@ -67,7 +67,7 @@ async function main() {
       data: {
         firstName: "Super",
         lastName: "Administrator",
-        email: "superadmin@gestion-salaires.com",
+        email: "superadmin@synergypay.com",
         password: await bcrypt.hash("superadmin123", 10),
         role: "SUPER_ADMIN",
         isActive: true,
@@ -483,7 +483,7 @@ async function main() {
     );
 
     console.log("\n🔑 Comptes de test :");
-    console.log("Super Admin: superadmin@gestion-salaires.com / superadmin123");
+    console.log("Super Admin: superadmin@synergypay.com / superadmin123");
     console.log("Admin Tech: admin@techsolutions.com / admin123");
     console.log("Admin Digital: admin@digitalmarketing.sn / admin123");
     console.log("Caissier Tech: caissier@techsolutions.com / caissier123");

@@ -16,8 +16,8 @@ export const useTheme = () => {
 const PREDEFINED_THEMES = {
   default: {
     name: 'Défaut',
-    primary: '#3b82f6', // blue-500
-    secondary: '#1e40af', // blue-700
+    primary: '#212121', // Nouvelle couleur par défaut
+    secondary: '#aaaaac',
   },
   blue: {
     name: 'Bleu Océan',

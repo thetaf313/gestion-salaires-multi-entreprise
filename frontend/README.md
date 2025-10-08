@@ -1,4 +1,6 @@
-# React + Vite
+# Synergy Pay - Frontend
+
+Interface utilisateur développée avec React + Vite pour la gestion multi-entreprise des salaires.
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

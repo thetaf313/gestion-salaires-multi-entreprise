@@ -1,6 +1,6 @@
-# backend
+# Synergy Pay - Backend
 
-API REST développée avec TypeScript, Express, Prisma et JWT.
+API REST développée avec TypeScript, Express, Prisma et JWT pour la gestion multi-entreprise des salaires.
 
 ## 🚀 Démarrage rapide
 

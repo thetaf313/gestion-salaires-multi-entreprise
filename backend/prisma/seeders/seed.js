@@ -43,7 +43,7 @@ async function main() {
       data: {
         firstName: "Super",
         lastName: "Administrator",
-        email: "superadmin@gestion-salaires.com",
+        email: "superadmin@synergypay.com",
         password: await bcrypt.hash("superadmin123", 10),
         role: "SUPER_ADMIN",
         isActive: true,
@@ -341,7 +341,7 @@ async function main() {
       "├─────────────────────────────────────────────────────────────────────│"
     );
     console.log(
-      "│ superadmin@gestion-salaires.com    │ SUPER_ADMIN  │ superadmin123  │"
+      "│ superadmin@synergypay.com         │ SUPER_ADMIN  │ superadmin123  │"
     );
     console.log(
       "│ admin@techsolutions.com            │ ADMIN        │ admin123       │"

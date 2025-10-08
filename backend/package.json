@@ -1,7 +1,7 @@
 {
-  "name": "backend",
+  "name": "synergy-pay-backend",
   "version": "1.0.0",
-  "description": "API REST avec TypeScript, Express, Prisma et JWT",
+  "description": "Synergy Pay - Multi-Company Payroll Management API with TypeScript, Express, Prisma and JWT",
   "main": "index.js",
   "scripts": {
     "dev": "tsx src/index.ts",
