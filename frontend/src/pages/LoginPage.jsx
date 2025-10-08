@@ -11,7 +11,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useAuth } from "../contexts/AuthContext";
-import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { email } from "zod";
 
 export default function LoginPage() {
@@ -126,37 +126,68 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 p-8">
-        {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gestion Salaires
-          </h1>
-          <p className="text-gray-600">Connectez-vous à votre compte</p>
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/image/loginbg.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 backdrop-blur-md bg-black/60"></div>
+      
+      {/* Ajout du bouton de retour */}
+      <button
+        onClick={() => navigate('/')}
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 px-4 py-2 
+          bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md
+          border border-white/10 transition-all duration-300"
+      >
+        <ArrowLeft size={20} />
+        <span>Retour</span>
+      </button>
+
+      <div className="w-full max-w-lg space-y-4 p-8 relative z-10"> {/* Réduit space-y-8 à space-y-4 */}
+        {/* Header avec logo */}
+        <div className="text-center">  {/* Supprimé space-y-4 */}
+          <div className="flex flex-col items-center">
+            <img 
+              src="/image/infinity.png"
+              alt="Infinity companies" 
+              className="h-40 w-40 -mb-4" /* Augmenté à h-40 w-40 et ajouté une marge négative */
+            />
+            <h1 className="text-4xl font-bold text-white drop-shadow-lg tracking-tight">
+              Infinity companies
+            </h1>
+          </div>
         </div>
 
-        {/* Formulaire de connexion */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Connexion</CardTitle>
-            <CardDescription>
+        {/* Formulaire de connexion amélioré */}
+        <Card className="backdrop-blur-md bg-white/10 border-white/20 shadow-2xl p-4 transition-all duration-300 hover:bg-white/15">
+          <CardHeader className="space-y-4">
+            <CardTitle className="text-2xl text-white text-center font-semibold">
+              Connexion
+            </CardTitle>
+            <CardDescription className="text-white/80 text-center text-lg">
               Entrez vos identifiants pour accéder à votre compte
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Affichage des erreurs */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Affichage des erreurs amélioré */}
               {formErrors.global && (
-                <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 rounded-md">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{formErrors.global}</span>
+                <div className="flex items-center gap-3 p-4 text-sm text-red-200 bg-red-500/20 backdrop-blur-sm rounded-lg border border-red-300/30 shadow-lg">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="font-medium">{formErrors.global}</span>
                 </div>
               )}
 
-              {/* Email */}
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+              {/* Email amélioré */}
+              <div className="space-y-3">
+                <Label htmlFor="email" className="text-white text-lg font-medium">
+                  Email
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -165,13 +196,16 @@ export default function LoginPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   disabled={isSubmitting}
+                  className="h-12 backdrop-blur-sm bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50 rounded-lg transition-all duration-200"
                 />
-                <p className="text-sm text-destructive">{formErrors.email}</p>
+                <p className="text-sm text-red-200 font-medium">{formErrors.email}</p>
               </div>
 
-              {/* Mot de passe */}
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+              {/* Mot de passe amélioré */}
+              <div className="space-y-3">
+                <Label htmlFor="password" className="text-white text-lg font-medium">
+                  Mot de passe
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -181,32 +215,33 @@ export default function LoginPage() {
                     value={formData.password}
                     onChange={handleInputChange}
                     disabled={isSubmitting}
-                    className="pr-10"
+                    className="h-12 pr-10 backdrop-blur-sm bg-white/20 border-white/30 text-white placeholder:text-white/60 focus:bg-white/30 focus:border-white/50 rounded-lg transition-all duration-200"
                   />
-                  <p className="text-sm text-destructive">
-                    {formErrors.password}
-                  </p>
-
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors p-2"
                     disabled={isSubmitting}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </button>
                 </div>
+                <p className="text-sm text-red-200 font-medium">{formErrors.password}</p>
               </div>
 
-              {/* Bouton de connexion */}
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {/* Bouton de connexion amélioré */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 font-semibold text-lg rounded-lg hover:scale-[1.02]"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                     Connexion...
                   </>
                 ) : (
@@ -214,43 +249,8 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
-
-            {/* Lien vers inscription */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
-                Pas encore de compte ?{" "}
-                <Link
-                  to="/register"
-                  className="font-medium text-primary hover:underline"
-                >
-                  Créer un compte
-                </Link>
-              </p>
-            </div>
           </CardContent>
         </Card>
-
-        {/* Comptes de test */}
-        {/* <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-sm">Comptes de test</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="text-xs">
-              <p>
-                <strong>SUPER_ADMIN:</strong> superadmin@gestion-salaires.com /
-                superadmin123
-              </p>
-              <p>
-                <strong>ADMIN:</strong> admin@techsolutions.com / admin123
-              </p>
-              <p>
-                <strong>CASHIER:</strong> cashier@gestion-salaires.com /
-                cashier123
-              </p>
-            </div>
-          </CardContent>
-        </Card> */}
       </div>
     </div>
   );

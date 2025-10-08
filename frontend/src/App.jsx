@@ -9,7 +9,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
+
 import Dashboard from "./pages/Dashboard";
 import Companies from "./pages/Companies";
 import CompanyDashboard from "./pages/CompanyDashboard";
@@ -36,6 +36,7 @@ import AttendanceStatsPage from "./pages/AttendanceStatsPage";
 import EmployeeQRCodesPage from "./pages/EmployeeQRCodesPage";
 import CreateEmployeePage from "./pages/CreateEmployeePage";
 import AdminLayout from "./components/AdminLayout";
+import WelcomePage from "./pages/WelcomePage";
 
 // Import du script de test en développement
 if (import.meta.env.DEV) {
@@ -48,11 +49,13 @@ function App() {
       <Toaster richColors position="top-right" />
       <Router>
         <Routes>
-          {/* Routes publiques */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* Route d'accueil - sera la première page affichée */}
+          <Route path="/" element={<WelcomePage />} />
 
-          {/* Routes protégées avec layout */}
+          {/* Route de connexion */}
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Routes protégées */}
           <Route
             path="/*"
             element={
