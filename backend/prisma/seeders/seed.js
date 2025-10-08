@@ -106,6 +106,100 @@ async function main() {
     console.log(`✅ ${adminUsers.length} utilisateurs ADMIN créés`);
     console.log(`✅ ${cashierUsers.length} utilisateurs CASHIER créés`);
 
+    // Créer des employés pour les utilisateurs admin et cashier
+    console.log("👥 Création des employés pour les utilisateurs...");
+    
+    // Créer des employés pour les admins
+    const adminEmployees = await Promise.all([
+      prisma.employee.create({
+        data: {
+          employeeCode: "ADM001",
+          firstName: adminUsers[0].firstName,
+          lastName: adminUsers[0].lastName,
+          email: adminUsers[0].email,
+          phone: "+221 33 812 00 02",
+          position: "Administrateur",
+          contractType: "FIXED",
+          fixedSalary: 600000,
+          hireDate: new Date("2024-01-01"),
+          companyId: companies[0].id,
+          isActive: true,
+        },
+      }),
+      prisma.employee.create({
+        data: {
+          employeeCode: "ADM002",
+          firstName: adminUsers[1].firstName,
+          lastName: adminUsers[1].lastName,
+          email: adminUsers[1].email,
+          phone: "+221 33 812 00 03",
+          position: "Administrateur",
+          contractType: "FIXED",
+          fixedSalary: 600000,
+          hireDate: new Date("2024-01-01"),
+          companyId: companies[1].id,
+          isActive: true,
+        },
+      }),
+    ]);
+
+    // Créer des employés pour les cashiers
+    const cashierEmployees = await Promise.all([
+      prisma.employee.create({
+        data: {
+          employeeCode: "CASH001",
+          firstName: cashierUsers[0].firstName,
+          lastName: cashierUsers[0].lastName,
+          email: cashierUsers[0].email,
+          phone: "+221 33 812 00 04",
+          position: "Caissier",
+          contractType: "FIXED",
+          fixedSalary: 300000,
+          hireDate: new Date("2024-01-01"),
+          companyId: companies[0].id,
+          isActive: true,
+        },
+      }),
+      prisma.employee.create({
+        data: {
+          employeeCode: "CASH002",
+          firstName: cashierUsers[1].firstName,
+          lastName: cashierUsers[1].lastName,
+          email: cashierUsers[1].email,
+          phone: "+221 33 812 00 05",
+          position: "Caissier",
+          contractType: "FIXED",
+          fixedSalary: 300000,
+          hireDate: new Date("2024-01-01"),
+          companyId: companies[1].id,
+          isActive: true,
+        },
+      }),
+    ]);
+
+    // Lier les utilisateurs aux employés
+    await Promise.all([
+      prisma.user.update({
+        where: { id: adminUsers[0].id },
+        data: { employeeId: adminEmployees[0].id },
+      }),
+      prisma.user.update({
+        where: { id: adminUsers[1].id },
+        data: { employeeId: adminEmployees[1].id },
+      }),
+      prisma.user.update({
+        where: { id: cashierUsers[0].id },
+        data: { employeeId: cashierEmployees[0].id },
+      }),
+      prisma.user.update({
+        where: { id: cashierUsers[1].id },
+        data: { employeeId: cashierEmployees[1].id },
+      }),
+    ]);
+
+    console.log(`✅ ${adminEmployees.length} employés admin créés et liés`);
+    console.log(`✅ ${cashierEmployees.length} employés cashier créés et liés`);
+
     // Créer des employés de test pour chaque entreprise
     console.log("👥 Création des employés de test...");
     const employees = [];

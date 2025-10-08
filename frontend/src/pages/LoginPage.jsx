@@ -216,7 +216,7 @@ export default function LoginPage() {
             </form>
 
             {/* Lien vers inscription */}
-            <div className="mt-6 text-center">
+            {/* <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Pas encore de compte ?{" "}
                 <Link
@@ -226,7 +226,7 @@ export default function LoginPage() {
                   Créer un compte
                 </Link>
               </p>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 

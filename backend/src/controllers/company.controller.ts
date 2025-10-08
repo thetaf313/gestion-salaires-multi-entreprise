@@ -245,7 +245,18 @@ export class CompanyController {
   async updateMyCompany(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
-      const { name, address, phone, email, currency, payPeriodType } = req.body;
+      const { 
+        name, 
+        address, 
+        phone, 
+        email, 
+        currency, 
+        payPeriodType,
+        themeType,
+        themePreset,
+        primaryColor,
+        secondaryColor 
+      } = req.body;
 
       if (!companyId) {
         return sendResponse(res, HttpStatus.UNAUTHORIZED, "Accès non autorisé");
@@ -258,6 +269,12 @@ export class CompanyController {
       if (email !== undefined) updateData.email = email;
       if (currency !== undefined) updateData.currency = currency;
       if (payPeriodType !== undefined) updateData.payPeriodType = payPeriodType;
+      
+      // Champs de thème
+      if (themeType !== undefined) updateData.themeType = themeType;
+      if (themePreset !== undefined) updateData.themePreset = themePreset;
+      if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
+      if (secondaryColor !== undefined) updateData.secondaryColor = secondaryColor;
 
       const updatedCompany = await companyService.updateCompany(
         companyId,

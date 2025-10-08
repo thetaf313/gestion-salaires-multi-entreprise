@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
@@ -45,8 +46,9 @@ if (import.meta.env.DEV) {
 function App() {
   return (
     <AuthProvider>
-      <Toaster richColors position="top-right" />
-      <Router>
+      <ThemeProvider>
+        <Toaster richColors position="top-right" />
+        <Router>
         <Routes>
           {/* Routes publiques */}
           <Route path="/login" element={<LoginPage />} />
@@ -270,6 +272,7 @@ function App() {
           />
         </Routes>
       </Router>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

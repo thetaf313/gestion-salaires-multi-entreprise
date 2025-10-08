@@ -7,6 +7,13 @@ export interface CompanyResponse {
   currency: string | null;
   logo?: string | null;
   payPeriodType: "MONTHLY" | "WEEKLY" | "DAILY";
+  
+  // Champs de thème
+  themeType: string;
+  themePreset?: string | null;
+  primaryColor?: string | null;
+  secondaryColor?: string | null;
+  
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -20,6 +27,13 @@ export interface CompanyCreateData {
   currency?: string;
   logo?: string;
   payPeriodType?: "MONTHLY" | "WEEKLY" | "DAILY";
+  
+  // Champs de thème
+  themeType?: string;
+  themePreset?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  
   isActive?: boolean;
 }
 

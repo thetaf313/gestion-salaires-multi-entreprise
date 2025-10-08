@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 import {
   Building2,
   Camera,
@@ -42,10 +43,12 @@ import {
   X,
   User,
   Settings,
+  Palette,
 } from "lucide-react";
 
 const CompanySettings = () => {
   const { user } = useAuth();
+  const { companyTheme, predefinedThemes, saveCompanyTheme, loading: themeLoading } = useTheme();
   const [activeTab, setActiveTab] = useState("company");
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,6 +61,10 @@ const CompanySettings = () => {
     email: "",
     currency: "XOF",
     payPeriodType: "MONTHLY",
+    themeType: "default",
+    themePreset: "",
+    primaryColor: "",
+    secondaryColor: "",
   });
   const [userFormData, setUserFormData] = useState({
     firstName: "",
@@ -89,6 +96,10 @@ const CompanySettings = () => {
         email: data.email || "",
         currency: data.currency || "XOF",
         payPeriodType: data.payPeriodType || "MONTHLY",
+        themeType: data.themeType || "default",
+        themePreset: data.themePreset || "",
+        primaryColor: data.primaryColor || "",
+        secondaryColor: data.secondaryColor || "",
       });
     } catch (error) {
       toast.error("Erreur lors du chargement des données de l'entreprise");
@@ -273,10 +284,14 @@ const CompanySettings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="company" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
             Entreprise
+          </TabsTrigger>
+          <TabsTrigger value="theme" className="flex items-center gap-2">
+            <Palette className="h-4 w-4" />
+            Thème
           </TabsTrigger>
           <TabsTrigger value="user" className="flex items-center gap-2">
             <User className="h-4 w-4" />
@@ -501,6 +516,208 @@ const CompanySettings = () => {
           </Button>
         </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="theme" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Thème et apparence
+              </CardTitle>
+              <CardDescription>
+                Personnalisez l'apparence de votre interface avec des thèmes prédéfinis ou créez votre propre style
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Type de thème */}
+              <div className="space-y-4">
+                <Label>Type de thème</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange("themeType", "default")}
+                    className={`p-4 border rounded-lg text-left transition-colors ${
+                      formData.themeType === "default"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="font-medium">Défaut</div>
+                    <div className="text-sm text-gray-600">Thème standard de l'application</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange("themeType", "preset")}
+                    className={`p-4 border rounded-lg text-left transition-colors ${
+                      formData.themeType === "preset"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="font-medium">Thème prédéfini</div>
+                    <div className="text-sm text-gray-600">Choisissez parmi nos thèmes</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => handleInputChange("themeType", "custom")}
+                    className={`p-4 border rounded-lg text-left transition-colors ${
+                      formData.themeType === "custom"
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="font-medium">Personnalisé</div>
+                    <div className="text-sm text-gray-600">Créez votre propre thème</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Thèmes prédéfinis */}
+              {formData.themeType === "preset" && (
+                <div className="space-y-4">
+                  <Label>Thèmes prédéfinis</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {Object.entries(predefinedThemes).map(([key, theme]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => handleInputChange("themePreset", key)}
+                        className={`p-4 border rounded-lg text-center transition-all hover:scale-105 ${
+                          formData.themePreset === key
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div 
+                          className="w-full h-6 rounded-md mb-2 flex"
+                          style={{
+                            background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`
+                          }}
+                        />
+                        <div className="text-sm font-medium">{theme.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Couleurs personnalisées */}
+              {formData.themeType === "custom" && (
+                <div className="space-y-4">
+                  <Label>Couleurs personnalisées</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="primaryColor">Couleur primaire</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          id="primaryColor"
+                          value={formData.primaryColor || "#3b82f6"}
+                          onChange={(e) => handleInputChange("primaryColor", e.target.value)}
+                          className="w-12 h-10 rounded border border-gray-300"
+                        />
+                        <Input
+                          value={formData.primaryColor || "#3b82f6"}
+                          onChange={(e) => handleInputChange("primaryColor", e.target.value)}
+                          placeholder="#3b82f6"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="secondaryColor">Couleur secondaire</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          id="secondaryColor"
+                          value={formData.secondaryColor || "#1e40af"}
+                          onChange={(e) => handleInputChange("secondaryColor", e.target.value)}
+                          className="w-12 h-10 rounded border border-gray-300"
+                        />
+                        <Input
+                          value={formData.secondaryColor || "#1e40af"}
+                          onChange={(e) => handleInputChange("secondaryColor", e.target.value)}
+                          placeholder="#1e40af"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Aperçu du thème personnalisé */}
+                  <div className="space-y-2">
+                    <Label>Aperçu</Label>
+                    <div className="p-4 border rounded-lg bg-gray-50">
+                      <div className="flex items-center gap-4">
+                        <div 
+                          className="w-16 h-16 rounded-lg shadow-md"
+                          style={{ backgroundColor: formData.primaryColor || "#3b82f6" }}
+                        />
+                        <div 
+                          className="w-16 h-16 rounded-lg shadow-md"
+                          style={{ backgroundColor: formData.secondaryColor || "#1e40af" }}
+                        />
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">Aperçu du thème</div>
+                          <div className="text-xs text-gray-600">
+                            Primaire: {formData.primaryColor || "#3b82f6"} • 
+                            Secondaire: {formData.secondaryColor || "#1e40af"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Boutons d'action pour le thème */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Reset du thème aux valeurs de l'entreprise
+                    setFormData(prev => ({
+                      ...prev,
+                      themeType: company?.themeType || "default",
+                      themePreset: company?.themePreset || "",
+                      primaryColor: company?.primaryColor || "",
+                      secondaryColor: company?.secondaryColor || "",
+                    }));
+                  }}
+                  disabled={saving || themeLoading}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={async () => {
+                    const themeData = {
+                      themeType: formData.themeType,
+                      themePreset: formData.themePreset,
+                      primaryColor: formData.primaryColor,
+                      secondaryColor: formData.secondaryColor,
+                    };
+                    
+                    const result = await saveCompanyTheme(themeData);
+                    if (result?.success) {
+                      toast.success("Thème mis à jour avec succès");
+                      // Mettre à jour les données de l'entreprise
+                      setCompany(prev => ({ ...prev, ...themeData }));
+                    } else {
+                      toast.error("Erreur lors de la mise à jour du thème");
+                    }
+                  }}
+                  disabled={saving || themeLoading}
+                  className="min-w-[140px]"
+                >
+                  {saving || themeLoading ? "Application..." : "Appliquer le thème"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="user" className="mt-6">

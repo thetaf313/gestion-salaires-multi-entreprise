@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import des styles de thème personnalisés */
+@import './styles/theme.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
