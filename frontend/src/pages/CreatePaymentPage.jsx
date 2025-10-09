@@ -85,10 +85,12 @@ const CreatePaymentPage = () => {
         setPayslip(payslipResult);
 
         // Rediriger si le bulletin est déjà complètement payé
-        if (payslipResult.status === 'PAID') {
+        if (payslipResult.status === "PAID") {
           navigate(`/company/${companyId}/payslips/${payslipId}`, {
             replace: true,
-            state: { message: 'Ce bulletin de paie est déjà complètement payé.' }
+            state: {
+              message: "Ce bulletin de paie est déjà complètement payé.",
+            },
           });
           return;
         }
@@ -143,7 +145,7 @@ const CreatePaymentPage = () => {
 
   const getRemainingAmount = () => {
     // Si le bulletin est marqué comme payé, le montant restant est 0
-    if (payslip?.status === 'PAID') {
+    if (payslip?.status === "PAID") {
       return 0;
     }
     return Math.max(0, (payslip?.netAmount || 0) - getTotalPaid());
@@ -163,7 +165,7 @@ const CreatePaymentPage = () => {
 
     try {
       // Vérification côté frontend avant envoi
-      if (payslip?.status === 'PAID') {
+      if (payslip?.status === "PAID") {
         throw new Error("Ce bulletin de paie est déjà complètement payé");
       }
 
@@ -177,7 +179,7 @@ const CreatePaymentPage = () => {
       if (remainingAmount <= 0) {
         throw new Error("Ce bulletin de paie est déjà complètement payé");
       }
-      
+
       if (amount > remainingAmount) {
         throw new Error(
           `Le montant ne peut pas dépasser ${formatAmount(remainingAmount)}`
@@ -200,17 +202,20 @@ const CreatePaymentPage = () => {
       }, 2000);
     } catch (error) {
       console.error("Erreur lors de la création du paiement:", error);
-      
+
       // Gestion spécifique pour les bulletins déjà payés
-      if (error.message?.includes("déjà entièrement payé") || error.message?.includes("déjà complètement payé")) {
+      if (
+        error.message?.includes("déjà entièrement payé") ||
+        error.message?.includes("déjà complètement payé")
+      ) {
         // Rediriger vers la page de détails avec un message
         navigate(`/company/${companyId}/payslips/${payslipId}`, {
           replace: true,
-          state: { message: "Ce bulletin de paie est déjà complètement payé." }
+          state: { message: "Ce bulletin de paie est déjà complètement payé." },
         });
         return;
       }
-      
+
       setError(error.message || "Erreur lors de la création du paiement");
     } finally {
       setSubmitting(false);
@@ -323,7 +328,9 @@ const CreatePaymentPage = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">Période:</span>
-                  <div className="font-medium">{payslip.payRun?.period || payslip.payRun?.title}</div>
+                  <div className="font-medium">
+                    {payslip.payRun?.period || payslip.payRun?.title}
+                  </div>
                   <div className="text-xs text-gray-500">
                     {formatPeriod(
                       payslip.payRun?.periodStart || payslip.payRun?.startDate,
@@ -523,7 +530,9 @@ const CreatePaymentPage = () => {
                         {method.icon}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{method.label}</div>
+                        <div className="font-medium truncate">
+                          {method.label}
+                        </div>
                         <div className="text-xs text-gray-500 truncate hidden sm:block">
                           {method.description}
                         </div>

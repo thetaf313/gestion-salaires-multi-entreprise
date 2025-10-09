@@ -32,6 +32,7 @@ const PayslipDetailsPage = () => {
   const [error, setError] = useState("");
   const [message, setMessage] = useState(location.state?.message || "");
   const [isPrinting, setIsPrinting] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState(null);
 
   useEffect(() => {
     async function fetchCompany() {
@@ -51,9 +52,9 @@ const PayslipDetailsPage = () => {
   const imageUrlToDataUrl = async (url) => {
     if (!url) return null;
     if (typeof url === "string" && url.startsWith("data:")) return url;
-    
+
     try {
-      const res = await fetch(url, { mode: 'cors' });
+      const res = await fetch(url, { mode: "cors" });
       if (!res.ok) {
         console.warn("Impossible de charger l'image:", url);
         return url;
@@ -76,7 +77,9 @@ const PayslipDetailsPage = () => {
 
   const handlePrint = useReactToPrint({
     content: () => document.getElementById("payslip-print-root"),
-    documentTitle: `Bulletin-${payslip?.employee?.lastName || ""}-${payslip?.payRun?.period || ""}`,
+    documentTitle: `Bulletin-${payslip?.employee?.lastName || ""}-${
+      payslip?.payRun?.period || ""
+    }`,
     // onBeforeGetContent removed; inlining handled explicitly in triggerPrint
     onAfterPrint: () => {
       setPrintLogo(null);
@@ -86,7 +89,7 @@ const PayslipDetailsPage = () => {
 
   const triggerPrint = async () => {
     if (isPrinting) return;
-    
+
     if (!printRef.current) {
       console.error("printRef non disponible");
       alert("Impossible d'imprimer. Veuillez réessayer.");
@@ -94,38 +97,45 @@ const PayslipDetailsPage = () => {
     }
 
     setIsPrinting(true);
-    
+
     const manualPrint = async () => {
       // 1️⃣ Sélection du conteneur principal à imprimer
-      const printable = document.getElementById('payslip-print-root') || document.querySelector('.printable-area');
+      const printable =
+        document.getElementById("payslip-print-root") ||
+        document.querySelector(".printable-area");
       if (!printable) {
-        console.warn('Aucune zone imprimable trouvée');
+        console.warn("Aucune zone imprimable trouvée");
         return;
       }
 
       const clone = printable.cloneNode(true);
 
       // 2️⃣ Nettoyage : suppression d’éléments non imprimables
-      clone.querySelectorAll('button, a, input, textarea, select, .no-print, .print\\:hidden')
-           .forEach(el => el.remove());
+      clone
+        .querySelectorAll(
+          "button, a, input, textarea, select, .no-print, .print\\:hidden"
+        )
+        .forEach((el) => el.remove());
 
       // 3️⃣ Récupération des styles actifs de ton app (Tailwind, globales, etc.)
-      const styleTags = Array.from(document.querySelectorAll('style'))
-        .map(style => style.outerHTML)
-        .join('\n');
+      const styleTags = Array.from(document.querySelectorAll("style"))
+        .map((style) => style.outerHTML)
+        .join("\n");
 
-      const linkTags = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-        .map(link => link.outerHTML)
-        .join('\n');
+      const linkTags = Array.from(
+        document.querySelectorAll('link[rel="stylesheet"]')
+      )
+        .map((link) => link.outerHTML)
+        .join("\n");
 
       // 4️⃣ Chargement de ton fichier print.css
-      let externalPrintCSS = '';
+      let externalPrintCSS = "";
       try {
-        const res = await fetch('/print.css');
+        const res = await fetch("/print.css");
         if (res.ok) externalPrintCSS = await res.text();
-        else console.warn('print.css non trouvé (HTTP ' + res.status + ')');
+        else console.warn("print.css non trouvé (HTTP " + res.status + ")");
       } catch (e) {
-        console.warn('Erreur lors du chargement de print.css :', e);
+        console.warn("Erreur lors du chargement de print.css :", e);
       }
 
       // 5️⃣ Style de secours minimal
@@ -163,9 +173,9 @@ const PayslipDetailsPage = () => {
       `;
 
       // 7️⃣ Ouverture de la fenêtre popup et écriture du contenu
-      const printWindow = window.open('', '_blank', 'width=900,height=650');
+      const printWindow = window.open("", "_blank", "width=900,height=650");
       if (!printWindow) {
-        alert('Veuillez autoriser les popups pour pouvoir imprimer.');
+        alert("Veuillez autoriser les popups pour pouvoir imprimer.");
         return;
       }
 
@@ -203,7 +213,6 @@ const PayslipDetailsPage = () => {
       // cleanup will also run onAfterPrint, but ensure printLogo cleared
       setTimeout(() => setPrintLogo(null), 200);
     }
-
   };
 
   const loadData = async () => {
@@ -211,7 +220,10 @@ const PayslipDetailsPage = () => {
       setLoading(true);
       const payslipData = await payslipService.getById(companyId, payslipId);
       setPayslip(payslipData.data || payslipData);
-      const paymentsData = await paymentService.getByPayslip(companyId, payslipId);
+      const paymentsData = await paymentService.getByPayslip(
+        companyId,
+        payslipId
+      );
       setPayments(paymentsData.data || paymentsData || []);
     } catch (err) {
       console.error("Erreur lors du chargement des données:", err);
@@ -263,7 +275,9 @@ const PayslipDetailsPage = () => {
       label: status,
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.class}`}>
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${cfg.class}`}
+      >
         {cfg.label}
       </span>
     );
@@ -284,6 +298,48 @@ const PayslipDetailsPage = () => {
     }
   };
 
+  const handleViewPayment = (payment) => {
+    // naviguer vers la page de détail du paiement si elle existe
+    navigate(`/company/${companyId}/payments/${payment.id}`);
+  };
+
+  const handlePrintPayment = (payment) => {
+    // Génère un petit reçu imprimable dans une popup en clonant le bloc du paiement
+    const content = document.createElement("div");
+    content.innerHTML = `
+      <div style="font-family:system-ui, sans-serif; color:#111827; padding:12px;">
+        <h2 style="margin:0 0 8px 0;">Reçu de paiement</h2>
+        <div><strong>Montant:</strong> ${formatAmount(payment.amount)}</div>
+        <div><strong>Méthode:</strong> ${getPaymentMethodLabel(
+          payment.method
+        )}</div>
+        <div><strong>Date:</strong> ${formatDate(payment.createdAt)}</div>
+        ${
+          payment.reference
+            ? `<div><strong>Réf:</strong> ${payment.reference}</div>`
+            : ""
+        }
+        ${
+          payment.notes
+            ? `<div style="margin-top:8px; font-style:italic;">${payment.notes}</div>`
+            : ""
+        }
+      </div>
+    `;
+
+    const html = `<!doctype html><html><head><meta charset="utf-8"><title>Reçu</title></head><body>${content.innerHTML}</body></html>`;
+    const popup = window.open("", "_blank", "width=600,height=700");
+    if (!popup)
+      return alert("Veuillez autoriser les popups pour imprimer le reçu.");
+    popup.document.open();
+    popup.document.write(html);
+    popup.document.close();
+    popup.onload = () => {
+      popup.focus();
+      popup.print();
+    };
+  };
+
   const handleBack = () => navigate(-1);
   const handleNewPayment = () =>
     navigate(`/company/${companyId}/payslips/${payslipId}/payment`);
@@ -294,14 +350,14 @@ const PayslipDetailsPage = () => {
         <span className="text-gray-500 text-lg">Chargement...</span>
       </div>
     );
-  
+
   if (error)
     return (
       <div className="flex items-center justify-center h-96">
         <span className="text-red-500 text-lg">{error}</span>
       </div>
     );
-  
+
   if (!payslip) return null;
 
   return (
@@ -332,15 +388,15 @@ const PayslipDetailsPage = () => {
           </div>
 
           <div className="print:hidden">
-            <button 
+            <button
               onClick={triggerPrint}
               disabled={isPrinting}
               className={`bg-gray-800 hover:bg-gray-600 text-white px-5 py-2 rounded-lg flex items-center gap-2 shadow transition-colors ${
-                isPrinting ? 'opacity-50 cursor-not-allowed' : ''
+                isPrinting ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              <PrinterCheck className="w-5 h-5" /> 
-              {isPrinting ? 'Préparation...' : 'Imprimer'}
+              <PrinterCheck className="w-5 h-5" />
+              {isPrinting ? "Préparation..." : "Imprimer"}
             </button>
           </div>
         </header>
@@ -445,7 +501,8 @@ const PayslipDetailsPage = () => {
 
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
-            <FaCalendarAlt className="text-green-600" /> Détails du bulletin de paie
+            <FaCalendarAlt className="text-green-600" /> Détails du bulletin de
+            paie
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-100">
@@ -632,7 +689,7 @@ const PayslipDetailsPage = () => {
           )}
         </div>
 
-  <div className="bg-white rounded-lg shadow-md border border-gray-200 no-print print:hidden">
+        <div className="bg-white rounded-lg shadow-md border border-gray-200 no-print print:hidden">
           <div className="p-6 border-b border-gray-100 bg-gray-50 rounded-t-lg">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
               <FaClock className="text-gray-600" /> Historique des paiements{" "}
@@ -673,11 +730,11 @@ const PayslipDetailsPage = () => {
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right relative">
                         <div className="text-sm font-medium text-gray-900 mb-1">
                           {formatDate(payment.createdAt)}
                         </div>
-                        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded inline-block">
                           Paiement #{index + 1}
                         </div>
                         {payment.processedBy && (
@@ -686,6 +743,45 @@ const PayslipDetailsPage = () => {
                             {payment.processedBy.lastName}
                           </div>
                         )}
+
+                        {/* Ellipsis menu */}
+                        <div className="inline-block ml-2">
+                          <button
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === payment.id ? null : payment.id
+                              )
+                            }
+                            className="p-2 rounded-full hover:bg-gray-100"
+                            aria-haspopup="true"
+                            aria-expanded={openMenuId === payment.id}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5 text-gray-600"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM18 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                          </button>
+                          {openMenuId === payment.id && (
+                            <div className="absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow-md z-50">
+                              <button
+                                onClick={() => handleViewPayment(payment)}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50"
+                              >
+                                Voir
+                              </button>
+                              <button
+                                onClick={() => handlePrintPayment(payment)}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-50"
+                              >
+                                Imprimer
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
