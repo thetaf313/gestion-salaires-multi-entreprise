@@ -14,7 +14,7 @@ import { AnimatedBackground } from "../components/ui/animated-background";
 import { ParticlesBackground } from "../components/ui/particles-background";
 import { Label } from "../components/ui/label";
 import { useAuth } from "../contexts/AuthContext";
-import { Eye, EyeOff, Loader2, AlertCircle, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Loader2, AlertCircle, Sparkles, Infinity } from "lucide-react";
 import { email } from "zod";
 
 export default function LoginPage() {
@@ -162,7 +162,7 @@ export default function LoginPage() {
             }}
             className="flex items-center justify-center mb-6"
           >
-            <Sparkles className="h-10 w-10 text-[#212121] mr-3" />
+            <Infinity className="h-10 w-10 text-[#212121] mr-3" />
             <h1 className="text-4xl font-bold bg-gradient-to-r from-[#212121] to-[#aaaaac] bg-clip-text text-transparent">
               Synergy Pay
             </h1>

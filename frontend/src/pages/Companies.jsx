@@ -76,6 +76,16 @@ const Companies = () => {
     }
   };
 
+  // helper pour construire l'URL du logo (gère chemins relatifs)
+  const getLogoSrc = (logo) => {
+    if (!logo) return null;
+    // URL absolue (http(s) or protocol-relative)
+    if (/^(https?:)?\/\//i.test(logo)) return logo;
+    const base = process.env.REACT_APP_API_URL || "http://localhost:3003";
+    if (logo.startsWith("/")) return `${base}${logo}`;
+    return `${base}/${logo}`;
+  };
+
   const filteredCompanies = companies.filter(
     (company) =>
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -98,7 +108,7 @@ const Companies = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-4">
       {/* En-tête */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -219,10 +229,10 @@ const Companies = () => {
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     {company.logo ? (
-                      <img 
-                        src={company.logo} 
+                      <img
+                        src={getLogoSrc(company.logo)}
                         alt={`Logo ${company.name}`}
-                        className="h-6 w-6 object-contain"
+                        className="h-6 w-6 object-contain rounded"
                       />
                     ) : (
                       <Building2 className="h-6 w-6 text-blue-600" />

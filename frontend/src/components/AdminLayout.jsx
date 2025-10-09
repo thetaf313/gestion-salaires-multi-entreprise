@@ -21,6 +21,7 @@ import {
   QrCode,
   ChevronDown,
   ChevronRight,
+  Infinity,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
@@ -191,7 +192,9 @@ const AdminLayout = ({ children }) => {
       {/* Sidebar Desktop */}
       <div className="hidden md:flex md:w-64 bg-white shadow-lg flex-col fixed h-full z-30">
         <div className="p-6 border-b flex-shrink-0">
-          <h1 className="text-xl font-bold text-gray-800">Synergy Pay</h1>
+          <h1 className="text-xl font-bold text-gray-800 flex items-center">
+            <Infinity className="h-10 w-10 text-[#212121] mr-3" /> Synergy Pay
+          </h1>
           <p className="text-sm text-gray-500 mt-1">Multi-Entreprise</p>
         </div>
 
@@ -273,7 +276,7 @@ const AdminLayout = ({ children }) => {
             <div className="p-6 border-b flex justify-between items-center flex-shrink-0">
               <div>
                 <h1 className="text-xl font-bold text-gray-800">
-                  Synergy Pay
+                  <Infinity className="h-10 w-10 text-[#212121] mr-3" /> Synergy Pay
                 </h1>
                 <p className="text-sm text-gray-500 mt-1">Multi-Entreprise</p>
               </div>
