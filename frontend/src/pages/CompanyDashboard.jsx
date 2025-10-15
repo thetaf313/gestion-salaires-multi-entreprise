@@ -57,13 +57,16 @@ const CompanyDashboard = () => {
       }
 
       if (statsResponse.success) {
-        // Simuler des statistiques pour le moment
+        const payload = statsResponse.data || statsResponse;
+        // payload may contain { stats, kpiSummary }
+        const s = payload.stats || payload;
+
         setStats({
-          totalEmployees: companyResponse.data?._count?.employees || 0,
-          activeEmployees: companyResponse.data?._count?.employees || 0,
-          monthlyPayroll: 45000,
-          lastPayRun: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          pendingPayslips: 5,
+          totalEmployees: s?.employees?.total || companyResponse.data?._count?.employees || 0,
+          activeEmployees: s?.employees?.active || companyResponse.data?._count?.employees || 0,
+          monthlyPayroll: s?.payroll?.currentMonthBudget ?? s?.totalPayrollAmount ?? s?.monthlyPayroll ?? 0,
+          lastPayRun: s?.lastPayRun ? new Date(s.lastPayRun) : null,
+          pendingPayslips: s?.pendingPayslips ?? s?.payslipStatus?.pending ?? 0,
         });
       }
     } catch (error) {

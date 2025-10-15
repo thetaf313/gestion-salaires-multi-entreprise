@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
+import api from "../services/api";
 import {
   Card,
   CardContent,
@@ -51,20 +52,14 @@ const DashboardStatsPage = () => {
   // Récupérer les statistiques générales
   const fetchGeneralStats = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const response = await fetch("http://localhost:3003/api/statistics/general", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      let params = {};
+      if (user?.role === 'ADMIN' && user?.companyId) params.companyId = user.companyId;
+      if (user?.role === 'CASHIER' && user?.employeeId) params.employeeId = user.employeeId;
 
-      if (response.ok) {
-        const data = await response.json();
-        setGeneralStats(data.data);
-      } else {
-        setError("Erreur lors de la récupération des statistiques générales");
-      }
+      const response = await api.get('/statistics/general', { params });
+      const payload = response.data || response;
+      const data = payload.data || payload;
+      setGeneralStats(data);
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques générales:", error);
       setError("Erreur lors de la récupération des statistiques générales");
@@ -74,18 +69,14 @@ const DashboardStatsPage = () => {
   // Récupérer les statistiques mensuelles
   const fetchMonthlyStats = async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const response = await fetch("http://localhost:3003/api/statistics/monthly", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      let params = {};
+      if (user?.role === 'ADMIN' && user?.companyId) params.companyId = user.companyId;
+      if (user?.role === 'CASHIER' && user?.employeeId) params.employeeId = user.employeeId;
 
-      if (response.ok) {
-        const data = await response.json();
-        setMonthlyStats(data.data);
-      }
+      const response = await api.get('/statistics/monthly', { params });
+      const payload = response.data || response;
+      const data = payload.data || payload;
+      setMonthlyStats(data);
     } catch (error) {
       console.error("Erreur lors de la récupération des statistiques mensuelles:", error);
     }
@@ -98,8 +89,8 @@ const DashboardStatsPage = () => {
       setLoading(false);
     };
 
-    loadStats();
-  }, []);
+    if (user) loadStats();
+  }, [user]);
 
   if (loading) {
     return (
