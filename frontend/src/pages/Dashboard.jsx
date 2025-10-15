@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Card } from "../components/ui/card";
@@ -10,6 +11,13 @@ import {
   PayrollChart,
   RealTimeChart,
 } from "../components/charts";
+import {
+  PieChart as RePieChart,
+  Pie as RePie,
+  Cell as ReCell,
+  ResponsiveContainer as ReResponsiveContainer,
+  Tooltip as ReTooltip,
+} from "recharts";
 import {
   Building2,
   Users,
@@ -23,6 +31,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [rawStats, setRawStats] = useState(null);
+
+  // Chart data
+  const [payrollChartData, setPayrollChartData] = useState(null);
+  const [employeeChartData, setEmployeeChartData] = useState(null);
+  const [contractChartData, setContractChartData] = useState(null);
 
   useEffect(() => {
     // Si l'utilisateur est ADMIN ou CASHIER, rediriger vers le dashboard de son entreprise
@@ -33,16 +47,138 @@ const Dashboard = () => {
       }
     }
 
-    // Simuler le chargement des statistiques pour SUPER_ADMIN
-    setTimeout(() => {
-      setStats({
-        totalCompanies: 12,
-        totalEmployees: 245,
-        totalPayslips: 1567,
-        monthlyPayroll: 125000,
-      });
-      setLoading(false);
-    }, 1000);
+    const loadStats = async () => {
+      setLoading(true);
+      try {
+        let res;
+        if (user?.role === "SUPER_ADMIN") {
+          res = await api.get('/stats/super-admin');
+        } else if (user?.role === "ADMIN") {
+          res = await api.get(`/stats/admin/${user.companyId}`);
+        } else if (user?.role === "CASHIER") {
+          res = await api.get(`/stats/cashier/${user.companyId}`);
+        } else {
+          res = await api.get('/stats/dashboard');
+        }
+        // API responses are wrapped: { success, message, data }
+        const payload = res?.data || res;
+        const wrapper = payload?.data || payload;
+
+        // The backend often returns { stats, kpiSummary, timestamp } inside data
+        const statsPayload = wrapper?.stats || wrapper;
+        const kpiSummary = wrapper?.kpiSummary || wrapper?.kpi || null;
+
+        // Helper to read KPI values from either stats or kpiSummary
+        const findKpi = (labelMatch) => {
+          if (kpiSummary && Array.isArray(kpiSummary)) {
+            const found = kpiSummary.find((k) =>
+              String(k.label).toLowerCase().includes(labelMatch.toLowerCase())
+            );
+            return found ? found.value : undefined;
+          }
+          return undefined;
+        };
+
+        const totalCompanies =
+          statsPayload?.totalCompanies ?? statsPayload?.activeCompanies ?? findKpi('entreprise') ?? 0;
+
+        const totalEmployees =
+          statsPayload?.totalEmployees ?? statsPayload?.total_employees ?? statsPayload?.employees?.total ?? findKpi('employ') ?? 0;
+
+        const totalPayslips =
+          statsPayload?.totalPayslips ?? statsPayload?.total_payslips ?? statsPayload?.totalPayslipsCount ?? 0;
+
+        const monthlyPayroll =
+          statsPayload?.monthlyPayroll ?? statsPayload?.totalPayrollAmount ?? statsPayload?.payroll?.currentMonthBudget ?? findKpi('masse') ?? 0;
+
+        setStats({
+          totalCompanies,
+          totalEmployees,
+          totalPayslips,
+          monthlyPayroll,
+        });
+        // keep raw payload for fallbacks and richer visualizations
+        setRawStats(statsPayload);
+
+        // Prepare chart data (tolerant to different shapes)
+        const payrollHistory = wrapper?.payrollHistory || statsPayload?.payrollHistory || statsPayload?.payroll?.history || null;
+        if (payrollHistory) setPayrollChartData(payrollHistory);
+
+        const employeesByCompany = wrapper?.employeesByCompany || statsPayload?.employeesByCompany || statsPayload?.topCompanies || null;
+        if (employeesByCompany) {
+          // normalize topCompanies -> { name, value }
+          if (Array.isArray(employeesByCompany) && employeesByCompany.length > 0 && employeesByCompany[0].employeeCount !== undefined) {
+            setEmployeeChartData(
+              employeesByCompany.map((c) => ({ name: c.name, value: c.employeeCount }))
+            );
+          } else {
+            setEmployeeChartData(employeesByCompany);
+          }
+        }
+
+        // If employeeChartData is not provided, try to fetch employee stats (departmentDistribution)
+        if (!employeesByCompany) {
+          try {
+            const params = {};
+            if (user?.role === 'ADMIN' && user?.companyId) params.companyId = user.companyId;
+            // For SUPER_ADMIN leave params empty to get global distribution
+            const empRes = await api.get('/statistics/employees', { params });
+            const empPayload = empRes?.data || empRes;
+            const empData = empPayload?.data || empPayload;
+            if (empData?.departmentDistribution) {
+              // normalize to chart format
+              const deptData = empData.departmentDistribution.map((d) => ({ department: d.department, count: d.count }));
+              setEmployeeChartData(deptData.map(d => ({ departement: d.department, actifs: d.count, inactifs: 0 })));
+            }
+          } catch (e) {
+            // ignore, will fallback to other sources
+            console.debug('No departmentDistribution available:', e);
+          }
+        }
+
+        // Contract types: look for several possible keys
+        const contractArr =
+          statsPayload?.employees?.byContractType ||
+          statsPayload?.employeesByContractType ||
+          statsPayload?.contractTypes ||
+          statsPayload?.contractTypeStats ||
+          statsPayload?.contractTypeDistribution ||
+          wrapper?.contractTypeStats ||
+          [];
+
+        if (Array.isArray(contractArr) && contractArr.length > 0) {
+          const mapping = {
+            DAILY: { name: 'Journalier', color: '#10b981' },
+            FIXED: { name: 'Fixe', color: '#3b82f6' },
+            HONORARIUM: { name: 'Honoraires', color: '#f59e0b' },
+            Journalier: { name: 'Journalier', color: '#10b981' },
+            Fixe: { name: 'Fixe', color: '#3b82f6' },
+            Honoraire: { name: 'Honoraires', color: '#f59e0b' },
+          };
+
+          const ctData = contractArr.map((ct, idx) => {
+            // ct may be { type, count } or { label, value } or { name, value }
+            const type = ct.type || ct.label || ct.name || ct[0];
+            const value = ct.count ?? ct.value ?? ct[1] ?? 0;
+            const key = String(type || '').toUpperCase();
+            // Try mapping by enum keys or by provided label
+            return {
+              name: mapping[key]?.name || ct.label || ct.name || type || key,
+              value,
+              color: mapping[key]?.color || mapping[type]?.color || '#8884d8',
+            };
+          });
+
+          setContractChartData(ctData);
+        }
+      } catch (err) {
+        console.error('Erreur chargement stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadStats();
   }, [user, navigate]);
 
   const getWelcomeMessage = () => {
@@ -53,6 +189,58 @@ const Dashboard = () => {
 
     return `${greeting}, ${user?.firstName} !`;
   };
+
+  // Normalize employee chart data for the EmployeeChart component
+  const employeeChartForRender = (() => {
+    // If we already have department-style data (used by admin/company views), return it
+    if (user?.role !== 'SUPER_ADMIN') return employeeChartData;
+
+    // SUPER_ADMIN view: try multiple fallbacks to build { departement, actifs, inactifs }
+    // 1) employeeChartData (already set from API) -> map name/value
+    if (Array.isArray(employeeChartData) && employeeChartData.length > 0) {
+      return employeeChartData.map((c) => ({
+        departement: c.name || c.label || c.companyName || 'Entreprise',
+        actifs: c.value ?? c.employeeCount ?? c.employees ?? 0,
+        inactifs: 0,
+      }));
+    }
+
+    // 2) rawStats.topCompanies (backend provides topCompanies with employeeCount)
+    if (rawStats?.topCompanies && Array.isArray(rawStats.topCompanies)) {
+      return rawStats.topCompanies.map((c) => ({
+        departement: c.name || 'Entreprise',
+        actifs: c.employeeCount ?? c.employees ?? 0,
+        inactifs: 0,
+      }));
+    }
+
+    // 3) If topCompanies missing, but we have per-company payrolls, show payroll as proxy
+    if (rawStats?.topCompanies && Array.isArray(rawStats.topCompanies) === false && Array.isArray(rawStats?.topCompanies)) {
+      // handled above; otherwise continue
+    }
+
+    if (rawStats?.topCompanies === undefined && Array.isArray(rawStats?.recentActivity) && rawStats.recentActivity.length > 0) {
+      // recentActivity is not ideal, but we can show counts per activity type as fallback
+      return rawStats.recentActivity.map((r, i) => ({
+        departement: r.name || `Activité ${i + 1}`,
+        actifs: r.count ?? 0,
+        inactifs: 0,
+      }));
+    }
+
+    // 4) contract type distribution as a last resort (maps contract types to bars)
+    const contractArr = rawStats?.contractTypeStats || rawStats?.employeesByContractType || rawStats?.employees?.byContractType;
+    if (Array.isArray(contractArr) && contractArr.length > 0) {
+      return contractArr.map((ct) => ({
+        departement: ct.label || ct.type || ct.name || 'Type',
+        actifs: ct.count ?? ct.value ?? 0,
+        inactifs: 0,
+      }));
+    }
+
+    // 5) Final fallback: empty dataset to let the chart render default sample
+    return null;
+  })();
 
   const getRoleDisplay = (role) => {
     const roleConfig = {
@@ -146,10 +334,18 @@ const Dashboard = () => {
                   Masse Salariale
                 </p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Intl.NumberFormat("fr-FR", {
-                    style: "currency",
-                    currency: "EUR",
-                  }).format(stats?.monthlyPayroll || 0)}
+                  {user?.role === 'SUPER_ADMIN' ? (
+                    new Intl.NumberFormat('fr-FR', {
+                      style: 'currency',
+                      currency: 'XOF',
+                      maximumFractionDigits: 0,
+                    }).format(stats?.monthlyPayroll || 0)
+                  ) : (
+                    new Intl.NumberFormat('fr-FR', {
+                      style: 'currency',
+                      currency: 'EUR',
+                    }).format(stats?.monthlyPayroll || 0)
+                  )}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-yellow-600" />
@@ -216,16 +412,54 @@ const Dashboard = () => {
       )}
 
       {/* Graphiques et analyses */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {user?.role === "SUPER_ADMIN" ? (
           <>
-            <PayrollChart title="Évolution globale de la masse salariale" />
-            <EmployeeChart title="Employés par entreprise" />
+            <PayrollChart
+              title="Évolution globale de la masse salariale"
+              data={payrollChartData}
+            />
+            {employeeChartForRender && employeeChartForRender.length > 0 ? (
+              <EmployeeChart title="Employés par entreprise" data={employeeChartForRender} />
+            ) : (
+              // Fallback pie chart: try employeeChartData, rawStats.topCompanies, contract types, or show sample
+              (() => {
+                const pieSource =
+                  (Array.isArray(employeeChartData) && employeeChartData.length > 0 && employeeChartData.map((c) => ({ name: c.name || c.label || c.companyName || c.name, value: c.value ?? c.employeeCount ?? 0 }))) ||
+                  (rawStats?.topCompanies && rawStats.topCompanies.map((c) => ({ name: c.name, value: c.employeeCount ?? 0 }))) ||
+                  (rawStats?.contractTypeStats && rawStats.contractTypeStats.map((c) => ({ name: c.label || c.type, value: c.count ?? c.value ?? 0 }))) ||
+                  null;
+
+                if (pieSource && pieSource.length > 0) {
+                  const COLORS = ["#8884d8", "#82ca9d", "#ffc658", "#ff7f50", "#a28fd0"];
+                  return (
+                    <div className="bg-white rounded-lg shadow p-4">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Employés par entreprise</h3>
+                      <div style={{ width: "100%", height: 300 }}>
+                        <ReResponsiveContainer>
+                          <RePieChart>
+                            <RePie data={pieSource} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                              {pieSource.map((entry, index) => (
+                                <ReCell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </RePie>
+                            <ReTooltip />
+                          </RePieChart>
+                        </ReResponsiveContainer>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // final fallback: render EmployeeChart with default sample (it will show its defaultData)
+                return <EmployeeChart title="Employés par entreprise" />;
+              })()
+            )}
           </>
         ) : (
           <>
-            <SalaryChart title="Évolution des salaires de l'entreprise" />
-            <ContractTypeChart title="Répartition des types de contrats" />
+            <SalaryChart title="Évolution des salaires de l'entreprise" data={payrollChartData} />
+            <ContractTypeChart title="Répartition des types de contrats" data={contractChartData} />
           </>
         )}
       </div>

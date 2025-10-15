@@ -22,14 +22,40 @@ const ContractTypeChart = ({
 }) => {
   // Données d'exemple si aucune donnée n'est fournie
   const defaultData = [
-    { name: "CDI", value: 45, color: "#0088FE" },
-    { name: "CDD", value: 20, color: "#00C49F" },
-    { name: "Stage", value: 15, color: "#FFBB28" },
-    { name: "Freelance", value: 10, color: "#FF8042" },
-    { name: "Autre", value: 10, color: "#8884D8" },
+    { name: "Fixe", value: 45, color: "#0088FE" },
+    { name: "Journalier", value: 35, color: "#00C49F" },
+    { name: "Honoraire", value: 15, color: "#FFBB28" },
   ];
 
-  const chartData = data || defaultData;
+  // Normalize incoming data: accept enums DAILY/FIXED/HONORARIUM or labels and map to display names/colors
+  const normalize = (raw) => {
+    if (!raw) return defaultData;
+    const mapping = {
+      DAILY: { name: 'Journalier', color: '#00C49F' },
+      FIXED: { name: 'Fixe', color: '#0088FE' },
+      HONORARIUM: { name: 'Honoraire', color: '#FFBB28' },
+      JOURNALIER: { name: 'Journalier', color: '#00C49F' },
+      FIXE: { name: 'Fixe', color: '#0088FE' },
+      HONORAIRE: { name: 'Honoraire', color: '#FFBB28' },
+    };
+
+    // only include known mappings (FIXED / DAILY / HONORARIUM and synonyms)
+    const acc = [];
+    (raw || []).forEach((item) => {
+      const key = (item.type || item.name || item.label || '').toString();
+      const upper = key.toUpperCase();
+      const map = mapping[upper];
+      const value = item.count ?? item.value ?? 0;
+      if (map && value > 0) {
+        acc.push({ name: map.name, value, color: map.color });
+      }
+      // ignore unknown types to avoid showing 'Autre'
+    });
+    return acc.length > 0 ? acc : defaultData;
+    
+  };
+
+  const chartData = normalize(data);
 
   const RADIAN = Math.PI / 180;
   const renderCustomizedLabel = ({

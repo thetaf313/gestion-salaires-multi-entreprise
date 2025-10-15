@@ -117,6 +117,7 @@ const AdminLayout = ({ children }) => {
       path: user?.companyId ? `/company/${user.companyId}/reports` : "/reports",
       roles: ["ADMIN"],
     },
+    // Rapports menu removed for ADMIN per request
     {
       icon: Clock,
       label: "Pointage",

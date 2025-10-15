@@ -49,229 +49,270 @@ function App() {
       <ThemeProvider>
         <Toaster richColors position="top-right" />
         <Router>
-        <Routes>
-          {/* Routes publiques */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Routes>
+            {/* Routes publiques */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* Routes protégées avec layout */}
-          <Route
-            path="/*"
-            element={
-              <ProtectedRoute>
-                <AdminLayout>
-                  <Routes>
-                    {/* Dashboard principal - redirige selon le rôle */}
-                    <Route path="/dashboard" element={<Dashboard />} />
+            {/* Routes protégées avec layout */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <Routes>
+                      {/* Dashboard principal - redirige selon le rôle */}
+                      <Route path="/dashboard" element={<Dashboard />} />
 
-                    {/* Gestion des entreprises - SUPER_ADMIN uniquement */}
-                    <Route
-                      path="/companies"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
-                          <Companies />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Gestion des entreprises - SUPER_ADMIN uniquement */}
+                      <Route
+                        path="/companies"
+                        element={
+                          <ProtectedRoute allowedRoles={["SUPER_ADMIN"]}>
+                            <Companies />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Dashboard d'une entreprise spécifique */}
-                    <Route
-                      path="/company/:companyId/dashboard"
-                      element={
-                        <ProtectedRoute
-                          allowedRoles={["SUPER_ADMIN", "ADMIN", "CASHIER"]}
-                        >
-                          <CompanyDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Dashboard d'une entreprise spécifique */}
+                      <Route
+                        path="/company/:companyId/dashboard"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN", "CASHIER"]}
+                          >
+                            <CompanyDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Gestion des utilisateurs d'une entreprise */}
-                    <Route
-                      path="/company/:companyId/users"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CompanyUsersWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Gestion des utilisateurs d'une entreprise */}
+                      <Route
+                        path="/company/:companyId/users"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <CompanyUsersWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Gestion des employés d'une entreprise */}
-                    <Route
-                      path="/company/:companyId/employees"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CompanyEmployeesWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Gestion des employés d'une entreprise */}
+                      <Route
+                        path="/company/:companyId/employees"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <CompanyEmployeesWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Détails d'un employé */}
-                    <Route
-                      path="/company/:companyId/employees/:employeeId"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <EmployeeDetails />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Détails d'un employé */}
+                      <Route
+                        path="/company/:companyId/employees/:employeeId"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <EmployeeDetails />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Création d'employé */}
-                    <Route
-                      path="/company/:companyId/employees/create"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CreateEmployeePage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Création d'employé */}
+                      <Route
+                        path="/company/:companyId/employees/create"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <CreateEmployeePage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Pages spécifiques aux ADMIN */}
-                    {/* Cycles de paie */}
-                    <Route
-                      path="/company/:companyId/payroll-cycles"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PayrollCyclesWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Pages spécifiques aux ADMIN */}
+                      {/* Cycles de paie */}
+                      <Route
+                        path="/company/:companyId/payroll-cycles"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <PayrollCyclesWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Bulletins de paie */}
-                    <Route
-                      path="/company/:companyId/payslips"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PayslipsWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Bulletins de paie */}
+                      <Route
+                        path="/company/:companyId/payslips"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <PayslipsWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Bulletins de paie d'un cycle spécifique */}
-                    <Route
-                      path="/company/:companyId/payroll/:payrunId/payslips"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PayslipsWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Bulletins de paie d'un cycle spécifique */}
+                      <Route
+                        path="/company/:companyId/payroll/:payrunId/payslips"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <PayslipsWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Détails d'un bulletin de paie */}
-                    <Route
-                      path="/company/:companyId/payslips/:payslipId"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PayslipDetailsPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Détails d'un bulletin de paie */}
+                      <Route
+                        path="/company/:companyId/payslips/:payslipId"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <PayslipDetailsPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Créer un paiement pour un bulletin */}
-                    <Route
-                      path="/company/:companyId/payslips/:payslipId/payment"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CreatePaymentPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Créer un paiement pour un bulletin */}
+                      <Route
+                        path="/company/:companyId/payslips/:payslipId/payment"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <CreatePaymentPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Paiements */}
-                    <Route
-                      path="/company/:companyId/payments"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <PaymentPageFixed />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Paiements */}
+                      <Route
+                        path="/company/:companyId/payments"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <PaymentPageFixed />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Rapports */}
-                    <Route
-                      path="/company/:companyId/reports"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <Reports />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Rapports */}
+                      <Route
+                        path="/company/:companyId/reports"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <Reports />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Pointage des employés */}
-                    <Route
-                      path="/company/:companyId/attendance"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <AttendanceWithPagination />
-                        </ProtectedRoute>
-                      }
-                    />
 
-                    {/* Pointage intelligent */}
-                    <Route
-                      path="/company/:companyId/smart-clock"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "CASHIER", "USER"]}>
-                          <SmartClockInPage />
-                        </ProtectedRoute>
-                      }
-                    />
 
-                    {/* Configuration des horaires de travail */}
-                    <Route
-                      path="/company/:companyId/work-schedule"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <WorkSchedulePage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Pointage des employés */}
+                      <Route
+                        path="/company/:companyId/attendance"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <AttendanceWithPagination />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Statistiques de pointage */}
-                    <Route
-                      path="/company/:companyId/attendance-stats"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <AttendanceStatsPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Pointage intelligent */}
+                      <Route
+                        path="/company/:companyId/smart-clock"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={[
+                              "SUPER_ADMIN",
+                              "ADMIN",
+                              "CASHIER",
+                              "USER",
+                            ]}
+                          >
+                            <SmartClockInPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* QR Codes des employés */}
-                    <Route
-                      path="/company/:companyId/employee-qr-codes"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <EmployeeQRCodesPage />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Configuration des horaires de travail */}
+                      <Route
+                        path="/company/:companyId/work-schedule"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <WorkSchedulePage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Paramètres de l'entreprise */}
-                    <Route
-                      path="/company/:companyId/company-settings"
-                      element={
-                        <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN"]}>
-                          <CompanySettings />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* Statistiques de pointage */}
+                      <Route
+                        path="/company/:companyId/attendance-stats"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <AttendanceStatsPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Paramètres */}
-                    <Route path="/settings" element={<Settings />} />
+                      {/* QR Codes des employés */}
+                      <Route
+                        path="/company/:companyId/employee-qr-codes"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <EmployeeQRCodesPage />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    {/* Redirection par défaut */}
-                    <Route
-                      path="/"
-                      element={<Navigate to="/dashboard" replace />}
-                    />
-                  </Routes>
-                </AdminLayout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
+                      {/* Paramètres de l'entreprise */}
+                      <Route
+                        path="/company/:companyId/company-settings"
+                        element={
+                          <ProtectedRoute
+                            allowedRoles={["SUPER_ADMIN", "ADMIN"]}
+                          >
+                            <CompanySettings />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      {/* Paramètres */}
+                      <Route path="/settings" element={<Settings />} />
+
+                      {/* Redirection par défaut */}
+                      <Route
+                        path="/"
+                        element={<Navigate to="/dashboard" replace />}
+                      />
+                    </Routes>
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
       </ThemeProvider>
     </AuthProvider>
   );
