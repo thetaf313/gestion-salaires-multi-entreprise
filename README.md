@@ -25,6 +25,7 @@
 ## 🛠️ Pile Technologique
 
 ### Frontend
+
 - **React 18** avec Hooks et Context API
 - **Vite** pour le bundling et le développement rapide
 - **Tailwind CSS** pour le styling moderne
@@ -33,6 +34,7 @@
 - **React Router** pour la navigation
 
 ### Backend
+
 - **Node.js** avec TypeScript
 - **Express.js** pour l'API REST
 - **Prisma** ORM avec migrations automatiques
@@ -41,15 +43,18 @@
 - **CORS** et validation des schémas
 
 ### Base de Données
+
 - **PostgreSQL** ou **MySQL** (configurable)
 - **Prisma Studio** pour la gestion visuelle
 
 ### Déploiement
+
 - **Docker** et **Docker Compose** pour l'orchestration
 
 ## 🚀 Installation et Démarrage
 
 ### Prérequis
+
 - Node.js (version 18 ou supérieure)
 - npm ou yarn
 - Docker et Docker Compose (optionnel, pour le déploiement conteneurisé)
@@ -58,23 +63,27 @@
 ### Installation Rapide avec Docker (Recommandé)
 
 1. **Cloner le dépôt :**
+
 ```bash
 git clone https://github.com/thetaf313/gestion-salaires-multi-entreprise.git
 cd gestion-salaires-multi-entreprise
 ```
 
 2. **Configurer l'environnement :**
+
 ```bash
 cp backend/.env.example backend/.env
 # Éditer backend/.env avec vos variables (DB_URL, JWT_SECRET, etc.)
 ```
 
 3. **Démarrer avec Docker Compose :**
+
 ```bash
 docker-compose up --build
 ```
 
 L'application sera accessible sur :
+
 - Frontend : http://localhost:3000
 - Backend API : http://localhost:5000
 - Prisma Studio : http://localhost:5555
@@ -82,6 +91,7 @@ L'application sera accessible sur :
 ### Installation Manuelle
 
 #### Backend
+
 ```bash
 cd backend
 npm install
@@ -94,6 +104,7 @@ npm run dev
 ```
 
 #### Frontend
+
 ```bash
 cd frontend
 npm install
@@ -103,12 +114,14 @@ npm run dev
 ## 📖 Utilisation
 
 ### Interface Utilisateur
+
 - **Connexion** : Utilisez les identifiants admin pour accéder au dashboard.
 - **Dashboard** : Vue d'ensemble avec statistiques et graphiques.
 - **Gestion des Employés** : Ajouter, modifier, supprimer des employés.
 - **Rapports** : Analyses détaillées par entreprise et période.
 
 ### API Endpoints Principaux
+
 - `POST /api/auth/login` - Authentification
 - `GET /api/companies` - Liste des entreprises
 - `GET /api/employees` - Liste des employés
@@ -140,6 +153,7 @@ Les contributions sont les bienvenues ! Veuillez suivre ces étapes :
 5. Ouvrir une Pull Request
 
 ### Standards de Code
+
 - Utiliser ESLint et Prettier
 - Écrire des tests pour les nouvelles fonctionnalités
 - Respecter les conventions TypeScript
@@ -156,6 +170,7 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](./LICENSE) pour plus 
 ## 📞 Support
 
 Pour toute question ou problème :
+
 - Ouvrir une issue sur GitHub
 - Contacter l'équipe de développement
 

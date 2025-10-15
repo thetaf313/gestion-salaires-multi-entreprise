@@ -108,7 +108,7 @@ async function main() {
 
     // Créer des employés pour les utilisateurs admin et cashier
     console.log("👥 Création des employés pour les utilisateurs...");
-    
+
     // Créer des employés pour les admins
     const adminEmployees = await Promise.all([
       prisma.employee.create({
