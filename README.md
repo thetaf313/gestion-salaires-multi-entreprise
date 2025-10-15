@@ -164,7 +164,7 @@ Ce projet est sous licence MIT - voir le fichier [LICENSE](./LICENSE) pour plus 
 
 ## 👥 Équipe
 
-- **Développeur Principal** : [Votre Nom](https://github.com/thetaf313)
+- **Développeur Principal** : [Moustapha Sayande](https://github.com/thetaf313)
 - **Contributeurs** : Bienvenue à bord !
 
 ## 📞 Support
