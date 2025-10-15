@@ -84,8 +84,8 @@ docker-compose up --build
 
 L'application sera accessible sur :
 
-- Frontend : http://localhost:3000
-- Backend API : http://localhost:5000
+- Frontend : http://localhost:5173
+- Backend API : http://localhost:3003
 - Prisma Studio : http://localhost:5555
 
 ### Installation Manuelle
